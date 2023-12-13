@@ -183,7 +183,7 @@ async def end_vote(ctx: discord.ApplicationContext):
     await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True) # type: ignore
     # On reset les votes
     current_vote = None
-    global vote_cooldown, vote_enabled
+    global vote_cooldown
     vote_cooldown = []
     vote_enabled = False
 
