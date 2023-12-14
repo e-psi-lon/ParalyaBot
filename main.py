@@ -199,9 +199,12 @@ async def on_message(message: discord.Message):
     guild = message.guild
     if guild is None:  # Vérifie si le message est envoyé en mp
         # On envoie le message avec un webhook dans le channel AdminChannel.MP
-        webhook: discord.Webhook = await bot.get_channel(AdminChannel.MP.value).create_webhook(name=message.author.name) # type: ignore
+        try:
+            webhook: discord.Webhook = await [webhook for webhook in await bot.get_channel(AdminChannel.MP.value).webhooks() if webhook.name == "MP"][0].edit("MP") # type: ignore
+
+        except IndexError:
+            webhook: discord.Webhook = await bot.get_channel(AdminChannel.MP.value).create_webhook(name="MP") # type: ignore
         await webhook.send(message.content, username=message.author.name, avatar_url=message.author.avatar.url) # type: ignore
-        await webhook.delete()
         return
     if message.channel.id == GlobalChannel.ANNONCES_VILLAGE.value and message.author.id in interview:
         interview.remove(message.author.id)
