@@ -62,6 +62,7 @@ async def interview_command(ctx: discord.ApplicationContext, member: discord.Mem
 
 @bot.slash_command(name="jour", description="Permet de passer au jour suivant")
 async def day(ctx: discord.ApplicationContext):
+    await ctx.response.defer()
     if not ctx.author.guild_permissions.administrator: # type: ignore
         return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
     await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(Roles.LG_VIVANT.value, send_messages=True) # type: ignore
@@ -75,6 +76,7 @@ async def day(ctx: discord.ApplicationContext):
 
 @bot.slash_command(name="nuit", description="Permet de passer à la nuit suivante")
 async def night(ctx: discord.ApplicationContext):
+    await ctx.response.defer()
     if not ctx.author.guild_permissions.administrator:  # type: ignore
         return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
     await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).send("----------") # type: ignore
@@ -187,7 +189,7 @@ async def end_vote(ctx: discord.ApplicationContext):
     max_votes_player = [player for player, votes in votes_count.items() if votes == max_votes]
     # On regarde si il y a une égalité
     if len(max_votes_player) > 1:
-        await ctx.respond("Il y a une égalité !", ephemeral=True)
+        await ctx.respond(f"Il y a une égalité ! Les joueurs désignés sont {', '.join(['<@'+ player + '>' for player in max_votes_player])}")
         return
     # On le tue
     await ctx.guild.get_member(max_votes_player[0]).add_roles(ctx.guild.get_role(Roles.LG_MORT.value), reason="Joueur tué") # type: ignore
@@ -212,7 +214,6 @@ async def on_message(message: discord.Message):
         # On envoie le message avec un webhook dans le channel AdminChannel.MP
         try:
             webhook: discord.Webhook = await [webhook for webhook in await bot.get_channel(AdminChannel.MP.value).webhooks() if webhook.name == "MP"][0].edit(name="MP") # type: ignore
-
         except IndexError:
             webhook: discord.Webhook = await bot.get_channel(AdminChannel.MP.value).create_webhook(name="MP") # type: ignore
         await webhook.send(message.content, username=message.author.name, avatar_url=message.author.avatar.url) # type: ignore
