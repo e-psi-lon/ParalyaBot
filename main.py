@@ -112,8 +112,6 @@ async def start_vote(ctx: discord.ApplicationContext, name: discord.Option(str, 
 
 @bot.slash_command(name="vote", description="Permet de voter contre un joueur")
 async def vote(ctx: discord.ApplicationContext, member: discord.Member, reason: discord.Option(str, description="La raison du vote", required=False)): # type: ignore
-    print(ctx.channel.id) # type: ignore
-    print(GlobalChannel.VOTE.value)
     if ctx.channel.id != GlobalChannel.VOTE.value: # type: ignore
         return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
     if ctx.author.id == member.id:
