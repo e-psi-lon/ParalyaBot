@@ -111,7 +111,9 @@ async def start_vote(ctx: discord.ApplicationContext, name: discord.Option(str, 
 
 
 @bot.slash_command(name="vote", description="Permet de voter contre un joueur")
-async def vote(ctx: discord.ApplicationContext, member: discord.Member):
+async def vote(ctx: discord.ApplicationContext, member: discord.Member, reason: discord.Option(str, description="La raison du vote", required=False)): # type: ignore
+    print(ctx.channel.id) # type: ignore
+    print(GlobalChannel.VOTE.value)
     if ctx.channel.id != GlobalChannel.VOTE.value: # type: ignore
         return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
     if ctx.author.id == member.id:
@@ -126,8 +128,13 @@ async def vote(ctx: discord.ApplicationContext, member: discord.Member):
     Timer(30, lambda: vote_cooldown.remove(ctx.author.id)).start() # type: ignore
     global votes, current_vote
     # On ajoute le vote sous la forme vote["nom_du_vote"][votant] = vote
+    if ctx.author.id in votes[current_vote].keys(): # type: ignore
+        deja_vote = True
+    else:
+        deja_vote = False
     votes[current_vote][ctx.author.id] = member.id # type: ignore
     await ctx.respond(f"Vous avez voté contre {member.name} !", ephemeral=True)
+    await ctx.guild.get_channel(GlobalChannel.VOTE.value).send(f"{ctx.author.mention} a voté contre {member.mention} {'*(Changement de vote)*' if deja_vote else ''} ! {'Raison : ' + reason if reason is not None else ''}") # type: ignore
 
 @bot.slash_command(name="unvote", description="Permet d'annuler son vote")
 async def unvote(ctx: discord.ApplicationContext):
@@ -200,7 +207,7 @@ async def on_message(message: discord.Message):
     if guild is None:  # Vérifie si le message est envoyé en mp
         # On envoie le message avec un webhook dans le channel AdminChannel.MP
         try:
-            webhook: discord.Webhook = await [webhook for webhook in await bot.get_channel(AdminChannel.MP.value).webhooks() if webhook.name == "MP"][0].edit("MP") # type: ignore
+            webhook: discord.Webhook = await [webhook for webhook in await bot.get_channel(AdminChannel.MP.value).webhooks() if webhook.name == "MP"][0].edit(name="MP") # type: ignore
 
         except IndexError:
             webhook: discord.Webhook = await bot.get_channel(AdminChannel.MP.value).create_webhook(name="MP") # type: ignore
