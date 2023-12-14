@@ -51,3 +51,8 @@ class Roles(Enum):
     LG_VIVANT = 709834794707714141 
     LG_MORT = 709756843768938496
 
+class AdminChannel(Enum):
+    MP = 1184885725221625866
+
+class Users(Enum):
+    LUXIO = 265178325381677059
