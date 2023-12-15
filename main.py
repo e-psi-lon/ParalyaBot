@@ -46,9 +46,9 @@ bot = Bot(intents=INTENTS)
 
 async def get_webhook(channel, name) -> discord.Webhook:
     try:
-        webhook: discord.Webhook = await [webhook for webhook in await bot.get_channel(AdminChannel.MP.value).webhooks() if webhook.name == name][0].edit(name=name) # type: ignore
+        webhook: discord.Webhook = await [webhook for webhook in await bot.get_channel(channel).webhooks() if webhook.name == name][0].edit(name=name) # type: ignore
     except IndexError:
-        webhook: discord.Webhook = await bot.get_channel(AdminChannel.MP.value).create_webhook(name=name) # type: ignore
+        webhook: discord.Webhook = await bot.get_channel(channel).create_webhook(name=name) # type: ignore
     return webhook
 
 
