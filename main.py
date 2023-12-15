@@ -206,7 +206,7 @@ async def vote_list(ctx: discord.ApplicationContext):
 async def on_message(message: discord.Message): 
     global LAST_MESSAGE_SENDER, current_webhook, current_pp
     guild = message.guild
-    if guild is None and not (message.content.startswith("!") or message.content.startswith("/")):  # Vérifie si le message est envoyé en mp
+    if guild is None:  # Vérifie si le message est envoyé en mp
         # On envoie le message avec un webhook dans le channel AdminChannel.MP
         webhook = get_webhook(AdminChannel.MP.value, "MP")
         await webhook.send(message.content, username=message.author.name, avatar_url=message.author.avatar.url) # type: ignore
