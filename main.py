@@ -65,7 +65,7 @@ async def day(ctx: discord.ApplicationContext):
     await ctx.response.defer()
     if not ctx.author.guild_permissions.administrator: # type: ignore
         return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
-    await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(Roles.LG_VIVANT.value, send_messages=True) # type: ignore
+    await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True) # type: ignore
     await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True) # type: ignore
     for user in [user for user in ctx.guild.members if Roles.LG_VIVANT.value in [role.id for role in user.roles]]: # type: ignore
         # Si l'utilisateur a accès a LOUP_CHAT et à LOUP_VOTE on lui redonne la permission d'écrire, sinon on passe
