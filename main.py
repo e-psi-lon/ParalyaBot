@@ -1,4 +1,3 @@
-from operator import is_
 import os
 import sys
 try:
@@ -18,10 +17,10 @@ interview: list = []
 LAST_MESSAGE_SENDER = 1
 current_webhook: discord.Webhook | None = None
 current_pp: int = 0
-vote_enabled: bool = False
 vote_cooldown: list[Timer] = []
 votes: dict[str, dict[int, int]] = {}
 current_vote: str | None = None
+time = "jour"
 
 class Bot(commands.Bot):
     async def on_ready(self):
@@ -45,6 +44,14 @@ class Message(discord.ui.Modal):
 
 bot = Bot(intents=INTENTS)
 
+async def get_webhook(channel, name) -> discord.Webhook:
+    try:
+        webhook: discord.Webhook = await [webhook for webhook in await bot.get_channel(AdminChannel.MP.value).webhooks() if webhook.name == name][0].edit(name=name) # type: ignore
+    except IndexError:
+        webhook: discord.Webhook = await bot.get_channel(AdminChannel.MP.value).create_webhook(name=name) # type: ignore
+    return webhook
+
+
 @bot.slash_command(name="notif", description="Envoie un mp d'info Loup-Garou à tout les joueurs possédant un rôle spécifique")
 async def notif(ctx: discord.ApplicationContext, role: discord.Role):
     if not ctx.author.guild_permissions.administrator: # type: ignore
@@ -65,13 +72,21 @@ async def day(ctx: discord.ApplicationContext):
     await ctx.response.defer()
     if not ctx.author.guild_permissions.administrator: # type: ignore
         return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
+    global time
+    if time == "jour":
+        return await ctx.respond("Vous ne pouvez pas lancer un jour alors qu'un jour est déjà en cours", delete_after=10)
+    time = "jour"
+    global votes, current_vote
+    name = f"Vote {len(votes.keys()) + 1}"
+    votes[name] = {}
+    current_vote = name
     await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True) # type: ignore
     await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True) # type: ignore
     for user in [user for user in ctx.guild.members if Roles.LG_VIVANT.value in [role.id for role in user.roles]]: # type: ignore
         # Si l'utilisateur a accès a LOUP_CHAT et à LOUP_VOTE on lui redonne la permission d'écrire, sinon on passe
         if user in [member for member in ctx.guild.get_channel(Channels.LOUP_CHAT).members]: # type: ignore
-            await ctx.guild.get_channel(Channels.LOUP_CHAT.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False) # type: ignore
-            await ctx.guild.get_channel(Channels.LOUP_VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False) # type: ignore
+            await ctx.guild.get_channel(Channels.LOUP_CHAT.value).set_permissions(user, send_messages=False) # type: ignore
+            await ctx.guild.get_channel(Channels.LOUP_VOTE.value).set_permissions(user, send_messages=False) # type: ignore
     await ctx.respond("Le jour a été lancé !", ephemeral=True)
 
 @bot.slash_command(name="nuit", description="Permet de passer à la nuit suivante")
@@ -79,11 +94,39 @@ async def night(ctx: discord.ApplicationContext):
     await ctx.response.defer()
     if not ctx.author.guild_permissions.administrator:  # type: ignore
         return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
+    global time
+    if time == "nuit":
+        return await ctx.respond("Vous ne pouvez pas lancer une nuit alors qu'une nuit est déjà en cours", delete_after=10)
+    time = "nuit"
+    global votes, current_vote
+    # On compte les votes
+    votes_count = {}
+    for vote in votes[current_vote].values(): # type: ignore
+        if vote not in votes_count.keys():
+            votes_count[vote] = 1
+        else:
+            votes_count[vote] += 1
+    # On cherche le max
+    max_votes = max(votes_count.values())
+    # On cherche les joueurs qui ont le max
+    max_votes_player = [player for player, votes in votes_count.items() if votes == max_votes]
+    # On regarde si il y a une égalité
+    if len(max_votes_player) > 1:
+        await ctx.respond(f"Il y a une égalité ! Les joueurs désignés sont {', '.join(['<@'+ player + '>' for player in max_votes_player])}")
+    else:
+        # On le tue
+        await ctx.guild.get_member(max_votes_player[0]).add_roles(ctx.guild.get_role(Roles.LG_MORT.value), reason="Joueur tué") # type: ignore
+        await ctx.guild.get_member(max_votes_player[0]).remove_roles(ctx.guild.get_role(Roles.LG_VIVANT.value), reason="Joueur tué") # type: ignore
+        await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True) # type: ignore
+        # On reset les votes
+        current_vote = None
+        global vote_cooldown
+        vote_cooldown = []
     await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).send("----------") # type: ignore
     await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False) # type: ignore
     await ctx.guild.get_channel(GlobalChannel.VOTE.value).send("----------") # type: ignore 
     await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False)  # type: ignore
-    for user in [user for user in ctx.guild.members if Roles.LG_VIVANT.value in [role.id for role in user.roles]] # type: ignore
+    for user in [user for user in ctx.guild.members if Roles.LG_VIVANT.value in [role.id for role in user.roles]]: # type: ignore
         # Si l'utilisateur a accès a LOUP_CHAT et à LOUP_VOTE on lui redonne la permission d'écrire, sinon on passe
         if user in [member for member in ctx.guild.get_channel(Channels.LOUP_CHAT).members]: # type: ignore
             await ctx.guild.get_channel(Channels.LOUP_CHAT.value).set_permissions(user, send_messages=True) # type: ignore
@@ -99,22 +142,6 @@ async def death(ctx: discord.ApplicationContext, member: discord.Member):
     await member.add_roles(ctx.guild.get_role(Roles.LG_MORT.value), reason="Joueur tué") # type: ignore
     await member.remove_roles(ctx.guild.get_role(Roles.LG_VIVANT.value), reason="Joueur tué") # type: ignore
     await ctx.respond(f"{member.name} a été tué !", ephemeral=True)
-
-
-@bot.slash_command(name="start-vote", description="Permet de lancer un vote contre un joueur")
-async def start_vote(ctx: discord.ApplicationContext, name: discord.Option(str, description="Le nom du vote", required=False)): # type: ignore
-    if not ctx.author.guild_permissions.administrator: # type: ignore
-        return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)  
-    global vote_enabled
-    if vote_enabled:
-        return await ctx.respond("Un vote est déjà en cours !", delete_after=10)
-    vote_enabled = True
-    global votes, current_vote
-    if name is None:
-        name = f"Vote {len(votes.keys()) + 1}"
-    votes[name] = {}
-    current_vote = name
-    await ctx.respond(f"Le vote {name} a été lancé !", ephemeral=True)
 
 
 
@@ -134,13 +161,20 @@ async def vote(ctx: discord.ApplicationContext, member: discord.Member, reason: 
     Timer(30, lambda: vote_cooldown.remove(ctx.author.id)).start() # type: ignore
     global votes, current_vote
     # On ajoute le vote sous la forme vote["nom_du_vote"][votant] = vote
+    if current_vote not in votes.keys():
+        return await ctx.respond("Aucun vote n'est actuellement en cours", delete_after=10)
     if ctx.author.id in votes[current_vote].keys(): # type: ignore
         deja_vote = True
     else:
         deja_vote = False
     votes[current_vote][ctx.author.id] = member.id # type: ignore
     await ctx.respond(f"Vous avez voté contre {member.name} !", ephemeral=True)
-    await ctx.guild.get_channel(GlobalChannel.VOTE.value).send(f"{ctx.author.mention} a voté contre {member.mention} {'*(Changement de vote)*' if deja_vote else ''} ! {'Raison : ' + reason if reason is not None else ''}") # type: ignore
+    webhook = await get_webhook(GlobalChannel.VOTE.value, "Vote")
+    if deja_vote:
+        await webhook.send(f"J'ai changé mon vote, je vote maintenant contre {member.mention} {'car '+ reason if reason is not None else ''}", name=ctx.author.name, avatar_url=ctx.author.avatar.url)
+    else:
+        await webhook.send(f"Je contre {member.mention} {'car '+ reason if reason is not None else ''}", name=ctx.author.name, avatar_url=ctx.author.avatar.url)
+
 
 @bot.slash_command(name="unvote", description="Permet d'annuler son vote")
 async def unvote(ctx: discord.ApplicationContext):
@@ -164,45 +198,7 @@ async def vote_list(ctx: discord.ApplicationContext):
     # On affiche vote : nombre de votes (voteurs)
     for vote in votes[current_vote].values(): # type: ignore
         message += f"{ctx.guild.get_member(vote).mention} : {list(votes[current_vote].values()).count(vote)} ({len([votant for votant in votes[current_vote].keys() if votes[current_vote][votant] == vote])})\n" # type: ignore
-    await ctx.respond(discord.Embed(title="Votes", description=message), ephemeral=True)
-
-
-
-@bot.slash_command(name="end-vote", description="Permet de terminer un vote")
-async def end_vote(ctx: discord.ApplicationContext):
-    if not ctx.author.guild_permissions.administrator: # type: ignore
-        return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
-    global vote_enabled, votes, current_vote
-    if not vote_enabled:
-        return await ctx.respond("Aucun vote n'est en cours !", delete_after=10)
-    vote_enabled = False
-    # On compte les votes
-    votes_count = {}
-    for vote in votes[current_vote].values(): # type: ignore
-        if vote not in votes_count.keys():
-            votes_count[vote] = 1
-        else:
-            votes_count[vote] += 1
-    # On cherche le max
-    max_votes = max(votes_count.values())
-    # On cherche les joueurs qui ont le max
-    max_votes_player = [player for player, votes in votes_count.items() if votes == max_votes]
-    # On regarde si il y a une égalité
-    if len(max_votes_player) > 1:
-        await ctx.respond(f"Il y a une égalité ! Les joueurs désignés sont {', '.join(['<@'+ player + '>' for player in max_votes_player])}")
-        return
-    # On le tue
-    await ctx.guild.get_member(max_votes_player[0]).add_roles(ctx.guild.get_role(Roles.LG_MORT.value), reason="Joueur tué") # type: ignore
-    await ctx.guild.get_member(max_votes_player[0]).remove_roles(ctx.guild.get_role(Roles.LG_VIVANT.value), reason="Joueur tué") # type: ignore
-    await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True) # type: ignore
-    # On reset les votes
-    current_vote = None
-    global vote_cooldown
-    vote_cooldown = []
-    vote_enabled = False
-
-
-
+    await ctx.respond(embed=discord.Embed(title="Votes", description=message), ephemeral=True)
     
 
 
@@ -210,12 +206,9 @@ async def end_vote(ctx: discord.ApplicationContext):
 async def on_message(message: discord.Message): 
     global LAST_MESSAGE_SENDER, current_webhook, current_pp
     guild = message.guild
-    if guild is None:  # Vérifie si le message est envoyé en mp
+    if guild is None and not (message.content.startswith("!") or message.content.startswith("/")):  # Vérifie si le message est envoyé en mp
         # On envoie le message avec un webhook dans le channel AdminChannel.MP
-        try:
-            webhook: discord.Webhook = await [webhook for webhook in await bot.get_channel(AdminChannel.MP.value).webhooks() if webhook.name == "MP"][0].edit(name="MP") # type: ignore
-        except IndexError:
-            webhook: discord.Webhook = await bot.get_channel(AdminChannel.MP.value).create_webhook(name="MP") # type: ignore
+        webhook = get_webhook(AdminChannel.MP.value, "MP")
         await webhook.send(message.content, username=message.author.name, avatar_url=message.author.avatar.url) # type: ignore
         return
     if message.channel.id == GlobalChannel.ANNONCES_VILLAGE.value and message.author.id in interview:
@@ -229,12 +222,7 @@ async def on_message(message: discord.Message):
         contents = []
         contents.append(content[:1990 if len(content) > 1990 else len(content)])
         if current_webhook is None:
-            try:
-                channel = bot.get_channel(Channels.PETITE_FILLE.value) 
-                if channel is not None:
-                    current_webhook = await [webhook for webhook in await channel.webhooks() if webhook.name == "🐺"][0].edit(name="🐺") # type: ignore
-            except IndexError:
-                current_webhook = await bot.get_channel(Channels.PETITE_FILLE.value).create_webhook(name="🐺") # type: ignore
+            current_webhook = await get_webhook(Channels.PETITE_FILLE.value, "🐺")
         while len(content) > 1990:
             contents.append(content[:1990])
             content = content[1990:]
