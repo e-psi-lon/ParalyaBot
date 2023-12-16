@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
 from threading import Timer
-from enums import GlobalChannel, Roles, Channels, AdminChannel
+from enums import *
 
 async def get_webhook(bot, channel, name) -> discord.Webhook:
     try:
@@ -9,6 +9,21 @@ async def get_webhook(bot, channel, name) -> discord.Webhook:
     except IndexError:
         webhook: discord.Webhook = await bot.get_channel(channel).create_webhook(name=name) # type: ignore
     return webhook
+
+
+class Message(discord.ui.Modal):
+    def __init__(self, members: list[discord.Member], *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.members = members
+        self.add_item(discord.ui.InputText(label="Message à envoyer", style=discord.InputTextStyle.long))
+
+    async def callback(self, interaction: discord.Interaction):
+        message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGNotifications ¦ {self.children[0].value}\n━━━━━━━━━━━━━━━━━━"
+        for member in self.members:
+            if member.bot:
+                continue
+            await member.send(message)
+        await interaction.response.send_message("Message envoyé !", ephemeral=True)
 
 
 class LG(commands.Cog):
@@ -50,6 +65,9 @@ class LG(commands.Cog):
         self.current_vote = name
         await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True) # type: ignore
         await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True) # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.SUJET.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True) # type: ignore
+        for thread in ctx.guild.get_channel(GlobalChannel.SUJET.value).threads: # type: ignore
+            await thread.set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True) # type: ignore
         for user in [user for user in ctx.guild.members if Roles.LG_VIVANT.value in [role.id for role in user.roles]]: # type: ignore
             # Si l'utilisateur a accès a LOUP_CHAT et à LOUP_VOTE on lui redonne la permission d'écrire, sinon on passe
             if user in [member for member in ctx.guild.get_channel(Channels.LOUP_CHAT).members]: # type: ignore
@@ -92,6 +110,9 @@ class LG(commands.Cog):
         await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False) # type: ignore
         await ctx.guild.get_channel(GlobalChannel.VOTE.value).send("----------") # type: ignore 
         await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False)  # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.SUJET.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False) # type: ignore
+        for thread in ctx.guild.get_channel(GlobalChannel.SUJET.value).threads: # type: ignore
+            await thread.set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False) # type: ignore
         for user in [user for user in ctx.guild.members if Roles.LG_VIVANT.value in [role.id for role in user.roles]]: # type: ignore
             # Si l'utilisateur a accès a LOUP_CHAT et à LOUP_VOTE on lui redonne la permission d'écrire, sinon on passe
             if user in [member for member in ctx.guild.get_channel(Channels.LOUP_CHAT.value).members]: # type: ignore
@@ -167,7 +188,8 @@ class LG(commands.Cog):
     async def findujour(self, ctx: discord.ApplicationContext, jour: discord.Option(int, description="Le jour en cours", required=True), heure: discord.Option(str, description="L'heure à laquelle le jour se terminera", required=True)): # type: ignore
         if not ctx.author.guild_permissions.administrator: # type: ignore
             return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
-        await ctx.guild.get_channel(GlobalChannel.ANNONCES_VILLAGE.value).send(f"━━━━━━━━━━━━━━━━━━━━━\n⏲ | Fin du Jour {jour} à {heure} {ctx.guild.get_role(Roles.LG_VIVANT.value).mention}\n━━━━━━━━━━━━━━━━━━━━━") # type: ignore
+        webhook = await get_webhook(self.bot, GlobalChannel.ANNONCES_VILLAGE.value, "Annonces")
+        await webhook.send(f"━━━━━━━━━━━━━━━━━━━━━\n⏲ | Fin du Jour {jour} à {heure} {ctx.guild.get_role(Roles.LG_VIVANT.value).mention}\n━━━━━━━━━━━━━━━━━━━━━", username=ctx.author.name, avatar_url=ctx.author.avatar.url) # type: ignore
         await ctx.respond("Message envoyé !", ephemeral=True)
 
 
@@ -179,6 +201,11 @@ class LG(commands.Cog):
             webhook = await get_webhook(self.bot, AdminChannel.MP.value, "MP")
             await webhook.send(message.content, username=message.author.name, avatar_url=message.author.avatar.url) # type: ignore
             return
+        if message.channel.id == GlobalChannel.SUJET.value and not message.author.bot:
+            await message.channel.create_thread(name=message.content, message=message, reason="Création d'un thread de discussion") # type: ignore
+            await message.add_reaction("🟢")
+            await message.add_reaction("🤔")
+            await message.add_reaction("🔴")
         if message.channel.id == GlobalChannel.ANNONCES_VILLAGE.value and message.author.id in self.interview:
             self.interview.remove(message.author.id)
             await message.channel.set_permissions(message.author, send_messages=False) # type: ignore
