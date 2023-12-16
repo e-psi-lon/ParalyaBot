@@ -32,10 +32,10 @@ class LG(commands.Cog):
         self.interview: list = []
         self.LAST_MESSAGE_SENDER = 1
         self.current_pp: int = 0
-        self.vote_cooldown: list[Timer] = []
-        self.votes: dict[str, dict[int, int]] = {}
-        self.current_vote: str | None = None
-        self.time = "jour"
+        self.vote_cooldown: list[int] = []
+        self.village_votes: dict[str, dict[int, int] | bool | list[int]] = {"is_vote": False, "votes": {}, "choices": []}
+        self.loup_votes: dict[str, dict[int, int] | bool | list[int]] = {"is_vote": False, "votes": {}, "choices": []}
+        self.time = "nuit"
     
     @commands.slash_command(name="notif", description="Envoie un mp d'info Loup-Garou à tout les joueurs possédant un rôle spécifique")
     async def notif(self, ctx: discord.ApplicationContext, role: discord.Role):
@@ -59,34 +59,13 @@ class LG(commands.Cog):
             return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
         if self.time == "jour":
             return await ctx.respond("Vous ne pouvez pas lancer un jour alors qu'un jour est déjà en cours", delete_after=10)
-        self.time = "jour"
-        name = f"Vote {len(self.votes.keys()) + 1}"
-        self.votes[name] = {}
-        self.current_vote = name
-        await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True) # type: ignore
-        await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True) # type: ignore
-        await ctx.guild.get_channel(GlobalChannel.SUJET.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True) # type: ignore
-        for thread in ctx.guild.get_channel(GlobalChannel.SUJET.value).threads: # type: ignore
-            await thread.set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True) # type: ignore
-        for user in [user for user in ctx.guild.members if Roles.LG_VIVANT.value in [role.id for role in user.roles]]: # type: ignore
-            # Si l'utilisateur a accès a LOUP_CHAT et à LOUP_VOTE on lui redonne la permission d'écrire, sinon on passe
-            if user in [member for member in ctx.guild.get_channel(Channels.LOUP_CHAT).members]: # type: ignore
-                await ctx.guild.get_channel(Channels.LOUP_CHAT.value).set_permissions(user, send_messages=False) # type: ignore
-                await ctx.guild.get_channel(Channels.LOUP_VOTE.value).set_permissions(user, send_messages=False) # type: ignore
-        await ctx.respond("Le jour a été lancé !", ephemeral=True)
-
-    @commands.slash_command(name="nuit", description="Permet de passer à la nuit suivante")
-    async def night(self, ctx: discord.ApplicationContext):
-        await ctx.response.defer()
-        if not ctx.author.guild_permissions.administrator:  # type: ignore
-            return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
-        if self.time == "nuit":
-            return await ctx.respond("Vous ne pouvez pas lancer une nuit alors qu'une nuit est déjà en cours", delete_after=10)
-        self.time = "nuit"
-        # On compte les votes
-        if self.current_vote is not None:
+        self.village_votes["is_vote"] = True
+        self.village_votes["votes"] = {}
+        self.loup_votes["is_vote"] = False
+        # On tue le joueur le plus voté par les loups
+        if len(self.loup_votes["votes"].keys()) > 0: # type: ignore
             votes_count = {}
-            for vote in self.votes[current_vote].values(): # type: ignore
+            for vote in self.loup_votes["votes"].values(): # type: ignore
                 if vote not in votes_count.keys():
                     votes_count[vote] = 1
                 else:
@@ -97,27 +76,70 @@ class LG(commands.Cog):
             max_votes_player = [player for player, votes in votes_count.items() if votes == max_votes]
             # On regarde si il y a une égalité
             if len(max_votes_player) > 1:
-                await ctx.respond(f"Il y a une égalité ! Les joueurs désignés sont {', '.join(['<@'+ player + '>' for player in max_votes_player])}")
-            else:
-                # On le tue
-                await ctx.guild.get_member(max_votes_player[0]).add_roles(ctx.guild.get_role(Roles.LG_MORT.value), reason="Joueur tué") # type: ignore
-                await ctx.guild.get_member(max_votes_player[0]).remove_roles(ctx.guild.get_role(Roles.LG_VIVANT.value), reason="Joueur tué") # type: ignore
-                await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True) # type: ignore
-                # On reset les votes
-                self.current_vote = None
-                self.vote_cooldown = []
-        await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).send("----------") # type: ignore
-        await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False) # type: ignore
-        await ctx.guild.get_channel(GlobalChannel.VOTE.value).send("----------") # type: ignore 
-        await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False)  # type: ignore
-        await ctx.guild.get_channel(GlobalChannel.SUJET.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False) # type: ignore
+                await ctx.guild.get_channel(Channels.LOUP_VOTE.value).send("Il y a une égalité, décidez vous sur qui tuer : " + ", ".join([ctx.guild.get_member(player).mention for player in max_votes_player])) # type: ignore
+                self.loup_votes["votes"] = {}
+                self.loup_votes["choices"] = max_votes_player
+                return await ctx.respond("Un second vote est donc lancé !", ephemeral=True)
+            # On le tue
+            await ctx.guild.get_member(max_votes_player).add_roles(ctx.guild.get_role(Roles.LG_MORT.value), reason="Joueur tué") # type: ignore
+            await ctx.guild.get_member(max_votes_player).remove_roles(ctx.guild.get_role(Roles.LG_VIVANT.value), reason="Joueur tué") # type: ignore
+            await ctx.respond(f"{ctx.guild.get_member(max_votes_player).name} a été tué !", ephemeral=True) # type: ignore
+        self.time = "jour"
+        await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, reason="Passage au jour") # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, reason="Passage au jour") # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.SUJET.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, reason="Passage au jour") # type: ignore
         for thread in ctx.guild.get_channel(GlobalChannel.SUJET.value).threads: # type: ignore
-            await thread.set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False) # type: ignore
-        for user in [user for user in ctx.guild.members if Roles.LG_VIVANT.value in [role.id for role in user.roles]]: # type: ignore
+            await thread.set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, reason="Passage au jour") # type: ignore
+        for user in ctx.guild.members: # type: ignore
             # Si l'utilisateur a accès a LOUP_CHAT et à LOUP_VOTE on lui redonne la permission d'écrire, sinon on passe
-            if user in [member for member in ctx.guild.get_channel(Channels.LOUP_CHAT.value).members]: # type: ignore
-                await ctx.guild.get_channel(Channels.LOUP_CHAT.value).set_permissions(user, send_messages=True) # type: ignore
-                await ctx.guild.get_channel(Channels.LOUP_VOTE.value).set_permissions(user, send_messages=True) # type: ignore
+            if user in [member for member in ctx.guild.get_channel(Channels.LOUP_CHAT).members] and Roles.LG_VIVANT.value in [role.id for role in user.roles]: # type: ignore
+                await ctx.guild.get_channel(Channels.LOUP_CHAT.value).set_permissions(user, send_messages=False, reason="Passage au jour") # type: ignore
+                await ctx.guild.get_channel(Channels.LOUP_VOTE.value).set_permissions(user, send_messages=False, reason="Passage au jour") # type: ignore
+        await ctx.respond("Le jour a été lancé !", ephemeral=True)
+
+    @commands.slash_command(name="nuit", description="Permet de passer à la nuit suivante")
+    async def night(self, ctx: discord.ApplicationContext):
+        await ctx.response.defer()
+        if not ctx.author.guild_permissions.administrator:  # type: ignore
+            return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
+        if self.time == "nuit":
+            return await ctx.respond("Vous ne pouvez pas lancer une nuit alors qu'une nuit est déjà en cours", delete_after=10)
+        # On compte les votes
+        if self.village_votes["is_vote"]:
+            votes_count = {}
+            for vote in self.village_votes["votes"].values(): # type: ignore
+                if vote not in votes_count.keys():
+                    votes_count[vote] = 1
+                else:
+                    votes_count[vote] += 1
+            # On cherche le max
+            max_votes = max(votes_count.values())
+            # On cherche les joueurs qui ont le max
+            max_votes_player = [player for player, votes in votes_count.items() if votes == max_votes]
+            # On regarde si il y a une égalité
+            if len(max_votes_player) > 1:
+                await ctx.guild.get_channel(GlobalChannel.VOTE.value).send("Il y a une égalité, les membres suivants sont donc en sursis pour le second vote : " + ", ".join([ctx.guild.get_member(player).mention for player in max_votes_player])) # type: ignore
+                self.village_votes["votes"] = {}
+                return await ctx.respond("Un second vote est donc lancé !", ephemeral=True)
+            await ctx.guild.get_member(max_votes_player[0]).add_roles(ctx.guild.get_role(Roles.LG_MORT.value), reason="Joueur tué") # type: ignore
+            await ctx.guild.get_member(max_votes_player[0]).remove_roles(ctx.guild.get_role(Roles.LG_VIVANT.value), reason="Joueur tué") # type: ignore
+            await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True) # type: ignore
+            # On reset les votes
+            self.current_vote = None
+            self.vote_cooldown = []
+        self.time = "nuit"
+        await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).send("----------") # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, reason="Passage à la nuit") # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.VOTE.value).send("----------") # type: ignore 
+        await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, reason="Passage à la nuit")  # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.SUJET.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, reason="Passage à la nuit") # type: ignore
+        for thread in ctx.guild.get_channel(GlobalChannel.SUJET.value).threads: # type: ignore
+            await thread.set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, reason="Passage à la nuit") # type: ignore
+        for user in ctx.guild.members: # type: ignore
+            # Si l'utilisateur a accès a LOUP_CHAT et à LOUP_VOTE on lui redonne la permission d'écrire, sinon on passe
+            if user in [member for member in ctx.guild.get_channel(Channels.LOUP_CHAT.value).members] and Roles.LG_VIVANT.value in [role.id for role in user.roles]: # type: ignore
+                await ctx.guild.get_channel(Channels.LOUP_CHAT.value).set_permissions(user, send_messages=True, reason="Passage à la nuit") # type: ignore
+                await ctx.guild.get_channel(Channels.LOUP_VOTE.value).set_permissions(user, send_messages=True, reason="Passage à la nuit") # type: ignore
         await ctx.respond("La nuit a été lancée !", ephemeral=True)
 
 
@@ -131,9 +153,10 @@ class LG(commands.Cog):
         await ctx.respond(f"{member.name} a été tué !", ephemeral=True)
 
 
+    vote = discord.SlashCommandGroup(name="vote", description="Permet de voter contre un joueur")
 
-    @commands.slash_command(name="vote", description="Permet de voter contre un joueur")
-    async def vote(self, ctx: discord.ApplicationContext, member: discord.Member, reason: discord.Option(str, description="La raison du vote", required=False)): # type: ignore
+    @vote.command(name="village", description="Permet aux villageois de voter contre un joueur")
+    async def village(self, ctx: discord.ApplicationContext, member: discord.Member, reason: discord.Option(str, description="La raison du vote", required=False)): # type: ignore
         if ctx.channel.id != GlobalChannel.VOTE.value: # type: ignore
             return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
         if ctx.author.id == member.id:
@@ -144,23 +167,79 @@ class LG(commands.Cog):
             return await ctx.respond("Vous ne pouvez pas voter contre un joueur qui n'est pas dans la partie !", delete_after=10)
         if ctx.author.id in self.vote_cooldown:
             return await ctx.respond("Vous êtes en cooldown !", delete_after=10)
+        if self.village_votes["choices"] != [] and member.id not in self.village_votes["choices"]: # type: ignore
+            return await ctx.respond("Ce joueur n'est pas dans les choix !", delete_after=10)
         self.vote_cooldown.append(ctx.author.id) # type: ignore
         Timer(30, lambda: self.vote_cooldown.remove(ctx.author.id)).start() # type: ignore
-        # On ajoute le vote sous la forme vote["nom_du_vote"][votant] = vote
-        if self.current_vote not in self.votes.keys():
+        if self.village_votes["is_vote"]:
             return await ctx.respond("Aucun vote n'est actuellement en cours", delete_after=10)
-        if ctx.author.id in self.votes[self.current_vote].keys(): # type: ignore
+        if ctx.author.id in self.village_votes["votes"].keys(): # type: ignore
             deja_vote = True
         else:
             deja_vote = False
-        self.votes[self.current_vote][ctx.author.id] = member.id # type: ignore
+        self.village_votes["votes"][ctx.author.id] = member.id # type: ignore
         await ctx.respond(f"Vous avez voté contre {member.name} !", ephemeral=True)
         webhook = await get_webhook(self.bot, GlobalChannel.VOTE.value, "Vote")
         if deja_vote:
             await webhook.send(f"J'ai changé mon vote, je vote maintenant contre {member.mention} {'car '+ reason if reason is not None else ''}", username=ctx.author.name, avatar_url=ctx.author.avatar.url) # type: ignore
         else:
             await webhook.send(f"Je contre {member.mention} {'car '+ reason if reason is not None else ''}", username=ctx.author.name, avatar_url=ctx.author.avatar.url) # type: ignore
+    
 
+    @vote.command(name="loup", description="Permet aux loups de voter contre un joueur")
+    async def loup(self, ctx: discord.ApplicationContext, member: discord.Member, reason: discord.Option(str, description="La raison du vote", required=False)): # type: ignore
+        if ctx.channel.id != Channels.LOUP_VOTE.value: # type: ignore
+            return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
+        if ctx.author.id == member.id:
+            return await ctx.respond("Vous ne pouvez pas voter contre vous même !", delete_after=10)
+        if Roles.LG_VIVANT.value not in [role.id for role in member.roles] and Roles.LG_MORT.value in [role.id for role in member.roles]:
+            return await ctx.respond("Vous ne pouvez pas voter contre un mort !", delete_after=10)
+        if Roles.LG_VIVANT.value not in [role.id for role in member.roles] and Roles.LG_MORT.value not in [role.id for role in member.roles]:
+            return await ctx.respond("Vous ne pouvez pas voter contre un joueur qui n'est pas dans la partie !", delete_after=10)
+        if ctx.author.id in self.vote_cooldown:
+            return await ctx.respond("Vous êtes en cooldown !", delete_after=10)
+        if self.loup_votes["choices"] != [] and member.id not in self.loup_votes["choices"]: # type: ignore
+            return await ctx.respond("Ce joueur n'est pas dans les choix !", delete_after=10)
+        self.vote_cooldown.append(ctx.author.id)
+        Timer(30, lambda: self.vote_cooldown.remove(ctx.author.id)).start()
+        if self.loup_votes["is_vote"]:
+            return await ctx.respond("Aucun vote n'est actuellement en cours", delete_after=10)
+        if ctx.author.id in self.loup_votes["votes"].keys(): # type: ignore
+            deja_vote = True
+        else:
+            deja_vote = False
+        self.loup_votes["votes"][ctx.author.id] = member.id # type: ignore
+        await ctx.respond(f"Vous avez voté contre {member.name} !", ephemeral=True)
+        webhook = await get_webhook(self.bot, Channels.LOUP_VOTE.value, "Vote")
+        if deja_vote:
+            await webhook.send(f"J'ai changé mon vote, je vote maintenant contre {member.mention} {'car '+ reason if reason is not None else ''}", username=ctx.author.name, avatar_url=ctx.author.avatar.url) # type: ignore
+        else:
+            await webhook.send(f"Je contre {member.mention} {'car '+ reason if reason is not None else ''}", username=ctx.author.name, avatar_url=ctx.author.avatar.url) # type: ignore
+
+        
+
+    @commands.slash_command(name="most_voted", description="Permet d'envoyer un message privé au joueur le plus voté")
+    async def most_voted(self, ctx: discord.ApplicationContext): # type: ignore
+        if ctx.channel.id != GlobalChannel.VOTE.value: # type: ignore
+            return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
+        if not self.village_votes["is_vote"]: # type: ignore
+            return await ctx.respond("Aucun vote n'est en cours !", delete_after=10)
+        votes_count = {}
+        for vote in self.village_votes["votes"].values(): # type: ignore
+            if vote not in votes_count.keys():
+                votes_count[vote] = 1
+            else:
+                votes_count[vote] += 1
+        # On cherche le max
+        max_votes = max(votes_count.values())
+        # On cherche les joueurs qui ont le max
+        max_votes_player = [player for player, votes in votes_count.items() if votes == max_votes]
+        # On regarde si il y a une égalité
+        if len(max_votes_player) > 1:
+            for player in max_votes_player:
+                await ctx.guild.get_member(player).send(f"Vous êtes l'un des joueurs les plus votés ! Vous avez {max_votes} votes ! Défendez vous !") # type: ignore
+        await ctx.guild.get_member(max_votes_player).send(f"Vous êtes le joueur le plus voté ! Vous avez {max_votes} votes ! Défendez vous !") # type: ignore
+        
 
     @commands.slash_command(name="unvote", description="Permet d'annuler son vote")
     async def unvote(self, ctx: discord.ApplicationContext):
@@ -202,7 +281,7 @@ class LG(commands.Cog):
             await webhook.send(message.content, username=message.author.name, avatar_url=message.author.avatar.url) # type: ignore
             return
         if message.channel.id == GlobalChannel.SUJET.value and not message.author.bot:
-            await message.channel.create_thread(name=message.content, message=message, reason="Création d'un thread de discussion") # type: ignore
+            await message.channel.create_thread(name=message.content, message=message, reason="Création d'un thread de discussion sur un sujet du jeu") # type: ignore
             await message.add_reaction("🟢")
             await message.add_reaction("🤔")
             await message.add_reaction("🔴")

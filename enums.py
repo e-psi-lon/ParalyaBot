@@ -58,3 +58,7 @@ class AdminChannel(Enum):
 
 class Users(Enum):
     LUXIO = 265178325381677059
+
+class VoteType(Enum):
+    VILLAGE = 0
+    LG = 1

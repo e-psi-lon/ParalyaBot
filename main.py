@@ -26,5 +26,5 @@ if __name__ == "__main__":
     for file in os.listdir("games"):
         if file.endswith(".py"):
             bot.load_extension(f"games.{file[:-3]}")
-            print(f"Loaded {file[:-3]}")
+            print(f"Loaded {file[:-3]} game")
     bot.run(os.getenv("TOKEN"))
