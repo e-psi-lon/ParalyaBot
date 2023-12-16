@@ -19,20 +19,6 @@ class Bot(commands.Bot):
         print(f"Connecté en tant que {self.user}!")
         
 
-class Message(discord.ui.Modal):
-    def __init__(self, members: list[discord.Member], *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.members = members
-        self.add_item(discord.ui.InputText(label="Long Input", style=discord.InputTextStyle.long))
-
-    async def callback(self, interaction: discord.Interaction):
-        message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGNotifications ¦ {self.children[0].value}\n━━━━━━━━━━━━━━━━━━"
-        for member in self.members:
-            if member.bot:
-                continue
-            await member.send(message)
-        await interaction.response.send_message("Message envoyé !", ephemeral=True)
-
 
 bot = Bot(intents=INTENTS)
 
