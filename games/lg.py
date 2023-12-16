@@ -253,15 +253,25 @@ class LG(commands.Cog):
 
     @commands.slash_command(name="vote-list", description="Permet de voir les votes en cours")
     async def vote_list(self, ctx: discord.ApplicationContext):
-        if ctx.channel.id != GlobalChannel.VOTE.value: # type: ignore
-            return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
-        if self.current_vote is None:
-            return await ctx.respond("Aucun vote n'est en cours !", delete_after=10)
-        message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGVote ¦ Vote {self.current_vote}\n━━━━━━━━━━━━━━━━━━\n"
-        # On affiche vote : nombre de votes (voteurs)
-        for vote in self.votes[self.current_vote].values(): # type: ignore
-            message += f"{ctx.guild.get_member(vote).mention} : {list(self.votes[self.current_vote].values()).count(vote)} ({len([votant for votant in self.votes[self.current_vote].keys() if self.votes[self.current_vote][votant] == vote])})\n" # type: ignore
-        await ctx.respond(embed=discord.Embed(title="Votes", description=message), ephemeral=True)
+        if ctx.channel.id == GlobalChannel.VOTE.value: # type: ignore
+            if not self.village_votes["is_vote"]: # type: ignore
+                return await ctx.respond("Aucun vote n'est en cours !", delete_after=10)
+            message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGVote ¦ Vote {self.current_vote}\n━━━━━━━━━━━━━━━━━━\n"
+            # On affiche vote : nombre de votes (voteurs)
+            for vote in self.votes[self.current_vote].values(): # type: ignore
+                message += f"{ctx.guild.get_member(vote).mention} : {list(self.votes[self.current_vote].values()).count(vote)} ({len([votant for votant in self.village_votes['votes'].keys() if self.village_votes['votes'][votant] == vote])})\n" # type: ignore
+            await ctx.respond(embed=discord.Embed(title="Votes", description=message), ephemeral=True)
+        elif ctx.channel.id == Channels.LOUP_VOTE.value: # type: ignore
+            if not self.loup_votes["is_vote"]:
+                return await ctx.respond("Aucun vote n'est en cours !", delete_after=10)
+            message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGVote ¦ Vote {self.current_vote}\n━━━━━━━━━━━━━━━━━━\n"
+            # On affiche vote : nombre de votes (voteurs)
+            for vote in self.votes[self.current_vote].values(): # type: ignore
+                message += f"{ctx.guild.get_member(vote).mention} : {list(self.votes[self.current_vote].values()).count(vote)} ({len([votant for votant in self.loup_votes['votes'].keys() if self.loup_votes['votes'][votant] == vote])})\n" # type: ignore
+            await ctx.respond(embed=discord.Embed(title="Votes", description=message), ephemeral=True)
+
+        else:
+            return await ctx.respond("Vous ne pouvez pas effectuer cette commande ici !", delete_after=10)
         
     @commands.slash_command(name="findujour", description="Envoie un message pour prévenir que le jour va se terminer")
     async def findujour(self, ctx: discord.ApplicationContext, jour: discord.Option(int, description="Le jour en cours", required=True), heure: discord.Option(str, description="L'heure à laquelle le jour se terminera", required=True)): # type: ignore
