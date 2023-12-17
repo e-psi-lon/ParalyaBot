@@ -36,14 +36,16 @@ class LG(commands.Cog):
         self.village_votes: dict[str, dict[int, int] | bool | list[int]] = {"is_vote": False, "votes": {}, "choices": []}
         self.loup_votes: dict[str, dict[int, int] | bool | list[int]] = {"is_vote": False, "votes": {}, "choices": []}
         self.time = "nuit"
+
+    lg = discord.SlashCommandGroup(name="lg", description="Commandes pour le Loup-Garou")
     
-    @commands.slash_command(name="notif", description="Envoie un mp d'info Loup-Garou à tout les joueurs possédant un rôle spécifique")
+    @lg.command(name="notif", description="Envoie un mp d'info Loup-Garou à tout les joueurs possédant un rôle spécifique")
     async def notif(self, ctx: discord.ApplicationContext, role: discord.Role):
         if not ctx.author.guild_permissions.administrator: # type: ignore
             return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
         await ctx.send_modal(Message([member for member in ctx.guild.members if role.id in [role.id for role in member.roles]], title="Quel message voulez vous envoyer ?")) # type: ignore
 
-    @commands.slash_command(name="interview", description="Permet d'interviewer un joueur dans le salon #annonces-village")
+    @lg.command(name="interview", description="Permet d'interviewer un joueur dans le salon #annonces-village")
     async def interview_command(self, ctx: discord.ApplicationContext, member: discord.Member):
         if not ctx.author.guild_permissions.administrator: # type: ignore
             return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
@@ -52,7 +54,7 @@ class LG(commands.Cog):
         await ctx.respond(f"Le channel a été ouvert pour {member.name}, vous pouvez lui poser vos questions !", ephemeral=True)
         self.interview.append(member.id)
 
-    @commands.slash_command(name="jour", description="Permet de passer au jour suivant")
+    @lg.command(name="jour", description="Permet de passer au jour suivant")
     async def day(self, ctx: discord.ApplicationContext):
         await ctx.response.defer()
         if not ctx.author.guild_permissions.administrator: # type: ignore
@@ -97,7 +99,7 @@ class LG(commands.Cog):
                 await ctx.guild.get_channel(Channels.LOUP_VOTE.value).set_permissions(user, send_messages=False, reason="Passage au jour") # type: ignore
         await ctx.respond("Le jour a été lancé !", ephemeral=True)
 
-    @commands.slash_command(name="nuit", description="Permet de passer à la nuit suivante")
+    @lg.command(name="nuit", description="Permet de passer à la nuit suivante")
     async def night(self, ctx: discord.ApplicationContext):
         await ctx.response.defer()
         if not ctx.author.guild_permissions.administrator:  # type: ignore
@@ -105,7 +107,10 @@ class LG(commands.Cog):
         if self.time == "nuit":
             return await ctx.respond("Vous ne pouvez pas lancer une nuit alors qu'une nuit est déjà en cours", delete_after=10)
         # On compte les votes
-        if self.village_votes["is_vote"]:
+        self.loup_votes["is_vote"] = True
+        self.loup_votes["votes"] = {}
+        self.village_votes["is_vote"] = False
+        if len(self.village_votes["votes"].keys()) > 0: # type: ignore
             votes_count = {}
             for vote in self.village_votes["votes"].values(): # type: ignore
                 if vote not in votes_count.keys():
@@ -125,7 +130,6 @@ class LG(commands.Cog):
             await ctx.guild.get_member(max_votes_player[0]).remove_roles(ctx.guild.get_role(Roles.LG_VIVANT.value), reason="Joueur tué") # type: ignore
             await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True) # type: ignore
             # On reset les votes
-            self.current_vote = None
             self.vote_cooldown = []
         self.time = "nuit"
         await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).send("----------") # type: ignore
@@ -143,7 +147,7 @@ class LG(commands.Cog):
         await ctx.respond("La nuit a été lancée !", ephemeral=True)
 
 
-    @commands.slash_command(name="mort", description="Permet de tuer un joueur")
+    @lg.command(name="mort", description="Permet de tuer un joueur")
     async def death(self, ctx: discord.ApplicationContext, member: discord.Member):
         if not ctx.author.guild_permissions.administrator: # type: ignore
             return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
@@ -153,10 +157,10 @@ class LG(commands.Cog):
         await ctx.respond(f"{member.name} a été tué !", ephemeral=True)
 
 
-    vote = discord.SlashCommandGroup(name="vote", description="Permet de voter contre un joueur")
+    vote = lg.create_subgroup(name="vote", description="Commandes pour voter")
 
     @vote.command(name="village", description="Permet aux villageois de voter contre un joueur")
-    async def village(self, ctx: discord.ApplicationContext, member: discord.Member, reason: discord.Option(str, description="La raison du vote", required=False)): # type: ignore
+    async def vote_village(self, ctx: discord.ApplicationContext, member: discord.Member, reason: discord.Option(str, description="La raison du vote", required=False)): # type: ignore
         if ctx.channel.id != GlobalChannel.VOTE.value: # type: ignore
             return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
         if ctx.author.id == member.id:
@@ -171,7 +175,7 @@ class LG(commands.Cog):
             return await ctx.respond("Ce joueur n'est pas dans les choix !", delete_after=10)
         self.vote_cooldown.append(ctx.author.id) # type: ignore
         Timer(30, lambda: self.vote_cooldown.remove(ctx.author.id)).start() # type: ignore
-        if self.village_votes["is_vote"]:
+        if not self.village_votes["is_vote"]:
             return await ctx.respond("Aucun vote n'est actuellement en cours", delete_after=10)
         if ctx.author.id in self.village_votes["votes"].keys(): # type: ignore
             deja_vote = True
@@ -187,7 +191,7 @@ class LG(commands.Cog):
     
 
     @vote.command(name="loup", description="Permet aux loups de voter contre un joueur")
-    async def loup(self, ctx: discord.ApplicationContext, member: discord.Member, reason: discord.Option(str, description="La raison du vote", required=False)): # type: ignore
+    async def vote_loup(self, ctx: discord.ApplicationContext, member: discord.Member, reason: discord.Option(str, description="La raison du vote", required=False)): # type: ignore
         if ctx.channel.id != Channels.LOUP_VOTE.value: # type: ignore
             return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
         if ctx.author.id == member.id:
@@ -202,7 +206,7 @@ class LG(commands.Cog):
             return await ctx.respond("Ce joueur n'est pas dans les choix !", delete_after=10)
         self.vote_cooldown.append(ctx.author.id)
         Timer(30, lambda: self.vote_cooldown.remove(ctx.author.id)).start()
-        if self.loup_votes["is_vote"]:
+        if not self.loup_votes["is_vote"]:
             return await ctx.respond("Aucun vote n'est actuellement en cours", delete_after=10)
         if ctx.author.id in self.loup_votes["votes"].keys(): # type: ignore
             deja_vote = True
@@ -218,7 +222,7 @@ class LG(commands.Cog):
 
         
 
-    @commands.slash_command(name="most_voted", description="Permet d'envoyer un message privé au joueur le plus voté")
+    @lg.command(name="most_voted", description="Permet d'envoyer un message privé au joueur le plus voté")
     async def most_voted(self, ctx: discord.ApplicationContext): # type: ignore
         if ctx.channel.id != GlobalChannel.VOTE.value: # type: ignore
             return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
@@ -241,39 +245,45 @@ class LG(commands.Cog):
         await ctx.guild.get_member(max_votes_player).send(f"Vous êtes le joueur le plus voté ! Vous avez {max_votes} votes ! Défendez vous !") # type: ignore
         
 
-    @commands.slash_command(name="unvote", description="Permet d'annuler son vote")
+    @lg.command(name="unvote", description="Permet d'annuler son vote")
     async def unvote(self, ctx: discord.ApplicationContext):
-        if ctx.channel.id != GlobalChannel.VOTE.value: # type: ignore
+        if ctx.channel.id == GlobalChannel.VOTE.value: # type: ignore
+            if ctx.author.id not in self.village_votes["votes"].keys(): # type: ignore
+                return await ctx.respond("Vous n'avez pas voté !", delete_after=10)
+            del self.village_votes["votes"][ctx.author.id] # type: ignore
+            await ctx.respond("Votre vote a été annulé !", ephemeral=True)
+        elif ctx.channel.id == Channels.LOUP_VOTE.value: # type: ignore
+            if ctx.author.id not in self.loup_votes["votes"].keys(): # type: ignore
+                return await ctx.respond("Vous n'avez pas voté !", delete_after=10)
+            del self.loup_votes["votes"][ctx.author.id] # type: ignore
+            await ctx.respond("Votre vote a été annulé !", ephemeral=True)
+        else:
             return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
-        if ctx.author.id not in self.votes[self.current_vote].keys(): # type: ignore
-            return await ctx.respond("Vous n'avez pas voté !", delete_after=10)
-        del self.votes[self.current_vote][ctx.author.id] # type: ignore
-        await ctx.respond("Votre vote a été annulé !", ephemeral=True)
 
 
-    @commands.slash_command(name="vote-list", description="Permet de voir les votes en cours")
+    @lg.command(name="vote-list", description="Permet de voir les votes en cours")
     async def vote_list(self, ctx: discord.ApplicationContext):
         if ctx.channel.id == GlobalChannel.VOTE.value: # type: ignore
             if not self.village_votes["is_vote"]: # type: ignore
                 return await ctx.respond("Aucun vote n'est en cours !", delete_after=10)
-            message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGVote ¦ Vote {self.current_vote}\n━━━━━━━━━━━━━━━━━━\n"
+            message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGVote ¦ Vote du village\n━━━━━━━━━━━━━━━━━━\n"
             # On affiche vote : nombre de votes (voteurs)
-            for vote in self.votes[self.current_vote].values(): # type: ignore
-                message += f"{ctx.guild.get_member(vote).mention} : {list(self.votes[self.current_vote].values()).count(vote)} ({len([votant for votant in self.village_votes['votes'].keys() if self.village_votes['votes'][votant] == vote])})\n" # type: ignore
+            for vote in self.village_votes["votes"].values(): # type: ignore
+                message += f"{ctx.guild.get_member(vote).mention} : {list(self.village_votes['votes'].values()).count(vote)} ({len([votant for votant in self.village_votes['votes'].keys() if self.village_votes['votes'][votant] == vote])})\n" # type: ignore
             await ctx.respond(embed=discord.Embed(title="Votes", description=message), ephemeral=True)
         elif ctx.channel.id == Channels.LOUP_VOTE.value: # type: ignore
             if not self.loup_votes["is_vote"]:
                 return await ctx.respond("Aucun vote n'est en cours !", delete_after=10)
-            message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGVote ¦ Vote {self.current_vote}\n━━━━━━━━━━━━━━━━━━\n"
+            message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGVote ¦ Vote des loups\n━━━━━━━━━━━━━━━━━━\n"
             # On affiche vote : nombre de votes (voteurs)
-            for vote in self.votes[self.current_vote].values(): # type: ignore
-                message += f"{ctx.guild.get_member(vote).mention} : {list(self.votes[self.current_vote].values()).count(vote)} ({len([votant for votant in self.loup_votes['votes'].keys() if self.loup_votes['votes'][votant] == vote])})\n" # type: ignore
+            for vote in self.village_votes['votes'].values(): # type: ignore
+                message += f"{ctx.guild.get_member(vote).mention} : {list(self.village_votes['votes'].values()).count(vote)} ({len([votant for votant in self.loup_votes['votes'].keys() if self.loup_votes['votes'][votant] == vote])})\n" # type: ignore
             await ctx.respond(embed=discord.Embed(title="Votes", description=message), ephemeral=True)
 
         else:
             return await ctx.respond("Vous ne pouvez pas effectuer cette commande ici !", delete_after=10)
         
-    @commands.slash_command(name="findujour", description="Envoie un message pour prévenir que le jour va se terminer")
+    @lg.command(name="findujour", description="Envoie un message pour prévenir que le jour va se terminer")
     async def findujour(self, ctx: discord.ApplicationContext, jour: discord.Option(int, description="Le jour en cours", required=True), heure: discord.Option(str, description="L'heure à laquelle le jour se terminera", required=True)): # type: ignore
         if not ctx.author.guild_permissions.administrator: # type: ignore
             return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
@@ -291,7 +301,7 @@ class LG(commands.Cog):
             await webhook.send(message.content, username=message.author.name, avatar_url=message.author.avatar.url) # type: ignore
             return
         if message.channel.id == GlobalChannel.SUJET.value and not message.author.bot:
-            await message.channel.create_thread(name=message.content, message=message, reason="Création d'un thread de discussion sur un sujet du jeu") # type: ignore
+            await message.channel.create_thread(name=message.content if len(message.content) < 100 else message.content[:97] + "...", message=message, reason="Création d'un thread de discussion sur un sujet du jeu") # type: ignore
             await message.add_reaction("🟢")
             await message.add_reaction("🤔")
             await message.add_reaction("🔴")
@@ -305,27 +315,27 @@ class LG(commands.Cog):
             content = message.content
             contents = []
             contents.append(content[:1990 if len(content) > 1990 else len(content)])
-            current_webhook = await get_webhook(self.bot, Channels.PETITE_FILLE.value, "🐺")
+            webhook = await get_webhook(self.bot, Channels.PETITE_FILLE.value, "🐺")
             while len(content) > 1990:
                 contents.append(content[:1990])
                 content = content[1990:]
             if message.author.id == self.LAST_MESSAGE_SENDER:
                 if len(contents) > 1:
-                    await current_webhook.send(contents[0], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png") # type: ignore
+                    await webhook.send(contents[0], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png") # type: ignore
                     for part in contents[1:-1]:
-                        await current_webhook.send(part, username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png") # type: ignore
-                    await current_webhook.send(contents[-1], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png", files=message.attachments) # type: ignore
+                        await webhook.send(part, username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png") # type: ignore
+                    await webhook.send(contents[-1], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png", files=message.attachments) # type: ignore
                 else:
-                    await current_webhook.send(contents[0], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png", files=message.attachments) # type: ignore
+                    await webhook.send(contents[0], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png", files=message.attachments) # type: ignore
             else:
                 self.current_pp = 0 if self.current_pp == 1 else 1
                 if len(contents) > 1:
-                    await current_webhook.send(contents[0], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png") # type: ignore
+                    await webhook.send(contents[0], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png") # type: ignore
                     for part in contents[1:-1]:
-                        await current_webhook.send(part, username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png") # type: ignore
-                    await current_webhook.send(contents[-1], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png", files=message.attachments) # type: ignore
+                        await webhook.send(part, username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png") # type: ignore
+                    await webhook.send(contents[-1], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png", files=message.attachments) # type: ignore
                 else:
-                    await current_webhook.send(contents[0], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png", files=message.attachments) # type: ignore
+                    await webhook.send(contents[0], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png", files=message.attachments) # type: ignore
                 self.LAST_MESSAGE_SENDER = message.author.id
 
 
