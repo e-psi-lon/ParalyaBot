@@ -91,7 +91,7 @@ class LG(commands.Cog):
         await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, reason="Passage au jour") # type: ignore
         await ctx.guild.get_channel(GlobalChannel.SUJET.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, reason="Passage au jour") # type: ignore
         for thread in ctx.guild.get_channel(GlobalChannel.SUJET.value).threads: # type: ignore
-            await thread.set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, reason="Passage au jour") # type: ignore
+            await thread.edit(locked=False, reason="Passage au jour")
         for user in ctx.guild.members: # type: ignore
             # Si l'utilisateur a accès a LOUP_CHAT et à LOUP_VOTE on lui redonne la permission d'écrire, sinon on passe
             if user in [member for member in ctx.guild.get_channel(Channels.LOUP_CHAT).members] and Roles.LG_VIVANT.value in [role.id for role in user.roles]: # type: ignore
@@ -138,7 +138,7 @@ class LG(commands.Cog):
         await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, reason="Passage à la nuit")  # type: ignore
         await ctx.guild.get_channel(GlobalChannel.SUJET.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, reason="Passage à la nuit") # type: ignore
         for thread in ctx.guild.get_channel(GlobalChannel.SUJET.value).threads: # type: ignore
-            await thread.set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, reason="Passage à la nuit") # type: ignore
+            await thread.edit(locked=True, reason="Passage à la nuit")
         for user in ctx.guild.members: # type: ignore
             # Si l'utilisateur a accès a LOUP_CHAT et à LOUP_VOTE on lui redonne la permission d'écrire, sinon on passe
             if user in [member for member in ctx.guild.get_channel(Channels.LOUP_CHAT.value).members] and Roles.LG_VIVANT.value in [role.id for role in user.roles]: # type: ignore
@@ -187,7 +187,7 @@ class LG(commands.Cog):
         if deja_vote:
             await webhook.send(f"J'ai changé mon vote, je vote maintenant contre {member.mention} {'car '+ reason if reason is not None else ''}", username=ctx.author.name, avatar_url=ctx.author.avatar.url) # type: ignore
         else:
-            await webhook.send(f"Je contre {member.mention} {'car '+ reason if reason is not None else ''}", username=ctx.author.name, avatar_url=ctx.author.avatar.url) # type: ignore
+            await webhook.send(f"Je vote contre {member.mention} {'car '+ reason if reason is not None else ''}", username=ctx.author.name, avatar_url=ctx.author.avatar.url) # type: ignore
     
 
     @vote.command(name="loup", description="Permet aux loups de voter contre un joueur")
@@ -218,7 +218,7 @@ class LG(commands.Cog):
         if deja_vote:
             await webhook.send(f"J'ai changé mon vote, je vote maintenant contre {member.mention} {'car '+ reason if reason is not None else ''}", username=ctx.author.name, avatar_url=ctx.author.avatar.url) # type: ignore
         else:
-            await webhook.send(f"Je contre {member.mention} {'car '+ reason if reason is not None else ''}", username=ctx.author.name, avatar_url=ctx.author.avatar.url) # type: ignore
+            await webhook.send(f"Je vote contre {member.mention} {'car '+ reason if reason is not None else ''}", username=ctx.author.name, avatar_url=ctx.author.avatar.url) # type: ignore
 
         
 
