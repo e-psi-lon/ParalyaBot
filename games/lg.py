@@ -89,16 +89,16 @@ class LG(commands.Cog):
             await ctx.respond(f"{ctx.guild.get_member(max_votes_player).name} a été tué !", ephemeral=True) # type: ignore
         self.loup_votes["choices"] = []
         self.time = "jour"
-        await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, reason="Passage au jour") # type: ignore
-        await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, reason="Passage au jour") # type: ignore
-        await ctx.guild.get_channel(GlobalChannel.SUJET.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, reason="Passage au jour") # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, view_channel=True, reason="Passage au jour") # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, view_channel=True, reason="Passage au jour") # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.SUJET.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, view_channel=True, reason="Passage au jour") # type: ignore
         for thread in ctx.guild.get_channel(GlobalChannel.SUJET.value).threads: # type: ignore
             await thread.edit(locked=False, reason="Passage au jour")
         for user in ctx.guild.members: # type: ignore
             # Si l'utilisateur a accès a LOUP_CHAT et à LOUP_VOTE on lui redonne la permission d'écrire, sinon on passe
             if user in [member for member in ctx.guild.get_channel(Channels.LOUP_CHAT.value).members] and Roles.LG_VIVANT.value in [role.id for role in user.roles]: # type: ignore
-                await ctx.guild.get_channel(Channels.LOUP_CHAT.value).set_permissions(user, send_messages=False, reason="Passage au jour") # type: ignore
-                await ctx.guild.get_channel(Channels.LOUP_VOTE.value).set_permissions(user, send_messages=False, reason="Passage au jour") # type: ignore
+                await ctx.guild.get_channel(Channels.LOUP_CHAT.value).set_permissions(user, send_messages=False, view_channel=True, reason="Passage au jour") # type: ignore
+                await ctx.guild.get_channel(Channels.LOUP_VOTE.value).set_permissions(user, send_messages=False, view_channel=True, reason="Passage au jour") # type: ignore
         await ctx.respond("Le jour a été lancé !", ephemeral=True)
 
     @lg.command(name="nuit", description="Permet de passer à la nuit suivante")
@@ -144,21 +144,21 @@ class LG(commands.Cog):
         self.village_votes["choices"] = []
         self.time = "nuit"
         await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).send("----------") # type: ignore
-        await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, reason="Passage à la nuit") # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, view_channel=True, reason="Passage à la nuit") # type: ignore
         await ctx.guild.get_channel(GlobalChannel.VOTE.value).send("----------") # type: ignore 
         if self.village_votes["corbeau"] != 0:
             webhook = await get_webhook(self.bot, GlobalChannel.VOTE.value, "Vote")
             await webhook.send(f"Je vote contre <@{self.village_votes['corbeau']}> (+**2** votes)", username="🐦‍⬛ Corbeau", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1185951750461599896/black_bird.png")
         self.village_votes["corbeau"] = 0
-        await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, reason="Passage à la nuit")  # type: ignore
-        await ctx.guild.get_channel(GlobalChannel.SUJET.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, reason="Passage à la nuit") # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, view_channel=True, reason="Passage à la nuit")  # type: ignore
+        await ctx.guild.get_channel(GlobalChannel.SUJET.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, view_channel=True, reason="Passage à la nuit") # type: ignore
         for thread in ctx.guild.get_channel(GlobalChannel.SUJET.value).threads: # type: ignore
             await thread.edit(locked=True, reason="Passage à la nuit")
         for user in ctx.guild.members: # type: ignore
             # Si l'utilisateur a accès a LOUP_CHAT et à LOUP_VOTE on lui redonne la permission d'écrire, sinon on passe
             if user in [member for member in ctx.guild.get_channel(Channels.LOUP_CHAT.value).members] and Roles.LG_VIVANT.value in [role.id for role in user.roles]: # type: ignore
-                await ctx.guild.get_channel(Channels.LOUP_CHAT.value).set_permissions(user, send_messages=True, reason="Passage à la nuit") # type: ignore
-                await ctx.guild.get_channel(Channels.LOUP_VOTE.value).set_permissions(user, send_messages=True, reason="Passage à la nuit") # type: ignore
+                await ctx.guild.get_channel(Channels.LOUP_CHAT.value).set_permissions(user, send_messages=True, view_channel=True, reason="Passage à la nuit") # type: ignore
+                await ctx.guild.get_channel(Channels.LOUP_VOTE.value).set_permissions(user, send_messages=True, view_channel=True, reason="Passage à la nuit") # type: ignore
         await ctx.respond("La nuit a été lancée !", ephemeral=True)
 
 
