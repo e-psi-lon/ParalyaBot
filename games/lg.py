@@ -1,7 +1,7 @@
 from discord.ext import commands
 import discord
 from threading import Timer
-from enums import *
+from games.lg_ import *
 
 async def get_webhook(bot, channel, name) -> discord.Webhook:
     try:
@@ -12,10 +12,12 @@ async def get_webhook(bot, channel, name) -> discord.Webhook:
 
 
 class Message(discord.ui.Modal):
-    def __init__(self, members: list[discord.Member], *args, **kwargs):
+    def __init__(self, members: list[discord.Member], callback=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.members = members
         self.add_item(discord.ui.InputText(label="Message à envoyer", style=discord.InputTextStyle.long))
+        if callback is not None:
+            self.callback = callback
 
     async def callback(self, interaction: discord.Interaction):
         message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGNotifications ¦ {self.children[0].value}\n━━━━━━━━━━━━━━━━━━"
