@@ -341,7 +341,7 @@ class LG(commands.Cog):
     @commands.Cog.listener("on_message")
     async def on_message(self, message: discord.Message): 
         guild = message.guild
-        if guild is None:  # Vérifie si le message est envoyé en mp
+        if guild is None and message.content != "" and message.content is not None:
             # On envoie le message avec un webhook dans le channel AdminChannel.MP
             webhook = await get_webhook(self.bot, AdminChannel.MP.value, "MP")
             await webhook.send(message.content, username=message.author.name, avatar_url=message.author.avatar.url) # type: ignore
