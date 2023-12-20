@@ -308,7 +308,7 @@ class LG(commands.Cog):
                 return await ctx.respond("Aucun vote n'est en cours !", delete_after=10)
             message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGVote ¦ Vote du village\n━━━━━━━━━━━━━━━━━━\n"
             # On affiche vote : nombre de votes (voteurs)
-            for vote in self.village_votes["votes"].values(): # type: ignore
+            for vote in set(self.village_votes["votes"].values()): # type: ignore
                 member = ctx.guild.get_member(vote).mention # type: ignore
                 vote_count = list(self.village_votes["votes"].values()).count(vote) # type: ignore
                 if vote == self.village_votes["corbeau"]:
