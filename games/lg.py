@@ -1,3 +1,4 @@
+from ast import Global
 from discord.ext import commands
 import discord
 from threading import Timer
@@ -333,8 +334,7 @@ class LG(commands.Cog):
     async def findujour(self, ctx: discord.ApplicationContext, jour: discord.Option(int, description="Le jour en cours", required=True), heure: discord.Option(str, description="L'heure à laquelle le jour se terminera", required=True)): # type: ignore
         if not ctx.author.guild_permissions.administrator: # type: ignore
             return await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande !", delete_after=10)
-        webhook = await get_webhook(self.bot, GlobalChannel.ANNONCES_VILLAGE.value, "Annonces")
-        await webhook.send(f"━━━━━━━━━━━━━━━━━━━━━\n⏲ | Fin du Jour {jour} à {heure} {ctx.guild.get_role(Roles.LG_VIVANT.value).mention}\n━━━━━━━━━━━━━━━━━━━━━", username=ctx.author.name, avatar_url=ctx.author.avatar.url) # type: ignore
+        await self.bot.get_channel(GlobalChannel.ANNONCES_VILLAGE.value).send(f"━━━━━━━━━━━━━━━━━━━━━\n⏲ | Fin du Jour {jour} à {heure} {ctx.guild.get_role(Roles.LG_VIVANT.value).mention}\n━━━━━━━━━━━━━━━━━━━━━") # type: ignore
         await ctx.respond("Message envoyé !", ephemeral=True)
 
 
@@ -383,6 +383,19 @@ class LG(commands.Cog):
                 else:
                     await webhook.send(contents[0], username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else "https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png", files=message.attachments) # type: ignore
                 self.LAST_MESSAGE_SENDER = message.author.id
+
+    @commands.Cog.listener("on_raw_reaction_add")
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
+        if payload.channel_id == Channels.JUGE.value:
+            if payload.emoji.name == "one":
+                message = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
+                await message.delete()
+            if payload.emoji.name == "two":
+                message = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
+                await message.delete()
+            if payload.emoji.name == "❌":
+                message = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
+                await message.delete()
 
 
 def setup(bot):
