@@ -43,6 +43,16 @@ class Channels(Enum):
     ANCIEN = 731834915183656982
     CONFESSEUR = 732180904021065789
 
+class GameRoles(Enum):
+    LOUP = "Loup"
+    LOUP_BLANC = "Loup Blanc"
+    LOUP_ANONYME = "Loup Anonyme"
+    LOUP_INFECT = "Loup Infect"
+    LOUP_BAVARD = "Loup Bavard"
+    LOUP_FRUSTRE = "Loup Frustré"
+    GRAND_MECHANT_LOUP = "Grand Méchant Loup"
+    
+
 class GlobalChannel(Enum):
     ANNONCES_VILLAGE = 1184459254812381226
     VILLAGE = 1184468854433382400

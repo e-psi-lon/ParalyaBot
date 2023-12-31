@@ -1,32 +1,7 @@
 from collections import Counter
 from discord.ext import commands
 import discord
-from threading import Timer
-from games._lg import *
-
-async def get_webhook(bot, channel, name) -> discord.Webhook:
-    try:
-        webhook: discord.Webhook = await [webhook for webhook in await bot.get_channel(channel).webhooks() if webhook.name == name][0].edit(name=name) 
-    except IndexError:
-        webhook: discord.Webhook = await bot.get_channel(channel).create_webhook(name=name) 
-    return webhook
-
-
-class Message(discord.ui.Modal):
-    def __init__(self, members: list[discord.Member], callback=None, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.members = members
-        self.add_item(discord.ui.InputText(label="Message à envoyer", style=discord.InputTextStyle.long))
-        if callback is not None:
-            self.callback = callback
-
-    async def callback(self, interaction: discord.Interaction):
-        message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGNotifications ¦ {self.children[0].value}\n━━━━━━━━━━━━━━━━━━"
-        for member in self.members:
-            if member.bot:
-                continue
-            await member.send(message)
-        await interaction.response.send_message("Message envoyé !", ephemeral=True)
+from ._lg import *
 
 
 class LG(commands.Cog):
@@ -38,13 +13,16 @@ class LG(commands.Cog):
         self.village_votes: dict[str, dict[int, int] | bool | list[int] | int] = {"is_vote": False, "votes": {}, "choices": [], "corbeau": 0}
         self.loup_votes: dict[str, dict[int, int] | bool | list[int]] = {"is_vote": False, "votes": {}, "choices": []}
         self.time = "nuit"
+        self.roles = {
+            "LOUP_BAVARD": None
+        }
 
     lg = discord.SlashCommandGroup(name="lg", description="Commandes pour le Loup-Garou")
     
     @lg.command(name="notif", description="Envoie un mp d'info Loup-Garou à tout les joueurs possédant un rôle spécifique")
     @admin_only()
     async def notif(self, ctx: discord.ApplicationContext, role: discord.Role):
-        await ctx.send_modal(Message([member for member in ctx.guild.members if role.id in [role.id for role in member.roles]], title="Quel message voulez vous envoyer ?")) 
+        await ctx.send_modal(Message(members=[member for member in ctx.guild.members if role.id in [role.id for role in member.roles]], title="Quel message voulez vous envoyer ?"), callback=message_callback)
 
     @lg.command(name="interview", description="Permet d'interviewer un joueur dans le salon #annonces-village")
     @admin_only()
@@ -56,10 +34,10 @@ class LG(commands.Cog):
 
     @lg.command(name="jour", description="Permet de passer au jour suivant")
     @admin_only()
-    async def day(self, ctx: discord.ApplicationContext):
+    async def day(self, ctx: discord.ApplicationContext, force: discord.Option(bool, description="Force le passage au jour", required=False, default=False)):
         await ctx.response.defer()
         if self.time == "jour":
-            return await ctx.respond("Vous ne pouvez pas lancer un jour alors qu'un jour est déjà en cours", delete_after=10)
+            return await ctx.respond("Vous ne pouvez pas lancer un jour alors qu'un jour est déjà en cours", ephemeral=True)
         self.village_votes["is_vote"] = True
         self.village_votes["votes"] = {}
         self.loup_votes["is_vote"] = False
@@ -75,16 +53,17 @@ class LG(commands.Cog):
             max_votes = max(votes_count.values())
             # On cherche les joueurs qui ont le max
             max_votes_player = [player for player, votes in votes_count.items() if votes == max_votes]
-            if len(max_votes_player) > 1:
+            if len(max_votes_player) > 1 and not force:
                 await ctx.guild.get_channel(Channels.LOUP_VOTE.value).send("Il y a une égalité, décidez vous sur qui tuer : " + ", ".join([ctx.guild.get_member(player).mention for player in max_votes_player])) 
                 self.loup_votes["votes"] = {}
                 self.loup_votes["choices"] = max_votes_player
                 self.loup_votes["is_vote"] = True
                 return await ctx.respond("Un second vote est donc lancé !", ephemeral=True)
-            # On le tue
-            await ctx.guild.get_member(max_votes_player).add_roles(ctx.guild.get_role(Roles.LG_MORT.value), reason="Joueur tué") 
-            await ctx.guild.get_member(max_votes_player).remove_roles(ctx.guild.get_role(Roles.LG_VIVANT.value), reason="Joueur tué") 
-            await ctx.send(f"{ctx.guild.get_member(max_votes_player).name} a été tué !", ephemeral=True) 
+            if len(max_votes_player) == 1:
+                # On le tue
+                await ctx.guild.get_member(max_votes_player).add_roles(ctx.guild.get_role(Roles.LG_MORT.value), reason="Joueur tué") 
+                await ctx.guild.get_member(max_votes_player).remove_roles(ctx.guild.get_role(Roles.LG_VIVANT.value), reason="Joueur tué") 
+                await ctx.send(f"{ctx.guild.get_member(max_votes_player).name} a été tué !", ephemeral=True) 
         self.loup_votes["choices"] = []
         self.time = "jour"
         await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=True, view_channel=True, reason="Passage au jour") 
@@ -101,10 +80,10 @@ class LG(commands.Cog):
 
     @lg.command(name="nuit", description="Permet de passer à la nuit suivante")
     @admin_only()
-    async def night(self, ctx: discord.ApplicationContext):
+    async def night(self, ctx: discord.ApplicationContext, force: discord.Option(bool, description="Force le passage à la nuit", required=False, default=False)):
         await ctx.response.defer()
         if self.time == "nuit":
-            return await ctx.respond("Vous ne pouvez pas lancer une nuit alors qu'une nuit est déjà en cours", delete_after=10)
+            return await ctx.respond("Vous ne pouvez pas lancer une nuit alors qu'une nuit est déjà en cours", ephemeral=True)
         # On compte les votes
         self.loup_votes["is_vote"] = True
         self.loup_votes["votes"] = {}
@@ -121,17 +100,17 @@ class LG(commands.Cog):
             # On cherche les joueurs qui ont le max
             max_votes_player = [player for player, votes in votes_count.items() if votes == max_votes]
             # On regarde si il y a une égalité
-            if len(max_votes_player) > 1:
+            if len(max_votes_player) > 1 and not force:
                 await ctx.guild.get_channel(GlobalChannel.VOTE.value).send("Il y a une égalité, les membres suivants sont donc en sursis pour le second vote : " + ", ".join([ctx.guild.get_member(player).mention for player in max_votes_player])) 
                 self.village_votes["votes"] = {}
                 self.village_votes["choices"] = max_votes_player
                 self.village_votes["is_vote"] = True
                 self.village_votes["corbeau"] = 0
                 return await ctx.respond("Un second vote est donc lancé !", ephemeral=True)
-            await ctx.guild.get_member(max_votes_player[0]).add_roles(ctx.guild.get_role(Roles.LG_MORT.value), reason="Joueur tué") 
-            await ctx.guild.get_member(max_votes_player[0]).remove_roles(ctx.guild.get_role(Roles.LG_VIVANT.value), reason="Joueur tué") 
-            await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True) 
-            # On reset les votes
+            if len(max_votes_player) == 1:
+                await ctx.guild.get_member(max_votes_player[0]).add_roles(ctx.guild.get_role(Roles.LG_MORT.value), reason="Joueur tué") 
+                await ctx.guild.get_member(max_votes_player[0]).remove_roles(ctx.guild.get_role(Roles.LG_VIVANT.value), reason="Joueur tué") 
+                await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True) 
         self.village_votes["choices"] = []
         self.time = "nuit"
         await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).send("----------") 
@@ -172,16 +151,16 @@ class LG(commands.Cog):
     async def vote_village(self, ctx: discord.ApplicationContext, member: discord.Member, reason: discord.Option(str, description="La raison du vote", required=False)): 
         if ctx.channel.id == Channels.CORBEAU.value: 
             if self.village_votes["corbeau"] != 0:
-                return await ctx.respond("Vous avez déjà voté !", delete_after=10)
+                return await ctx.respond("Vous avez déjà voté !", ephemeral=True)
             self.village_votes["corbeau"] = member.id 
             await ctx.respond(f"Vous avez voté contre {member.name} !", ephemeral=True)
             return
         if ctx.channel.id != GlobalChannel.VOTE.value: 
-            return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
+            return await ctx.respond("Vous ne pouvez pas voter ici !", ephemeral=True)
         if self.village_votes["choices"] != [] and member.id not in self.village_votes["choices"]: 
-            return await ctx.respond("Ce joueur n'est pas dans les choix !", delete_after=10)
+            return await ctx.respond("Ce joueur n'est pas dans les choix !", ephemeral=True)
         if not self.village_votes["is_vote"]:
-            return await ctx.respond("Aucun vote n'est actuellement en cours", delete_after=10)
+            return await ctx.respond("Aucun vote n'est actuellement en cours", ephemeral=True)
         if ctx.author.id in self.village_votes["votes"].keys(): 
             deja_vote = True
         else:
@@ -206,11 +185,11 @@ class LG(commands.Cog):
     @check_valid_vote
     async def vote_loup(self, ctx: discord.ApplicationContext, member: discord.Member, reason: discord.Option(str, description="La raison du vote", required=False)): 
         if ctx.channel.id != Channels.LOUP_VOTE.value: 
-            return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
+            return await ctx.respond("Vous ne pouvez pas voter ici !", ephemeral=True)
         if self.loup_votes["choices"] != [] and member.id not in self.loup_votes["choices"]: 
-            return await ctx.respond("Ce joueur n'est pas dans les choix !", delete_after=10)
+            return await ctx.respond("Ce joueur n'est pas dans les choix !", ephemeral=True)
         if not self.loup_votes["is_vote"]:
-            return await ctx.respond("Aucun vote n'est actuellement en cours", delete_after=10)
+            return await ctx.respond("Aucun vote n'est actuellement en cours", ephemeral=True)
         if ctx.author.id in self.loup_votes["votes"].keys(): 
             deja_vote = True
         else:
@@ -237,9 +216,9 @@ class LG(commands.Cog):
     @admin_only()
     async def most_voted(self, ctx: discord.ApplicationContext): 
         if ctx.channel.id != GlobalChannel.VOTE.value: 
-            return await ctx.respond("Vous ne pouvez pas utiliser cette commande ici !", delete_after=10)
+            return await ctx.respond("Vous ne pouvez pas utiliser cette commande ici !", ephemeral=True)
         if not self.village_votes["is_vote"]: 
-            return await ctx.respond("Aucun vote n'est en cours !", delete_after=10)
+            return await ctx.respond("Aucun vote n'est en cours !", ephemeral=True)
         votes_count = Counter(self.village_votes["votes"].values())
         # Si il y a vote du corbeau on l'ajoute
         if self.village_votes["corbeau"] != 0:
@@ -255,7 +234,7 @@ class LG(commands.Cog):
             for player in max_votes_player:
                 await ctx.guild.get_member(player).send(f"Vous êtes l'un des joueurs les plus votés ! Vous avez {max_votes} votes ! Défendez vous !") 
         await ctx.guild.get_member(max_votes_player).send(f"Vous êtes le joueur le plus voté ! Vous avez {max_votes} votes ! Défendez vous !") 
-        
+    
 
     @lg.command(name="unvote", description="Permet d'annuler son vote")
     async def unvote(self, ctx: discord.ApplicationContext):
@@ -268,22 +247,22 @@ class LG(commands.Cog):
             vote_key, vote_dict = channel_votes_map[ctx.channel.id]
             if vote_key == "corbeau":
                 if vote_dict[vote_key] == 0:
-                    return await ctx.respond("Vous n'avez pas voté !", delete_after=10)
+                    return await ctx.respond("Vous n'avez pas voté !", ephemeral=True)
                 vote_dict[vote_key] = 0
             else:
                 if ctx.author.id not in vote_dict[vote_key]:
-                    return await ctx.respond("Vous n'avez pas voté !", delete_after=10)
+                    return await ctx.respond("Vous n'avez pas voté !", ephemeral=True)
                 vote_dict[vote_key].pop(ctx.author.id, None)
             await ctx.respond("Votre vote a été annulé !", ephemeral=True)
         else:
-            return await ctx.respond("Vous ne pouvez pas voter ici !", delete_after=10)
+            return await ctx.respond("Vous ne pouvez pas voter ici !", ephemeral=True)
 
 
     @lg.command(name="vote-list", description="Permet de voir les votes en cours")
     async def vote_list(self, ctx: discord.ApplicationContext):
         if ctx.channel.id in [GlobalChannel.VILLAGE.value, GlobalChannel.VOTE.value]: 
             if not self.village_votes["is_vote"]: 
-                return await ctx.respond("Aucun vote n'est en cours !", delete_after=10)
+                return await ctx.respond("Aucun vote n'est en cours !", ephemeral=True)
             message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGVote ¦ Vote du village\n━━━━━━━━━━━━━━━━━━\n"
             # On affiche vote : nombre de votes (voteurs)4
             votes_count = Counter(self.village_votes['votes'].values())
@@ -301,7 +280,7 @@ class LG(commands.Cog):
             await ctx.respond(embed=discord.Embed(title="Votes", description=message), ephemeral=True)
         elif ctx.channel.id in [Channels.LOUP_CHAT.value, Channels.LOUP_VOTE.value]: 
             if not self.loup_votes["is_vote"]:
-                return await ctx.respond("Aucun vote n'est en cours !", delete_after=10)
+                return await ctx.respond("Aucun vote n'est en cours !", ephemeral=True)
             message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGVote ¦ Vote des loups\n━━━━━━━━━━━━━━━━━━\n"
             # On affiche vote : nombre de votes (voteurs)
             votes_count = Counter(self.loup_votes['votes'].values())
@@ -312,7 +291,7 @@ class LG(commands.Cog):
                 message += f"{member} : {vote_count} vote{'s' if vote_count > 1 else ''} {'(' + ', '.join(voters) + ')' if len(voters) > 0 else ''}\n"
             await ctx.respond(embed=discord.Embed(title="Votes", description=message), ephemeral=True)
         else:
-            return await ctx.respond("Vous ne pouvez pas effectuer cette commande ici !", delete_after=10)
+            return await ctx.respond("Vous ne pouvez pas effectuer cette commande ici !", ephemeral=True)
         
     @lg.command(name="findujour", description="Envoie un message pour prévenir que le jour va se terminer")
     @admin_only()
@@ -320,11 +299,29 @@ class LG(commands.Cog):
         await self.bot.get_channel(GlobalChannel.ANNONCES_VILLAGE.value).send(f"━━━━━━━━━━━━━━━━━━━━━\n⏲ | Fin du Jour {jour} à {heure} {ctx.guild.get_role(Roles.LG_VIVANT.value).mention}\n━━━━━━━━━━━━━━━━━━━━━") 
         await ctx.respond("Message envoyé !", ephemeral=True)
 
+    
+    @lg.command(name="setrole", description="Permet de définir un rôle")
+    @admin_only()
+    async def setrole(self, ctx: discord.ApplicationContext, role: discord.Option(GameRoles, description="Le rôle à définir", required=True), member: discord.Option(discord.Member, description="Le membre à qui définir le rôle", required=True)):
+        match role: 
+            case GameRoles.LOUP_BAVARD:
+                self.roles["LOUP_BAVARD"] = LoupBavard(member.id, self.bot)
+                await ctx.respond("Rôle défini !", ephemeral=True)
+            case _:
+                await ctx.respond("Ce rôle n'est pas encore implémenté !", ephemeral=True)
+
+    @lg.command(name="setmot", description="Permet de définir le mot du loup bavard")
+    @admin_only()
+    async def setmot(self, ctx: discord.ApplicationContext, mot: discord.Option(str, description="Le mot à définir", required=True)):
+        if self.roles["LOUP_BAVARD"] is None:
+            return await ctx.respond("Le rôle n'est pas défini !", ephemeral=True)
+        self.roles["LOUP_BAVARD"].mot_actuel = mot
+        await ctx.respond("Mot défini !", ephemeral=True)
 
     @commands.Cog.listener("on_message")
     async def on_message(self, message: discord.Message): 
         guild = message.guild
-        if guild is None and message.content != "" and message.content is not None:
+        if guild is None and message.content != "" and message.content is not None and message.author.id != self.bot.user.id:
             # On envoie le message avec un webhook dans le channel AdminChannel.MP
             webhook = await get_webhook(self.bot, AdminChannel.MP.value, "MP")
             await webhook.send(message.content, username=message.author.name, avatar_url=message.author.avatar.url) 
@@ -338,6 +335,17 @@ class LG(commands.Cog):
             self.interview.remove(message.author.id)
             await message.channel.set_permissions(message.author, send_messages=False) 
             return
+        if message.channel.id == GlobalChannel.VILLAGE.value and message.author.id == self.roles['LOUP_BAVARD'].player_id:
+            # Si le message contient le mot
+            if self.roles['LOUP_BAVARD'].mot_actuel in message.content:
+                self.roles['LOUP_BAVARD'].mots_places += 1
+                self.roles['LOUP_BAVARD'].mot_place = True
+                if self.roles['LOUP_BAVARD'].mots_places == 3:
+                    await self.bot.get_channel(Channels.LOUP_BAVARD.value).send(f"<@{Users.LUXIO.value}> Le loup bavard a placé son mot 3 fois ! Il a donc droit à l'identité d'un joueur aléatoire !")
+                    self.roles['LOUP_BAVARD'].mots_places = 0
+                    self.roles['LOUP_BAVARD'].mot_actuel = None
+                    self.roles['LOUP_BAVARD'].mot_place = False
+                    return
         if message.channel.id == Channels.LOUP_CHAT.value and message.author.id not in [self.bot.user.id, Users.LUXIO.value] and not message.author.bot: 
             if message.content.startswith("!") or message.content.startswith("/"):
                 return
