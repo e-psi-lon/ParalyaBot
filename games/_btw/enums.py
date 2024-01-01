@@ -1,10 +1,5 @@
 from enum import Enum
 
-class Actions(Enum):
-    ATTACK = "Attaquer une équipe"
-    OPEN = "Ouvrir une caisse"
-    USE = "Utiliser un objet/sort de l'inventaire"
-    BUY = "Acheter un sort à utiliser immédiatement"
 
 """class Teams(Enum):
     EQUIPE_1 = 987306226805256192

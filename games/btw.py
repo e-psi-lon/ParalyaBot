@@ -9,18 +9,18 @@ class BTW(commands.Cog):
     btw = discord.SlashCommandGroup(name="btw", description="Commandes pour le Battery War")
 
     @btw.command(name="action", description="Faire une action dans le Battery War")
-    async def action(self, ctx: discord.ApplicationContext, action: discord.Option(Actions, description="L'action à faire", required=True)):
+    async def action(self, ctx: discord.ApplicationContext, action: discord.Option(str, description="L'action à faire", required=True, choices=[discord.OptionChoice("Attaquer une équipe", "ATTACK"), discord.OptionChoice("Ouvrir une caisse", "OPEN"), discord.OptionChoice("Utiliser un objet/sort de l'inventaire", "USE"), discord.OptionChoice("Acheter un sort à utiliser immédiatement", "BUY")])): 
         if not isinstance(ctx.channel, discord.Thread):
             await ctx.respond("Vous devez utiliser cette commande dans un thread d'équipe.", ephemeral=True)
             return
         match action:
-            case Actions.ATTACK:
+            case "ATTACK":
                 await ctx.respond("Attaque", view=Attack(ctx))
-            case Actions.OPEN:
+            case "OPEN":
                 await ctx.respond("Ouverture", view=Open(ctx))
-            case Actions.USE:
+            case "USE":
                 await ctx.respond("Utilisation", view=Use(ctx))
-            case Actions.BUY:
+            case "BUY":
                 await ctx.respond("Achat", view=Buy(ctx))
 
     

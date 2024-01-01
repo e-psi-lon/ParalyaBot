@@ -43,7 +43,7 @@ class Attack(discord.ui.View):
             return
         await interaction.response.send_message("Vous attaquez furtivement.", ephemeral=True)
         webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "BTW")
-        await webhook.send(f"J'attaque l'{interaction.guild.get_channel(int(self.team)).name} furtivement !", username=interaction.user.display_name, avatar_url=interaction.user.display_avatar.url)
+        await webhook.send(f"J'attaque l'{interaction.guild.get_channel(int(self.team)).name} furtivement !", username=interaction.user.display_name, avatar_url=interaction.user.display_avatar.url, thread=self.ctx.channel)
         await interaction.message.delete()
         
 
@@ -55,7 +55,7 @@ class Attack(discord.ui.View):
         await interaction.response.send_message("Vous attaquez anonymement.", ephemeral=True)
         await interaction.message.edit(view=None)
         webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "BTW")
-        await webhook.send(f"J'attaque l'{interaction.guild.get_channel(int(self.team)).name} furtivement !", username=interaction.user.display_name, avatar_url=interaction.user.display_avatar.url)
+        await webhook.send(f"J'attaque l'{interaction.guild.get_channel(int(self.team)).name} furtivement !", username=interaction.user.display_name, avatar_url=interaction.user.display_avatar.url, thread=self.ctx.channel)
         await interaction.message.delete()
         
 
