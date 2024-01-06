@@ -54,7 +54,8 @@ class LG(commands.Cog):
             # On cherche les joueurs qui ont le max
             max_votes_player = [player for player, votes in votes_count.items() if votes == max_votes]
             if len(max_votes_player) > 1 and not force:
-                await ctx.guild.get_channel(Channels.LOUP_VOTE.value).send("Il y a une égalité, décidez vous sur qui tuer : " + ", ".join([ctx.guild.get_member(player).mention for player in max_votes_player])) 
+                webhook = await get_webhook(self.bot, Channels.LOUP_VOTE.value, "🐺")
+                await webhook.send("Il y a une égalité, décidez vous sur qui tuer : " + ", ".join([ctx.guild.get_member(player).mention for player in max_votes_player]), username="ParalyaLG", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1193221549919047710/ParalyaLG.webp")
                 self.loup_votes["votes"] = {}
                 self.loup_votes["choices"] = max_votes_player
                 self.loup_votes["is_vote"] = True
@@ -101,7 +102,8 @@ class LG(commands.Cog):
             max_votes_player = [player for player, votes in votes_count.items() if votes == max_votes]
             # On regarde si il y a une égalité
             if len(max_votes_player) > 1 and not force:
-                await ctx.guild.get_channel(GlobalChannel.VOTE.value).send("Il y a une égalité, les membres suivants sont donc en sursis pour le second vote : " + ", ".join([ctx.guild.get_member(player).mention for player in max_votes_player])) 
+                webhook = await get_webhook(self.bot, GlobalChannel.VOTE.value, "🐺")
+                await webhook.send("Il y a une égalité, les membres suivants sont donc en sursis pour le second vote : " + ", ".join([ctx.guild.get_member(player).mention for player in max_votes_player]), username="ParalyaLG", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1193221549919047710/ParalyaLG.webp")
                 self.village_votes["votes"] = {}
                 self.village_votes["choices"] = max_votes_player
                 self.village_votes["is_vote"] = True
@@ -113,11 +115,13 @@ class LG(commands.Cog):
                 await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True) 
         self.village_votes["choices"] = []
         self.time = "nuit"
-        await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).send("----------") 
+        webhook = await get_webhook(self.bot, GlobalChannel.VILLAGE.value, "🐺")
+        await webhook.send("----------", username="ParalyaLG")
         await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, view_channel=True, reason="Passage à la nuit") 
-        await ctx.guild.get_channel(GlobalChannel.VOTE.value).send("----------")  
+        webhook = await get_webhook(self.bot, GlobalChannel.VOTE.value, "🐺")
+        await webhook.send("----------", username="ParalyaLG")
         if self.village_votes["corbeau"] != 0:
-            webhook = await get_webhook(self.bot, GlobalChannel.VOTE.value, "Vote")
+            webhook = await get_webhook(self.bot, GlobalChannel.VOTE.value, "🐺")
             await webhook.send(f"Je vote contre <@{self.village_votes['corbeau']}> (+**2** votes)", username="🐦‍⬛ Corbeau", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1185951750461599896/black_bird.png")
         self.village_votes["corbeau"] = 0
         await ctx.guild.get_channel(GlobalChannel.VOTE.value).set_permissions(ctx.guild.get_role(Roles.LG_VIVANT.value), send_messages=False, view_channel=True, reason="Passage à la nuit")  
@@ -167,7 +171,7 @@ class LG(commands.Cog):
             deja_vote = False
         self.village_votes["votes"][ctx.author.id] = member.id 
         await ctx.respond(f"Vous avez voté contre {member.name} !", ephemeral=True)
-        webhook = await get_webhook(self.bot, GlobalChannel.VOTE.value, "Vote")
+        webhook = await get_webhook(self.bot, GlobalChannel.VOTE.value, "🐺")
         if deja_vote:
             await webhook.send(f"J'ai changé mon vote, je vote maintenant contre {member.mention} {'car '+ reason if reason is not None else ''}", username=ctx.author.display_name, avatar_url=ctx.author.display_avatar.url) 
         else:
@@ -196,7 +200,7 @@ class LG(commands.Cog):
             deja_vote = False
         self.loup_votes["votes"][ctx.author.id] = member.id 
         await ctx.respond(f"Vous avez voté contre {member.name} !", ephemeral=True)
-        webhook = await get_webhook(self.bot, Channels.LOUP_VOTE.value, "Vote")
+        webhook = await get_webhook(self.bot, Channels.LOUP_VOTE.value, "🐺")
         if deja_vote:
             await webhook.send(f"J'ai changé mon vote, je vote maintenant contre {member.mention} {'car '+ reason if reason is not None else ''}", username=ctx.author.display_name, avatar_url=ctx.author.display_avatar.url) 
         else:
@@ -296,7 +300,8 @@ class LG(commands.Cog):
     @lg.command(name="findujour", description="Envoie un message pour prévenir que le jour va se terminer")
     @admin_only()
     async def findujour(self, ctx: discord.ApplicationContext, jour: discord.Option(int, description="Le jour en cours", required=True), heure: discord.Option(str, description="L'heure à laquelle le jour se terminera", required=True)): 
-        await self.bot.get_channel(GlobalChannel.ANNONCES_VILLAGE.value).send(f"━━━━━━━━━━━━━━━━━━━━━\n⏲ | Fin du Jour {jour} à {heure} {ctx.guild.get_role(Roles.LG_VIVANT.value).mention}\n━━━━━━━━━━━━━━━━━━━━━") 
+        webhook = await get_webhook(self.bot, GlobalChannel.ANNONCES_VILLAGE.value, "🐺")
+        await webhook.send(f"━━━━━━━━━━━━━━━━━━━━━\n⏲ | Fin du Jour {jour} à {heure} {ctx.guild.get_role(Roles.LG_VIVANT.value).mention}\n━━━━━━━━━━━━━━━━━━━━━", username="ParalyaLG", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1193221549919047710/ParalyaLG.webp")
         await ctx.respond("Message envoyé !", ephemeral=True)
 
     
@@ -341,7 +346,8 @@ class LG(commands.Cog):
                 self.roles['LOUP_BAVARD'].mots_places += 1
                 self.roles['LOUP_BAVARD'].mot_place = True
                 if self.roles['LOUP_BAVARD'].mots_places == 3:
-                    await self.bot.get_channel(Channels.LOUP_BAVARD.value).send(f"<@{Users.LUXIO.value}> Le loup bavard a placé son mot 3 fois ! Il a donc droit à l'identité d'un joueur aléatoire !")
+                    webhook = await get_webhook(self.bot, Channels.LOUP_BAVARD.value, "🐺")
+                    await webhook.send(f"<@{Users.LUXIO.value}> Le loup bavard a placé son mot 3 fois ! Il a donc droit à l'identité d'un joueur aléatoire !", username="ParalyaLG", avatar_url="https://media.discordapp.net/attachments/939233865350938644/1193221549919047710/ParalyaLG.webp")
                     self.roles['LOUP_BAVARD'].mots_places = 0
                     self.roles['LOUP_BAVARD'].mot_actuel = None
                     self.roles['LOUP_BAVARD'].mot_place = False

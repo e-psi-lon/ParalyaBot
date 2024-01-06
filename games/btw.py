@@ -15,13 +15,13 @@ class BTW(commands.Cog):
             return
         match action:
             case "ATTACK":
-                await ctx.respond("Attaque", view=Attack(ctx))
+                await ctx.respond("Attaquer une équipe\nVeuillez sélectionner l'équipe que vous souhaitez attaquer puis le type d'attaque (anonymement  __ou__ furtivement)", view=Attack(ctx))
             case "OPEN":
-                await ctx.respond("Ouverture", view=Open(ctx))
+                await ctx.respond("Ouverture d'une caisse\nVous avez le choix entre une caisse de tier 1 ou de tier 2", view=Open(ctx))
             case "USE":
-                await ctx.respond("Utilisation", view=Use(ctx))
+                await ctx.response.send_modal(Use(ctx))
             case "BUY":
-                await ctx.respond("Achat", view=Buy(ctx))
+                await ctx.respond("Achat d'un objet/sort à utiliser immédiatement", view=Buy(ctx))
 
     
     @btw.command(name="annonce", description="Annoncer un message")

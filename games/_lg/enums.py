@@ -1,4 +1,5 @@
 from enum import Enum
+from shared.enums import Users
 
 class Channels(Enum):
     LOUP_CHAT = 731835704782487592
@@ -65,9 +66,6 @@ class Roles(Enum):
 
 class AdminChannel(Enum):
     MP = 1184885725221625866
-
-class Users(Enum):
-    LUXIO = 265178325381677059
 
 class VoteType(Enum):
     VILLAGE = 0

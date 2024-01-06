@@ -1,4 +1,5 @@
 from enum import Enum
+from shared.enums import Users
 
 
 """class Teams(Enum):
