@@ -78,18 +78,12 @@ class Open(discord.ui.View):
 
 
 class Use(discord.ui.Modal):
-    def __init__(self, ctx: discord.ApplicationContext, error=False, object="", *args, **kwargs):
+    def __init__(self, ctx: discord.ApplicationContext, *args, **kwargs):
         super().__init__(title="Utiliser un objet/sort", *args, **kwargs)
         self.ctx = ctx
         self.teams = list(Teams)
-        if error:
-            self.add_item(discord.ui.InputText(label="Objet/sort à utiliser", style=discord.InputTextStyle.short, value=object))
-            self.add_item(discord.ui.InputText(label="Équipe ciblée. Entrez un nombre valide", style=discord.InputTextStyle.singleline, max_length=1, required=False))
-            print()
-        else:
-            self.add_item(discord.ui.InputText(label="Objet/sort à utiliser", style=discord.InputTextStyle.short))
-            self.add_item(discord.ui.InputText(label="Équipe ciblée", style=discord.InputTextStyle.singleline, max_length=1, required=False))
-        print(self.to_dict())
+        self.add_item(discord.ui.InputText(label="Objet/sort à utiliser", style=discord.InputTextStyle.short))
+        self.add_item(discord.ui.InputText(label="Équipe ciblée", style=discord.InputTextStyle.singleline, max_length=1, required=False))
 
 
     async def callback(self, interaction: discord.Interaction):
@@ -103,8 +97,7 @@ class Use(discord.ui.Modal):
                 team = int(team)
                 team = self.teams[team-1].value
             else:
-                new_modal = Use(self.ctx, error=True, object=obj)
-                await interaction.response.send_modal(new_modal)
+                await interaction.response.send_message("Équipe invalide", ephemeral=True)
                 return
         webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "🔋")
         # Si c'est sur l'équipe de l'utilisateur
@@ -119,18 +112,12 @@ class Use(discord.ui.Modal):
 
 
 class Buy(discord.ui.Modal):
-    def __init__(self, ctx: discord.ApplicationContext, error=False, object="", *args, **kwargs):
+    def __init__(self, ctx: discord.ApplicationContext, *args, **kwargs):
         super().__init__(title="Achat d'objet/sort à utiliser immédiatement", *args, **kwargs)
         self.ctx = ctx
         self.teams = list(Teams)
-        if error:
-            self.add_item(discord.ui.InputText(label="Objet/sort à acheter", style=discord.InputTextStyle.short, value=object))
-            self.add_item(discord.ui.InputText(label="Équipe ciblée. Entrez un nombre valide", style=discord.InputTextStyle.singleline, max_length=1, required=False))
-            print()
-        else:
-            self.add_item(discord.ui.InputText(label="Objet/sort à acheter", style=discord.InputTextStyle.short))
-            self.add_item(discord.ui.InputText(label="Équipe ciblée", style=discord.InputTextStyle.singleline, max_length=1, required=False))
-        print(self.to_dict())
+        self.add_item(discord.ui.InputText(label="Objet/sort à acheter", style=discord.InputTextStyle.short))
+        self.add_item(discord.ui.InputText(label="Équipe ciblée", style=discord.InputTextStyle.singleline, max_length=1, required=False))
     
     async def callback(self, interaction: discord.Interaction):
         obj = self.children[0].value
@@ -143,8 +130,7 @@ class Buy(discord.ui.Modal):
                 team = int(team)
                 team = self.teams[team-1].value
             else:
-                new_modal = Buy(self.ctx, error=True, object=obj)
-                await interaction.response.send_modal(new_modal)
+                await interaction.response.send_message("Équipe invalide", ephemeral=True)
                 return
         webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "🔋")
         # Si c'est sur l'équipe de l'utilisateur
