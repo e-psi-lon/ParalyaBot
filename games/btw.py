@@ -21,7 +21,7 @@ class BTW(commands.Cog):
             case "USE":
                 await ctx.response.send_modal(Use(ctx))
             case "BUY":
-                await ctx.respond("Achat d'un objet/sort à utiliser immédiatement", view=Buy(ctx))
+                await ctx.response.send_modal(Buy(ctx))
 
     
     @btw.command(name="annonce", description="Annoncer un message")

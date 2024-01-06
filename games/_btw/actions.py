@@ -106,7 +106,7 @@ class Use(discord.ui.Modal):
                 new_modal = Use(self.ctx, error=True, object=obj)
                 await interaction.response.send_modal(new_modal)
                 return
-        webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "BTW")
+        webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "🔋")
         # Si c'est sur l'équipe de l'utilisateur
         if team == self.ctx.channel.parent_id:
             await webhook.send(f"J'utilise l'objet **{obj}**", username=interaction.user.display_name, avatar_url=interaction.user.display_avatar.url, thread=self.ctx.channel)
@@ -118,7 +118,39 @@ class Use(discord.ui.Modal):
 
 
 
-class Buy(discord.ui.View):
-    def __init__(self, ctx: discord.ApplicationContext, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+class Buy(discord.ui.Modal):
+    def __init__(self, ctx: discord.ApplicationContext, error=False, object="", *args, **kwargs):
+        super().__init__(title="Achat d'objet/sort à utiliser immédiatement", *args, **kwargs)
         self.ctx = ctx
+        self.teams = list(Teams)
+        if error:
+            self.add_item(discord.ui.InputText(label="Objet/sort à acheter", style=discord.InputTextStyle.short, value=object))
+            self.add_item(discord.ui.InputText(label="Équipe ciblée. Entrez un nombre valide", style=discord.InputTextStyle.singleline, max_length=1, required=False))
+            print()
+        else:
+            self.add_item(discord.ui.InputText(label="Objet/sort à acheter", style=discord.InputTextStyle.short))
+            self.add_item(discord.ui.InputText(label="Équipe ciblée", style=discord.InputTextStyle.singleline, max_length=1, required=False))
+        print(self.to_dict())
+    
+    async def callback(self, interaction: discord.Interaction):
+        obj = self.children[0].value
+        team = self.children[1].value
+        # S'il n'y a pas de team, la team est celle de l'utilisateur
+        if not team:
+            team = self.ctx.channel.parent_id
+        else:
+            if team.isdigit() and int(team) <= len(self.teams):
+                team = int(team)
+                team = self.teams[team-1].value
+            else:
+                new_modal = Buy(self.ctx, error=True, object=obj)
+                await interaction.response.send_modal(new_modal)
+                return
+        webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "🔋")
+        # Si c'est sur l'équipe de l'utilisateur
+        if team == self.ctx.channel.parent_id:
+            await webhook.send(f"J'achète l'objet **{obj}** et l'utilise", username=interaction.user.display_name, avatar_url=interaction.user.display_avatar.url, thread=self.ctx.channel)
+            await interaction.response.send_message(f"Vous achetez l'objet **{obj}** et l'utilise !", ephemeral=True)
+        else:
+            await webhook.send(f"J'achète l'objet **{obj}** et l'utilise contre l'{self.ctx.guild.get_channel(team).name.replace('-', '')} !", username=interaction.user.display_name, avatar_url=interaction.user.display_avatar.url, thread=self.ctx.channel)
+            await interaction.response.send_message(f"Vous achetez l'objet **{obj}** et l'utilise contre l'{self.ctx.guild.get_channel(team).name} !", ephemeral=True)
