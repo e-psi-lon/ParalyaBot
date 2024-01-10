@@ -97,7 +97,7 @@ class Use(discord.ui.Modal):
                 team = int(team)
                 team = self.teams[team-1].value
             else:
-                await interaction.response.send_message("Équipe invalide", ephemeral=True)
+                await interaction.response.send_message("Équipe invalide", ephemeral=True, view=Retry(self.__class__, self.ctx))
                 return
         webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "🔋")
         # Si c'est sur l'équipe de l'utilisateur
@@ -130,7 +130,7 @@ class Buy(discord.ui.Modal):
                 team = int(team)
                 team = self.teams[team-1].value
             else:
-                await interaction.response.send_message("Équipe invalide", ephemeral=True)
+                await interaction.response.send_message("Équipe invalide", ephemeral=True, view=Retry(self.__class__, self.ctx))
                 return
         webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "🔋")
         # Si c'est sur l'équipe de l'utilisateur

@@ -25,3 +25,15 @@ async def get_webhook(bot, channel, name) -> discord.Webhook:
     except IndexError:
         webhook: discord.Webhook = await bot.get_channel(channel).create_webhook(name=name) 
     return webhook
+
+
+class Retry(discord.ui.View):
+    def __init__(self, modal: discord.ui.Modal, *args, **kwargs):
+        super().__init__(timeout=None)
+        self.modal = modal
+        self.args = args
+        self.kwargs = kwargs
+
+    @discord.ui.button(label="Réessayer", style=discord.ButtonStyle.primary)
+    async def retry(self, button: discord.ui.Button, interaction: discord.Interaction):
+        await interaction.response.send_modal(modal=self.modal(*self.args, **self.kwargs))
