@@ -1,5 +1,3 @@
-import discord
-from .enums import *
 
 class LoupBavard:
     def __init__(self, player_id, bot):
@@ -9,8 +7,5 @@ class LoupBavard:
         self.mot_actuel = None
         self.mot_place = False
 
-
     def set_mot(self, mot):
         self.mot_actuel = mot
-    
-    

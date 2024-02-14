@@ -1,5 +1,5 @@
-import discord
 from shared.utils import *
+
 
 async def message_callback(self, interaction: discord.Interaction):
     if self.notif:
@@ -9,4 +9,3 @@ async def message_callback(self, interaction: discord.Interaction):
     webhook = await get_webhook(self.bot, self.channel, "🔋")
     await webhook.send(message, username="ParalyaBTW", avatar_url="https:/")
     await interaction.response.send_message("Message envoyé !", ephemeral=True)
-    

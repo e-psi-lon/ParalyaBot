@@ -1,5 +1,7 @@
 from enum import Enum
+
 from shared.enums import Users
+
 
 class Channels(Enum):
     LOUP_CHAT = 731835704782487592
@@ -44,6 +46,7 @@ class Channels(Enum):
     ANCIEN = 731834915183656982
     CONFESSEUR = 732180904021065789
 
+
 class GameRoles(Enum):
     LOUP = "Loup"
     LOUP_BLANC = "Loup Blanc"
@@ -52,7 +55,7 @@ class GameRoles(Enum):
     LOUP_BAVARD = "Loup Bavard"
     LOUP_FRUSTRE = "Loup Frustré"
     GRAND_MECHANT_LOUP = "Grand Méchant Loup"
-    
+
 
 class GlobalChannel(Enum):
     ANNONCES_VILLAGE = 1184459254812381226
@@ -60,12 +63,15 @@ class GlobalChannel(Enum):
     VOTE = 1184827482378092574
     SUJET = 1184460057107255326
 
+
 class Roles(Enum):
-    LG_VIVANT = 709834794707714141 
+    LG_VIVANT = 709834794707714141
     LG_MORT = 709756843768938496
+
 
 class AdminChannel(Enum):
     MP = 1184885725221625866
+
 
 class VoteType(Enum):
     VILLAGE = 0

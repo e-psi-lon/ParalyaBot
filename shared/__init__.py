@@ -1,2 +1,2 @@
-from .utils import *
 from .enums import *
+from .utils import *
