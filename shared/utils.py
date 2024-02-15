@@ -15,7 +15,6 @@ class Message(discord.ui.Modal):
 
 def admin_only():
     async def predicate(ctx: discord.ApplicationContext):
-        # Une liste des valeurs d'un Enum
         if ctx.author.guild_permissions.administrator:
             return True
         else:

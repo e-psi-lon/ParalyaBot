@@ -51,11 +51,6 @@ class LG(commands.Cog):
         if len(self.loup_votes["votes"].keys()) > 0:
             votes_count = Counter(self.loup_votes["votes"].values())
             # Si il y a vote du corbeau on l'ajoute
-            if self.village_votes["corbeau"] != 0:
-                if self.village_votes["corbeau"] in votes_count.keys():
-                    votes_count[self.village_votes["corbeau"]] += 2
-                else:
-                    votes_count[self.village_votes["corbeau"]] = 2
             max_votes = max(votes_count.values())
             # On cherche les joueurs qui ont le max
             max_votes_player = [player for player, votes in votes_count.items() if votes == max_votes]
@@ -75,7 +70,7 @@ class LG(commands.Cog):
                                                                           reason="Joueur tué")
                 await ctx.guild.get_member(max_votes_player[0]).remove_roles(ctx.guild.get_role(Roles.LG_VIVANT.value),
                                                                              reason="Joueur tué")
-                await ctx.send(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True)
+                await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True)
         self.loup_votes["choices"] = []
         self.time = "jour"
         await ctx.guild.get_channel(GlobalChannel.VILLAGE.value).set_permissions(
@@ -115,7 +110,7 @@ class LG(commands.Cog):
         self.village_votes["is_vote"] = False
         if len(self.village_votes["votes"].keys()) > 0:
             votes_count = Counter(self.village_votes["votes"].values())
-            # Si il y a vote du corbeau on l'ajoute
+    # Si il y a vote du corbeau on l'ajoute
             if self.village_votes["corbeau"] != 0:
                 if self.village_votes["corbeau"] in votes_count.keys():
                     votes_count[self.village_votes["corbeau"]] += 2
