@@ -3,7 +3,7 @@ from ._lg import *
 
 
 class LG(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.interview: list = []
         self.LAST_MESSAGE_SENDER = 1
@@ -30,7 +30,7 @@ class LG(commands.Cog):
     @lg.command(name="interview", description="Permet d'interviewer un joueur dans le salon #annonces-village")
     @admin_only()
     async def interview_command(self, ctx: discord.ApplicationContext, member: discord.Member):
-        await ctx.guild.get_channel(GlobalChannel.ANNONCES_VILLAGE.value).set_permissions(member, send_messages=True)
+        await ctx.guild.get_channel(GlobalChannel.RESUME.value).set_permissions(member, send_messages=True)
         # On attends que le membre envoie un message
         await ctx.respond(f"Le channel a été ouvert pour {member.name}, vous pouvez lui poser vos questions !",
                           ephemeral=True)
@@ -308,6 +308,13 @@ class LG(commands.Cog):
         else:
             return await ctx.respond("Vous ne pouvez pas voter ici !", ephemeral=True)
 
+    @admin_only()
+    @lg.command(name="vote-reset", description="Permet de réinitialiser les votes")
+    async def vote_reset(self, ctx: discord.ApplicationContext):
+        self.village_votes = {"is_vote": False, "votes": {}, "choices": [], "corbeau": 0}
+        self.loup_votes = {"is_vote": False, "votes": {}, "choices": []}
+        await ctx.respond("Votes réinitialisés !", ephemeral=True)
+
     @lg.command(name="vote-list", description="Permet de voir les votes en cours")
     async def vote_list(self, ctx: discord.ApplicationContext):
         if ctx.channel.id in [GlobalChannel.VILLAGE.value, GlobalChannel.VOTE.value]:
@@ -383,7 +390,7 @@ class LG(commands.Cog):
             return await ctx.respond("Le rôle n'est pas défini !", ephemeral=True)
         self.roles["LOUP_BAVARD"].mot_actuel = mot
         await ctx.respond("Mot défini !", ephemeral=True)
-
+    
     @commands.Cog.listener("on_message")
     async def on_message(self, message: discord.Message):
         guild = message.guild
@@ -400,12 +407,12 @@ class LG(commands.Cog):
             await message.add_reaction("🟢")
             await message.add_reaction("🤔")
             await message.add_reaction("🔴")
-        if message.channel.id == GlobalChannel.ANNONCES_VILLAGE.value and message.author.id in self.interview:
+        if message.channel.id == GlobalChannel.RESUME.value and message.author.id in self.interview:
             self.interview.remove(message.author.id)
             await message.channel.set_permissions(message.author, send_messages=False)
             return
-        if (message.channel.id == GlobalChannel.VILLAGE.value and message.author.id ==
-                self.roles['LOUP_BAVARD'].player_id):
+        if (self.roles["LOUP_BAVARD"] is not None and 
+            message.channel.id == GlobalChannel.VILLAGE.value and message.author.id == self.roles['LOUP_BAVARD'].player_id):
             # Si le message contient le mot
             if self.roles['LOUP_BAVARD'].mot_actuel in message.content:
                 self.roles['LOUP_BAVARD'].mots_places += 1
@@ -436,15 +443,21 @@ class LG(commands.Cog):
                 if self.current_pp == 0 else ("https://media.discordapp.net/attachments/939233865350938644/"
                                               "1184890615650062356/wolf.png")
             self.LAST_MESSAGE_SENDER = message.author.id
+            answer = message.reference
+            if answer is not None and (await message.channel.fetch_message(answer.message_id)).author.id != Users.LUXIO.value:
+                answer = await message.channel.fetch_message(answer.message_id)
+                answer = discord.Embed(title="Repondre à ", description=answer.content)
             if len(contents) > 1:
                 await webhook.send(contents[0], username=username, avatar_url=avatar_url)
                 for part in contents[1:-1]:
                     await webhook.send(part, username=username, avatar_url=avatar_url)
                 await webhook.send(contents[-1], username=username, avatar_url=avatar_url,
-                                   files=message.attachments if len(message.attachments) > 0 else discord.MISSING)
+                                   files=message.attachments if len(message.attachments) > 0 else discord.MISSING,
+                                    embed=answer if isinstance(answer, discord.Embed) else discord.MISSING)
             else:
                 await webhook.send(contents[0], username=username, avatar_url=avatar_url,
-                                   files=message.attachments if len(message.attachments) > 0 else discord.MISSING)
+                                   files=message.attachments if len(message.attachments) > 0 else discord.MISSING,
+                                    embed=answer if isinstance(answer, discord.Embed) else discord.MISSING)
 
     @commands.Cog.listener("on_raw_reaction_add")
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
