@@ -312,8 +312,8 @@ class LG(commands.Cog):
     @admin_only()
     @lg.command(name="vote-reset", description="Permet de réinitialiser les votes")
     async def vote_reset(self, ctx: discord.ApplicationContext):
-        self.village_votes = {"is_vote": False, "votes": {}, "choices": [], "corbeau": 0}
-        self.loup_votes = {"is_vote": False, "votes": {}, "choices": []}
+        self.village_votes = {"is_vote": self.time == "jour", "votes": {}, "choices": [], "corbeau": 0}
+        self.loup_votes = {"is_vote": self.time == "nuit", "votes": {}, "choices": []}
         await ctx.respond("Votes réinitialisés !", ephemeral=True)
 
     @lg.command(name="vote-list", description="Permet de voir les votes en cours")
