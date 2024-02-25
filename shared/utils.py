@@ -10,7 +10,10 @@ class Message(discord.ui.Modal):
         for key, value in kwargs.items():
             setattr(self, key, value)
         self.add_item(discord.ui.InputText(label="Message à envoyer", style=discord.InputTextStyle.long))
-        self.callback = callback
+        self.callback_function = callback
+
+    async def callback(self, interaction: discord.Interaction):
+        await self.callback_function(self, interaction)
 
 
 def admin_only():
