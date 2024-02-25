@@ -9,7 +9,7 @@ class BTW(commands.Cog):
 
     @btw.command(name="action", description="Faire une action dans le Battery War")
     async def action(self, ctx: discord.ApplicationContext,
-                     action: discord.Option(str, description="L'action à faire", required=True,
+                     action: discord.Option(str, description="L'action à faire", required=True, # type: ignore
                                             choices=[discord.OptionChoice("Attaquer une équipe", "ATTACK"),
                                                      discord.OptionChoice("Ouvrir une caisse", "OPEN"),
                                                      discord.OptionChoice("Utiliser un objet/sort de l'inventaire",
@@ -36,9 +36,9 @@ class BTW(commands.Cog):
     @btw.command(name="annonce", description="Annoncer un message")
     @admin_only()
     async def annonce(self, ctx,
-                      channel: discord.Option(discord.TextChannel, description="Le salon où envoyer l'annonce",
+                      channel: discord.Option(discord.TextChannel, description="Le salon où envoyer l'annonce", # type: ignore
                                               required=True),
-                      notif: discord.Option(bool, description="Notifier les membres ?", required=False, default=False)):
+                      notif: discord.Option(bool, description="Notifier les membres ?", required=False, default=False)): # type: ignore
         await ctx.send_modal(Message(message_callback, channel=channel.id, notif=notif))
 
 

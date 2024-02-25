@@ -1,3 +1,4 @@
+from calendar import c
 from collections import Counter
 from ._lg import *
 
@@ -39,7 +40,7 @@ class LG(commands.Cog):
     @lg.command(name="jour", description="Permet de passer au jour suivant")
     @admin_only()
     async def day(self, ctx: discord.ApplicationContext,
-                  force: discord.Option(bool, description="Force le passage au jour", required=False, default=False)):
+                  force: discord.Option(bool, description="Force le passage au jour", required=False, default=False)): # type: ignore
         await ctx.response.defer()
         if self.time == "jour":
             return await ctx.respond("Vous ne pouvez pas lancer un jour alors qu'un jour est déjà en cours",
@@ -99,7 +100,7 @@ class LG(commands.Cog):
     @admin_only()
     async def night(self, ctx: discord.ApplicationContext,
                     force: discord.Option(bool, description="Force le passage à la nuit", required=False,
-                                          default=False)):
+                                          default=False)): # type: ignore
         await ctx.response.defer()
         if self.time == "nuit":
             return await ctx.respond("Vous ne pouvez pas lancer une nuit alors qu'une nuit est déjà en cours",
@@ -190,7 +191,7 @@ class LG(commands.Cog):
     @commands.cooldown(1, 30, commands.BucketType.user)
     @check_valid_vote
     async def vote_village(self, ctx: discord.ApplicationContext, member: discord.Member,
-                           reason: discord.Option(str, description="La raison du vote", required=False)):
+                           reason: discord.Option(str, description="La raison du vote", required=False)): # type: ignore
         if ctx.channel.id == Channels.CORBEAU.value:
             if self.village_votes["corbeau"] != 0:
                 return await ctx.respond("Vous avez déjà voté !", ephemeral=True)
@@ -231,7 +232,7 @@ class LG(commands.Cog):
     @commands.cooldown(1, 30, commands.BucketType.user)
     @check_valid_vote
     async def vote_loup(self, ctx: discord.ApplicationContext, member: discord.Member,
-                        reason: discord.Option(str, description="La raison du vote", required=False)):
+                        reason: discord.Option(str, description="La raison du vote", required=False)): # type: ignore
         if ctx.channel.id != Channels.LOUP_VOTE.value:
             return await ctx.respond("Vous ne pouvez pas voter ici !", ephemeral=True)
         if self.loup_votes["choices"] != [] and member.id not in self.loup_votes["choices"]:
@@ -358,8 +359,8 @@ class LG(commands.Cog):
     @lg.command(name="findujour", description="Envoie un message pour prévenir que le jour va se terminer")
     @admin_only()
     async def findujour(self, ctx: discord.ApplicationContext,
-                        jour: discord.Option(int, description="Le jour en cours", required=True),
-                        heure: discord.Option(str, description="L'heure à laquelle le jour se terminera",
+                        jour: discord.Option(int, description="Le jour en cours", required=True), # type: ignore
+                        heure: discord.Option(str, description="L'heure à laquelle le jour se terminera",  # type: ignore
                                               required=True)):
         webhook = await get_webhook(self.bot, GlobalChannel.ANNONCES_VILLAGE.value, "🐺")
         await webhook.send(
@@ -371,9 +372,9 @@ class LG(commands.Cog):
 
     @lg.command(name="setrole", description="Permet de définir un rôle")
     @admin_only()
-    async def setrole(self, ctx: discord.ApplicationContext,
-                      role: discord.Option(GameRoles, description="Le rôle à définir", required=True),
-                      member: discord.Option(discord.Member, description="Le membre à qui définir le rôle",
+    async def setrole(self, ctx: discord.ApplicationContext, 
+                      role: discord.Option(GameRoles, description="Le rôle à définir", required=True),  # type: ignore
+                      member: discord.Option(discord.Member, description="Le membre à qui définir le rôle", # type: ignore
                                              required=True)):
         match role:
             case GameRoles.LOUP_BAVARD:
@@ -385,7 +386,7 @@ class LG(commands.Cog):
     @lg.command(name="setmot", description="Permet de définir le mot du loup bavard")
     @admin_only()
     async def setmot(self, ctx: discord.ApplicationContext,
-                     mot: discord.Option(str, description="Le mot à définir", required=True)):
+                     mot: discord.Option(str, description="Le mot à définir", required=True)): # type: ignore
         if self.roles["LOUP_BAVARD"] is None:
             return await ctx.respond("Le rôle n'est pas défini !", ephemeral=True)
         self.roles["LOUP_BAVARD"].mot_actuel = mot
@@ -446,7 +447,7 @@ class LG(commands.Cog):
             answer = message.reference
             if answer is not None and (await message.channel.fetch_message(answer.message_id)).author.id != Users.LUXIO.value:
                 answer = await message.channel.fetch_message(answer.message_id)
-                answer = discord.Embed(title="Repondre à ", description=answer.content)
+                answer = discord.Embed(title="En réponse à", description=answer.content)
             if len(contents) > 1:
                 await webhook.send(contents[0], username=username, avatar_url=avatar_url)
                 for part in contents[1:-1]:
@@ -458,6 +459,33 @@ class LG(commands.Cog):
                 await webhook.send(contents[0], username=username, avatar_url=avatar_url,
                                    files=message.attachments if len(message.attachments) > 0 else discord.MISSING,
                                     embed=answer if isinstance(answer, discord.Embed) else discord.MISSING)
+                
+    
+    @commands.Cog.listener("on_message_edit")
+    async def on_message_edit(self, before: discord.Message, after: discord.Message):
+        if before.channel.id == Channels.LOUP_CHAT.value and before.content != after.content:
+            webhook = await get_webhook(self.bot, Channels.PETITE_FILLE.value, "🐺")
+            previous_content = before.content
+            new_content = after.content
+            answer = after.reference
+            if answer is not None and (await after.channel.fetch_message(answer.message_id)).author.id != Users.LUXIO.value:
+                answer = await after.channel.fetch_message(answer.message_id)
+                answer = discord.Embed(title="En réponse à", description=answer.content)
+            if len(new_content) > 2000:
+                new_content = new_content[:2000]
+            if len(previous_content) > 2000:
+                previous_content = previous_content[:2000]
+            username = "🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme"
+            avatar_url = "https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" \
+                if self.current_pp == 0 else ("https://media.discordapp.net/attachments/939233865350938644/"
+                                                "1184890615650062356/wolf.png")
+            before_content = discord.Embed(title="Modification du message", description=previous_content)
+            await webhook.send(new_content, username=username, avatar_url=avatar_url,
+                                 files=after.attachments if len(after.attachments) > 0 else discord.MISSING,
+                                 embeds = [before_content, answer] if isinstance(answer, discord.Embed) else [before_content])
+
+
+
 
     @commands.Cog.listener("on_raw_reaction_add")
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):

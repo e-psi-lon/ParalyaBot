@@ -1,6 +1,8 @@
 import logging
 import os
 import sys
+from discord import command
+from shared import Users
 
 try:
     import discord
@@ -17,6 +19,26 @@ INTENTS = discord.Intents.all()
 class Bot(commands.Bot):
     async def on_ready(self):
         logging.info(f"Logged in as {self.user}")
+
+    async def on_application_command_error(self, ctx: discord.ApplicationContext, error: discord.DiscordException):
+        if isinstance(error, commands.CommandOnCooldown):
+            await ctx.respond(f"Cette commande est en cooldown. Veuillez réessayer dans {error.retry_after:.0f} secondes.",
+                              ephemeral=True)
+        else:
+            logging.error(f"Error in {ctx.command}: {error}")
+            embed = discord.Embed(title="Une erreur est survenue", description=f"Erreur provoquée par {ctx.author.mention}",
+                                  color=discord.Color.red())
+            command = ctx.command
+            command_path = []
+            while command.parent:
+                command_path.append(command.name)
+                command = command.parent
+            embed.add_field(name="Commande", value=f"`/{''.join(reversed(command_path))}`")
+            embed.add_field(name="Module", value=f"`{ctx.command.cog.__class__.__name__!r}`")
+            embed.add_field(name="Message d'erreur", value=f"`{error}`")
+            embed.add_field(name="Traceback", value=f"```\n{error.__traceback__}```")
+            embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
+            await ctx.respond(embed=embed, ephemeral=True)
 
 
 bot = Bot(intents=INTENTS)
