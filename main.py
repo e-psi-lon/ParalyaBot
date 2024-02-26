@@ -1,7 +1,6 @@
 import logging
 import os
 import sys
-from discord import command
 from shared import Users
 
 try:
@@ -40,12 +39,35 @@ class Bot(commands.Bot):
             embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
             await ctx.respond(embed=embed, ephemeral=True)
     
-    async def on_error(self, event_method: str, *args: logging.Any, **kwargs: logging.Any) -> None:
-        # Si dans les kwargs il y a un contexte, on l'envoie dans le on_application_command_error
-        if "ctx" in kwargs:
-            await self.on_application_command_error(kwargs["ctx"], sys.exc_info())
+    async def on_error(self, event_method: str, *args, **kwargs) -> None:
+        # S'il y a un contexte dans les *args ou dans les **kwargs, on le récupère
+        ctx = None
+        for arg in args:
+            if isinstance(arg, discord.ApplicationContext):
+                ctx = arg
+                break
+        for kwarg in kwargs.values():
+            if isinstance(kwarg, discord.ApplicationContext):
+                ctx = kwarg
+                break
+        if ctx:
+            logging.error(f"Error in {event_method}: {sys.exc_info()[1]}")
+            embed = discord.Embed(title="Une erreur est survenue", description=f"Erreur provoquée par {ctx.author.mention}",
+                                  color=discord.Color.red())
+            embed.add_field(name="Module", value=f"`{ctx.command.cog.__class__.__name__!r}`")
+            embed.add_field(name="Message d'erreur", value=f"`{sys.exc_info()[1]}`")
+            embed.add_field(name="Traceback", value=f"```\n{sys.exc_info()[2]}```")
+            embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
+            await ctx.respond(embed=embed, ephemeral=True)
         else:
-            await super().on_error(event_method, *args, **kwargs)
+            logging.error(f"Error in {event_method}: {sys.exc_info()[1]}")
+            logging.error(f"Traceback: {sys.exc_info()[2]}")
+            logging.error(f"Args: {args}")
+            logging.error(f"Kwargs: {kwargs}")
+            
+            
+
+
 
 bot = Bot(intents=INTENTS)
 
