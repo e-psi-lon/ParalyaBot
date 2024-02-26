@@ -39,7 +39,13 @@ class Bot(commands.Bot):
             embed.add_field(name="Traceback", value=f"```\n{error.__traceback__}```")
             embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
             await ctx.respond(embed=embed, ephemeral=True)
-
+    
+    async def on_error(self, event_method: str, *args: logging.Any, **kwargs: logging.Any) -> None:
+        # Si dans les kwargs il y a un contexte, on l'envoie dans le on_application_command_error
+        if "ctx" in kwargs:
+            await self.on_application_command_error(kwargs["ctx"], sys.exc_info())
+        else:
+            await super().on_error(event_method, *args, **kwargs)
 
 bot = Bot(intents=INTENTS)
 
