@@ -500,6 +500,17 @@ class LG(commands.Cog):
                 message = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
                 await message.delete()
 
+        if payload.channel_id == Channels.LOUP_CHAT.value and payload.member.id != Users.LUXIO.value:
+            message = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
+            webhook = await get_webhook(self.bot, Channels.PETITE_FILLE.value, "🐺")
+            embed = discord.Embed(title="Réaction à un message", description=message.content if len(message.content) < 1024 else message.content[:1021] + "...")
+            reponse = await message.channel.fetch_message(message.reference.message_id)
+            embed.add_field(name="En réponse à", value=reponse.content if len(reponse.content) < 1024 else reponse.content[:1021] + "...")
+            await webhook.send(f"Quelqu'un a réagit {payload.emoji} au message ci-dessous", embed=embed, username= "🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme"
+                                 , avatar_url="https://media.discordapp.net/attachments/939233865350938644/1184888656222244905/wolf.png" if self.current_pp == 0 else ("https://media.discordapp.net/attachments/939233865350938644/1184890615650062356/wolf.png"))
+
+
+
 
 def setup(bot):
     bot.add_cog(LG(bot))
