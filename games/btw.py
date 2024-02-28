@@ -2,6 +2,14 @@ from ._btw import *
 
 
 class BTW(commands.Cog):
+    """
+    This is a Cog class for the Discord bot. This Cog is specifically designed for managing the Battery War game.
+    It includes commands for game actions such as attacking a team, opening a crate, using an item/spell
+    from the inventory, and buying a spell for immediate use. It also handles certain events related to the game.
+
+    Attributes:
+        bot: An instance of commands.Bot. This represents the bot that's being used.
+    """
     def __init__(self, bot):
         self.bot = bot
 
@@ -9,7 +17,7 @@ class BTW(commands.Cog):
 
     @btw.command(name="action", description="Faire une action dans le Battery War")
     async def action(self, ctx: discord.ApplicationContext,
-                     action: discord.Option(str, description="L'action à faire", required=True, # type: ignore
+                     action: discord.Option(str, description="L'action à faire", required=True,  # type: ignore
                                             choices=[discord.OptionChoice("Attaquer une équipe", "ATTACK"),
                                                      discord.OptionChoice("Ouvrir une caisse", "OPEN"),
                                                      discord.OptionChoice("Utiliser un objet/sort de l'inventaire",
@@ -36,9 +44,10 @@ class BTW(commands.Cog):
     @btw.command(name="annonce", description="Annoncer un message")
     @admin_only()
     async def annonce(self, ctx,
-                      channel: discord.Option(discord.TextChannel, description="Le salon où envoyer l'annonce", # type: ignore
-                                              required=True),
-                      notif: discord.Option(bool, description="Notifier les membres ?", required=False, default=False)): # type: ignore
+                      channel: discord.Option(discord.TextChannel, description="Le salon où envoyer l'annonce",
+                                              required=True),  # type: ignore
+                      notif: discord.Option(bool, description="Notifier les membres ?",
+                                            required=False, default=False)):  # type: ignore
         await ctx.send_modal(Message(message_callback, channel=channel.id, notif=notif))
 
 

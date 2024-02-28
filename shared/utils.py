@@ -5,6 +5,13 @@ from discord.ext import commands
 
 
 class Message(discord.ui.Modal):
+    """
+    This is a subclass of discord.ui.Modal. It represents a modal dialog box that prompts the user to enter a message.
+    The entered message is then processed by a callback function.
+
+    Attributes:
+        callback_function: A function that processes the entered message.
+    """
     def __init__(self, callback, **kwargs):
         super().__init__(title="Quel message voulez-vous envoyer ?")
         for key, value in kwargs.items():
@@ -38,6 +45,15 @@ async def get_webhook(bot, channel, name) -> discord.Webhook:
 
 
 class Retry(discord.ui.View):
+    """
+    This is a subclass of discord.ui.View. It represents a view that provides a retry button to the user.
+    When the retry button is clicked, it reopens the modal dialog box.
+
+    Attributes:
+        modal: A subclass of discord.ui.Modal. This represents the modal dialog box that is reopened when the retry button is clicked.
+        args: A tuple that contains the positional arguments to be passed to the modal when it is reopened.
+        kwargs: A dictionary that contains the keyword arguments to be passed to the modal when it is reopened.
+    """
     def __init__(self, modal: Type, *args, **kwargs):
         super().__init__(timeout=None)
         self.modal = modal

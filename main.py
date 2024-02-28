@@ -1,7 +1,7 @@
 import logging
 import os
 import sys
-from shared import Users
+from shared import Users, Channels
 
 try:
     import discord
@@ -21,11 +21,13 @@ class Bot(commands.Bot):
 
     async def on_application_command_error(self, ctx: discord.ApplicationContext, error: discord.DiscordException):
         if isinstance(error, commands.CommandOnCooldown):
-            await ctx.respond(f"Cette commande est en cooldown. Veuillez réessayer dans {error.retry_after:.0f} secondes.",
-                              ephemeral=True)
+            await ctx.respond(
+                f"Cette commande est en cooldown. Veuillez réessayer dans {error.retry_after:.0f} secondes.",
+                ephemeral=True)
         else:
             logging.error(f"Error in {ctx.command}: {error}")
-            embed = discord.Embed(title="Une erreur est survenue", description=f"Erreur provoquée par {ctx.author.mention}",
+            embed = discord.Embed(title="Une erreur est survenue",
+                                  description=f"Erreur provoquée par {ctx.author.mention}",
                                   color=discord.Color.red())
             command = ctx.command
             command_path = []
@@ -38,7 +40,7 @@ class Bot(commands.Bot):
             embed.add_field(name="Traceback", value=f"```\n{error.__traceback__}```")
             embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
             await ctx.respond(embed=embed, ephemeral=True)
-    
+
     async def on_error(self, event_method: str, *args, **kwargs) -> None:
         # S'il y a un contexte dans les *args ou dans les **kwargs, on le récupère
         ctx = None
@@ -52,7 +54,8 @@ class Bot(commands.Bot):
                 break
         if ctx:
             logging.error(f"Error in {event_method}: {sys.exc_info()[1]}")
-            embed = discord.Embed(title="Une erreur est survenue", description=f"Erreur provoquée par {ctx.author.mention}",
+            embed = discord.Embed(title="Une erreur est survenue",
+                                  description=f"Erreur provoquée par {ctx.author.mention}",
                                   color=discord.Color.red())
             embed.add_field(name="Module", value=f"`{ctx.command.cog.__class__.__name__!r}`")
             embed.add_field(name="Message d'erreur", value=f"`{sys.exc_info()[1]}`")
@@ -64,12 +67,16 @@ class Bot(commands.Bot):
             logging.error(f"Traceback: {sys.exc_info()[2]}")
             logging.error(f"Args: {args}")
             logging.error(f"Kwargs: {kwargs}")
-            
-            
-
 
 
 bot = Bot(intents=INTENTS)
+
+
+@bot.listen("on_message")
+async def on_message(message: discord.Message):
+    if message.channel.id == Channels.IDEES.value:
+        await message.create_thread(
+            name=message.content if len(message.content) < 100 else message.content[:97] + "...")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
