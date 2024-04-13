@@ -1,3 +1,7 @@
+from typing import Literal
+
+import discord.ui
+
 from .enums import *
 from .utils import *
 
@@ -38,30 +42,24 @@ class Attack(discord.ui.View):
     @discord.ui.button(label="Furtivement", style=discord.ButtonStyle.green, custom_id="attack_stealth", disabled=True,
                        row=1)
     async def attack_stealth(self, _: discord.ui.Button, interaction: discord.Interaction):
-        if self.ctx.author.id != interaction.user.id:
-            await interaction.response.send_message("Vous n'avez pas le droit de faire ça.", ephemeral=True)
-            return
-        await interaction.response.send_message(
-            f"Vous attaquez furtivement l'{interaction.guild.get_channel(int(self.team)).name} !", ephemeral=True)
-        webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "🔋")
-        await webhook.send(
-            f"J'attaque l'{interaction.guild.get_channel(int(self.team)).name.replace('-', ' ')} furtivement !",
-            username=interaction.user.display_name, avatar_url=interaction.user.display_avatar.url,
-            thread=self.ctx.channel)
-        await interaction.message.delete()
+        return await self.attack(_, interaction, "furtivement")
 
     @discord.ui.button(label="Anonymement", style=discord.ButtonStyle.green, custom_id="attack_anonymously",
                        disabled=True, row=1)
     async def attack_anonymously(self, _: discord.ui.Button, interaction: discord.Interaction):
+        return await self.attack(_, interaction, "anonymement")
+
+    async def attack(self, _: discord.ui.Button, interaction: discord.Interaction,
+                     attack_type: Literal["anonymement", "furtivement"]):
         if self.ctx.author.id != interaction.user.id:
             await interaction.response.send_message("Vous n'avez pas le droit de faire ça.", ephemeral=True)
             return
         await interaction.response.send_message(
-            f"Vous attaquez anonymement l'{interaction.guild.get_channel(int(self.team)).name} !", ephemeral=True)
+            f"Vous attaquez {attack_type} l'{interaction.guild.get_channel(int(self.team)).name} !", ephemeral=True)
         await interaction.message.edit(view=None)
         webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "🔋")
         await webhook.send(
-            f"J'attaque l'{interaction.guild.get_channel(int(self.team)).name.replace('-', ' ')} furtivement !",
+            f"J'attaque l'{interaction.guild.get_channel(int(self.team)).name.replace('-', ' ')} {attack_type} !",
             username=interaction.user.display_name, avatar_url=interaction.user.display_avatar.url,
             thread=self.ctx.channel)
         await interaction.message.delete()
@@ -99,20 +97,7 @@ class Use(discord.ui.Modal):
                                            required=False))
 
     async def callback(self, interaction: discord.Interaction):
-        obj = self.children[0].value
-        team = self.children[1].value
-        # S'il n'y a pas de team, la team est celle de l'utilisateur
-        if not team:
-            team = self.ctx.channel.parent_id
-        else:
-            if team.isdigit() and int(team) <= len(self.teams):
-                team = int(team)
-                team = self.teams[team - 1].value
-            else:
-                await interaction.response.send_message("Équipe invalide", ephemeral=True,
-                                                        view=Retry(self.__class__, self.ctx))
-                return
-        webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "🔋")
+        obj, team, webhook = await invalid_team(self, interaction)
         # Si c'est sur l'équipe de l'utilisateur
         if team == self.ctx.channel.parent_id:
             await webhook.send(f"J'utilise l'objet **{obj}**", username=interaction.user.display_name,

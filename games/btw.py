@@ -31,8 +31,7 @@ class BTW(commands.Cog):
             case "ATTACK":
                 await ctx.respond(
                     "Attaquer une équipe\nVeuillez sélectionner l'équipe que vous souhaitez attaquer puis le "
-                    "type d'attaque (anonymement  __ou__ furtivement)",
-                    view=Attack(ctx))
+                    "type d'attaque (anonymement  __ou__ furtivement)", view=Attack(ctx))
             case "OPEN":
                 await ctx.respond("Ouverture d'une caisse\nVous avez le choix entre une caisse de tier 1 ou de tier 2",
                                   view=Open(ctx))
