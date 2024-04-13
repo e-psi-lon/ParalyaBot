@@ -50,7 +50,8 @@ class Retry(discord.ui.View):
     When the retry button is clicked, it reopens the modal dialog box.
 
     Attributes:
-        modal: A subclass of discord.ui.Modal. This represents the modal dialog box that is reopened when the retry button is clicked.
+        modal: A subclass of discord.ui.Modal. This represents the modal dialog box that is reopened when the
+        retry button is clicked.
         args: A tuple that contains the positional arguments to be passed to the modal when it is reopened.
         kwargs: A dictionary that contains the keyword arguments to be passed to the modal when it is reopened.
     """
