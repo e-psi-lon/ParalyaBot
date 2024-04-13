@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+import traceback
 from shared import Users, Channels
 
 try:
@@ -20,54 +21,59 @@ class Bot(commands.Bot):
         logging.info(f"Logged in as {self.user}")
 
     async def on_application_command_error(self, ctx: discord.ApplicationContext, error: discord.DiscordException):
-        if isinstance(error, commands.CommandOnCooldown):
-            await ctx.respond(
-                f"Cette commande est en cooldown. Veuillez réessayer dans {error.retry_after:.0f} secondes.",
-                ephemeral=True)
-        else:
-            logging.error(f"Error in {ctx.command}: {error}")
-            embed = discord.Embed(title="Une erreur est survenue",
-                                  description=f"Erreur provoquée par {ctx.author.mention}",
-                                  color=discord.Color.red())
-            command = ctx.command
-            command_path = []
-            while command.parent:
-                command_path.append(command.name)
-                command = command.parent
-            embed.add_field(name="Commande", value=f"`/{''.join(reversed(command_path))}`")
-            embed.add_field(name="Module", value=f"`{ctx.command.cog.__class__.__name__!r}`")
-            embed.add_field(name="Message d'erreur", value=f"`{error}`")
-            embed.add_field(name="Traceback", value=f"```\n{error.__traceback__}```")
-            embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
+        exc_type, exc_value, exc_traceback = type(error), error, error.__traceback__
+        traceback_str = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        logging.error(f"Error in {ctx.command} from module {ctx.command.cog.__class__.__name__}"
+                      f"\n Error message: {exc_value}\n Traceback: {traceback_str}")
+        embed = discord.Embed(title="Une erreur est survenue", description=f"Erreur provoquée par {ctx.author.mention}",
+                              color=discord.Color.red())
+        embed.add_field(name="Commande", value=f"`/{ctx.command}`")
+        embed.add_field(name="Module", value=f"`{ctx.command.cog.__class__.__name__!r}`")
+        embed.add_field(name="Message d'erreur", value=f"`{exc_value}`")
+        embed.add_field(name="Traceback", value=f"```\n{traceback_str[:1014]}...```")
+        embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
+        try:
             await ctx.respond(embed=embed, ephemeral=True)
+            await self.get_user(self.owner_id).send(embed=embed)
+        except Exception:
+            await ctx.channel.send("Ce message se supprimera d'ici 20s", embed=embed, delete_after=20)
+            await self.get_user(self.owner_id).send(embed=embed)
 
     async def on_error(self, event_method: str, *args, **kwargs) -> None:
-        # S'il y a un contexte dans les *args ou dans les **kwargs, on le récupère
-        ctx = None
+        context = None
         for arg in args:
             if isinstance(arg, discord.ApplicationContext):
-                ctx = arg
+                context = arg
                 break
-        for kwarg in kwargs.values():
-            if isinstance(kwarg, discord.ApplicationContext):
-                ctx = kwarg
-                break
-        if ctx:
-            logging.error(f"Error in {event_method}: {sys.exc_info()[1]}")
+        if not context:
+            for arg in kwargs.values():
+                if isinstance(arg, discord.ApplicationContext):
+                    context = arg
+                    break
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        traceback_str = "".join(traceback.format_exception(exc_type, exc_value, exc_traceback))
+        if context is not None:
+            logging.error(
+                f"Error in {event_method}\n Error message: {exc_value}\n Traceback: {traceback_str}\n Args: {args}"
+                f"\n Kwargs: {kwargs}")
             embed = discord.Embed(title="Une erreur est survenue",
-                                  description=f"Erreur provoquée par {ctx.author.mention}",
+                                  description=f"Erreur provoquée par {context.author.mention}",
                                   color=discord.Color.red())
-            embed.add_field(name="Module", value=f"`{ctx.command.cog.__class__.__name__!r}`")
-            embed.add_field(name="Message d'erreur", value=f"`{sys.exc_info()[1]}`")
-            embed.add_field(name="Traceback", value=f"```\n{sys.exc_info()[2]}```")
+            embed.add_field(name="Commande", value=f"`{context.command}`")
+            embed.add_field(name="Module", value=f"`{context.command.cog.__class__.__name__}`")
+            embed.add_field(name="Message d'erreur", value=f"`{exc_value}`")
+            embed.add_field(name="Traceback", value=f"```\n{traceback_str}```")
             embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
-            await ctx.respond(embed=embed, ephemeral=True)
+            try:
+                await context.respond(embed=embed, ephemeral=True)
+                await self.get_user(self.owner_id).send(embed=embed)
+            except Exception:
+                await context.send("Ce message se supprimera d'ici 20s", embed=embed, delete_after=20)
+                await self.get_user(self.owner_id).send(embed=embed)
         else:
-            logging.error(f"Error in {event_method}: {sys.exc_info()[1]}")
-            logging.error(f"Traceback: {sys.exc_info()[2]}")
-            logging.error(f"Args: {args}")
-            logging.error(f"Kwargs: {kwargs}")
-
+            logging.error(
+                f"Error in {event_method}\n Error message: {exc_value}\n Traceback: {traceback_str}\n Args: {args}"
+                f"\n Kwargs: {kwargs}")
 
 bot = Bot(intents=INTENTS)
 
