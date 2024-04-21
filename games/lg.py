@@ -1,4 +1,5 @@
 from collections import Counter
+from typing import Literal
 from ._lg import *
 
 
@@ -24,7 +25,7 @@ class LG(commands.Cog):
         self.bot = bot
         self.interview: list = []
         self.last_message_sender = 1
-        self.current_pp: int = 0
+        self.current_pp: Literal[0, 1] = 0
         self.village_votes: dict[str, dict[int, int] | bool | list[int] | int] = {"is_vote": False, "votes": {},
                                                                                   "choices": [], "corbeau": 0}
         self.loup_votes: dict[str, dict[int, int] | bool | list[int]] = {"is_vote": False, "votes": {}, "choices": []}
@@ -468,7 +469,7 @@ class LG(commands.Cog):
                     self.roles['LOUP_BAVARD'].mot_place = False
                     return
         if (message.channel.id == LgChannels.LOUP_CHAT.value and message.author.id not in
-                [self.bot.user.id, Users.LUXIO.value] and not message.author.bot):
+                (self.bot.user.id, Users.LUXIO.value) and not message.author.bot):
             if message.content.startswith("!") or message.content.startswith("/"):
                 return
             content = message.content
@@ -501,6 +502,8 @@ class LG(commands.Cog):
     @commands.Cog.listener("on_message_edit")
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if before.channel.id == LgChannels.LOUP_CHAT.value and before.content != after.content:
+            if before.author.id in (self.bot.user.id, Users.LUXIO.value):
+                return
             webhook = await get_webhook(self.bot, LgChannels.PETITE_FILLE.value, "🐺")
             previous_content = before.content
             new_content = after.content
@@ -542,9 +545,10 @@ class LG(commands.Cog):
             embed = discord.Embed(title="Réaction à un message",
                                   description=message.content if len(message.content) < 1024 else message.content[
                                                                                                   :1021] + "...")
-            reponse = await message.channel.fetch_message(message.reference.message_id)
-            embed.add_field(name="En réponse à",
-                            value=reponse.content if len(reponse.content) < 1024 else reponse.content[:1021] + "...")
+            if message.reference is not None:
+                reponse = await message.channel.fetch_message(message.reference.message_id)
+                embed.add_field(name="En réponse à",
+                                value=reponse.content if len(reponse.content) < 1024 else reponse.content[:1021] + "...")
             await webhook.send(f"Quelqu'un a réagit {payload.emoji} au message ci-dessous", embed=embed,
                                username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme",
                                avatar_url="https://media.discordapp.net/attachments/939233865350938644/"
@@ -552,6 +556,7 @@ class LG(commands.Cog):
                                            "https://media.discordapp.net/attachments/939233865350938644/"
                                            "1184890615650062356/wolf.png")
                                )
+            self.current_pp = 1
 
 
 def setup(bot):
