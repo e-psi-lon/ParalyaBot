@@ -1,3 +1,4 @@
+from curses.ascii import US
 import logging
 import os
 import sys
@@ -34,10 +35,11 @@ class Bot(commands.Bot):
         embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
         try:
             await ctx.respond(embed=embed, ephemeral=True)
-            await self.get_user(self.owner_id).send(embed=embed)
         except Exception:
             await ctx.channel.send("Ce message se supprimera d'ici 20s", embed=embed, delete_after=20)
-            await self.get_user(self.owner_id).send(embed=embed)
+        finally:
+            await self.get_user(Users.LUXIO.value).send(embed=embed)
+            await self.get_user(Users.E_PSI_LON.value).send(embed=embed)
 
     async def on_error(self, event_method: str, *args, **kwargs) -> None:
         context = None
@@ -66,10 +68,11 @@ class Bot(commands.Bot):
             embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
             try:
                 await context.respond(embed=embed, ephemeral=True)
-                await self.get_user(self.owner_id).send(embed=embed)
             except Exception:
                 await context.send("Ce message se supprimera d'ici 20s", embed=embed, delete_after=20)
-                await self.get_user(self.owner_id).send(embed=embed)
+            finally:
+                await self.get_user(Users.LUXIO.value).send(embed=embed)
+                await self.get_user(Users.E_PSI_LON.value).send(embed=embed)
         else:
             logging.error(
                 f"Error in {event_method}\n Error message: {exc_value}\n Traceback: {traceback_str}\n Args: {args}"
