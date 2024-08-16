@@ -63,3 +63,7 @@ class Retry(discord.ui.View):
     @discord.ui.button(label="Réessayer", style=discord.ButtonStyle.primary)
     async def retry(self, _: discord.ui.Button, interaction: discord.Interaction):
         await interaction.response.send_modal(modal=self.modal(*self.args, **self.kwargs))
+
+
+def get_asset(name: str) -> str:
+    return f"https://raw.githubusercontent.com/e-psi-lon/ParalyaBot/main/assets/{name}.webp"

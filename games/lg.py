@@ -79,7 +79,7 @@ class LG(commands.Cog):
                 webhook = await get_webhook(self.bot, LgChannels.LOUP_VOTE.value, "🐺")
                 await webhook.send("Il y a une égalité, décidez vous sur qui tuer : " + ", ".join(
                     [ctx.guild.get_member(player).mention for player in max_votes_player]), username="ParalyaLG",
-                                   avatar_url="https://raw.githubusercontent.com/e-psi-lon/ParalyaLG/main/assets/ParalyaLG.webp")
+                                   avatar_url=get_asset("paralya_lg"))
                 self.loup_votes["votes"] = {}
                 self.loup_votes["choices"] = max_votes_player
                 self.loup_votes["is_vote"] = True
@@ -152,7 +152,7 @@ class LG(commands.Cog):
                 await webhook.send(
                     "Il y a une égalité, les membres suivants sont donc en sursis pour le second vote : " + ", ".join(
                         [ctx.guild.get_member(player).mention for player in max_votes_player]), username="ParalyaLG",
-                    avatar_url="https://raw.githubusercontent.com/e-psi-lon/ParalyaLG/main/assets/ParalyaLG.webp")
+                    avatar_url=get_asset("paralya_lg"))
                 self.village_votes["votes"] = {}
                 self.village_votes["choices"] = max_votes_player
                 self.village_votes["is_vote"] = True
@@ -168,17 +168,17 @@ class LG(commands.Cog):
         self.village_votes["choices"] = []
         self.time = "nuit"
         webhook = await get_webhook(self.bot, LgGlobalChannel.VILLAGE.value, "🐺")
-        await webhook.send("----------", username="ParalyaLG")
+        await webhook.send("----------", username="ParalyaLG", avatar_url=get_asset("paralya_lg"))
         await ctx.guild.get_channel(LgGlobalChannel.VILLAGE.value).set_permissions(
             ctx.guild.get_role(LgRoles.LG_VIVANT.value), send_messages=False, view_channel=True,
             reason="Passage à la nuit")
         webhook = await get_webhook(self.bot, LgGlobalChannel.VOTE.value, "🐺")
-        await webhook.send("----------", username="ParalyaLG")
+        await webhook.send("----------", username="ParalyaLG", avatar_url=get_asset("paralya_lg"))
         if self.village_votes["corbeau"] != 0:
             webhook = await get_webhook(self.bot, LgGlobalChannel.VOTE.value, "🐺")
             await webhook.send(f"Je vote contre <@{self.village_votes['corbeau']}> (+**2** votes)",
                                username="🐦‍⬛ Corbeau",
-                               avatar_url="https://raw.githubusercontent.com/e-psi-lon/ParalyaLG/main/assets/black_bird.webp"
+                               avatar_url=get_asset("black_bird")
                                )
         self.village_votes["corbeau"] = 0
         await ctx.guild.get_channel(LgGlobalChannel.VOTE.value).set_permissions(
@@ -401,7 +401,7 @@ class LG(commands.Cog):
             f"━━━━━━━━━━━━━━━━━━━━━\n⏲ | Fin du Jour {jour} à {heure} "
             f"{ctx.guild.get_role(LgRoles.LG_VIVANT.value).mention}\n━━━━━━━━━━━━━━━━━━━━━",
             username="ParalyaLG",
-            avatar_url="https://raw.githubusercontent.com/e-psi-lon/ParalyaLG/main/assets/ParalyaLG.webp")
+            avatar_url=get_asset("paralya_lg"))
         await ctx.respond("Message envoyé !", ephemeral=True)
 
     @lg.command(name="setrole", description="Permet de définir un rôle")
@@ -460,7 +460,7 @@ class LG(commands.Cog):
                         f"<@{Users.LUXIO.value}> Le loup bavard a placé son mot 3 fois !"
                         f" Il a donc droit à l'identité d'un joueur aléatoire !",
                         username="ParalyaLG",
-                        avatar_url="https://raw.githubusercontent.com/e-psi-lon/ParalyaLG/main/assets/ParalyaLG.webp")
+                        avatar_url=get_asset("paralya_lg"))
                     self.roles['LOUP_BAVARD'].mots_places = 0
                     self.roles['LOUP_BAVARD'].mot_actuel = None
                     self.roles['LOUP_BAVARD'].mot_place = False
@@ -475,8 +475,8 @@ class LG(commands.Cog):
             if message.author.id != self.last_message_sender:
                 self.current_pp = 0 if self.current_pp == 1 else 1
             username = "🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme"
-            avatar_url = "https://raw.githubusercontent.com/e-psi-lon/ParalyaLG/main/assets/wolf_variant_1.webp" \
-                if self.current_pp == 0 else "https://raw.githubusercontent.com/e-psi-lon/ParalyaLG/main/assets/wolf_variant_2.webp/"
+            avatar_url = get_asset("wolf_variant_1") \
+                if self.current_pp == 0 else get_asset("wolf_variant_2")
             self.last_message_sender = message.author.id
             answer = message.reference
             if answer is not None and (
@@ -513,8 +513,8 @@ class LG(commands.Cog):
             if len(previous_content) > 2000:
                 previous_content = previous_content[:2000]
             username = "🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme"
-            avatar_url = "https://raw.githubusercontent.com/e-psi-lon/ParalyaLG/main/assets/wolf_variant_1.webp" \
-                if self.current_pp == 0 else "https://raw.githubusercontent.com/e-psi-lon/ParalyaLG/main/assets/wolf_variant_2.webp/"
+            avatar_url = get_asset("wolf_variant_1") \
+                if self.current_pp == 0 else get_asset("wolf_variant_2")
             before_content = discord.Embed(title="Modification du message", description=previous_content)
             await webhook.send(new_content, username=username, avatar_url=avatar_url,
                                files=after.attachments if len(after.attachments) > 0 else discord.MISSING,
@@ -546,8 +546,8 @@ class LG(commands.Cog):
                                 value=reponse.content if len(reponse.content) < 1024 else reponse.content[:1021] + "...")
             await webhook.send(f"Quelqu'un a réagit {payload.emoji} au message ci-dessous", embed=embed,
                                username="🐺Anonyme" if self.current_pp == 0 else "🐺 Anonyme", 
-                                avatar_url = "https://raw.githubusercontent.com/e-psi-lon/ParalyaLG/main/assets/wolf_variant_1.webp" \
-                                if self.current_pp == 0 else "https://raw.githubusercontent.com/e-psi-lon/ParalyaLG/main/assets/wolf_variant_2.webp/"
+                                avatar_url = get_asset("wolf_variant_1") \
+                                if self.current_pp == 0 else get_asset("wolf_variant_2")
                                )
             self.current_pp = 1
 
