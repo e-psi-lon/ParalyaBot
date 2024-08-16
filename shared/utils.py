@@ -30,7 +30,6 @@ def admin_only():
         else:
             await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande.", ephemeral=True)
             return False
-
     return commands.check(predicate)
 
 

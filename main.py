@@ -28,11 +28,16 @@ class Bot(commands.Bot):
                       f"\n Error message: {exc_value}\n Traceback: {traceback_str}")
         embed = discord.Embed(title="Une erreur est survenue", description=f"Erreur provoquée par {ctx.author.mention}",
                               color=discord.Color.red())
-        embed.add_field(name="Commande", value=f"`/{ctx.command}`")
-        embed.add_field(name="Module", value=f"`{ctx.command.cog.__class__.__name__!r}`")
-        embed.add_field(name="Message d'erreur", value=f"`{exc_value}`")
-        embed.add_field(name="Traceback", value=f"```\n{traceback_str[:1014]}...```")
-        embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
+        embed = discord.Embed(
+            title="Une erreur est survenue",
+            description=f"Erreur provoquée par {ctx.author.mention}",
+            color=discord.Color.red(),
+            footer={"text": f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>"}
+        )\
+            .add_field(name="Commande", value=f"`/{ctx.command}`")\
+            .add_field(name="Module", value=f"`{ctx.command.cog.__class__.__name__!r}`")\
+            .add_field(name="Message d'erreur", value=f"`{exc_value}`")\
+            .add_field( name="Traceback", value=f"```\n{traceback_str[:1014]}...```")
         try:
             await ctx.respond(embed=embed, ephemeral=True)
         except Exception:
