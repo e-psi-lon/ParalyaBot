@@ -36,13 +36,13 @@ class BTW(commands.Cog):
                 await ctx.respond("Ouverture d'une caisse\nVous avez le choix entre une caisse de tier 1 ou de tier 2",
                                   view=Open(ctx))
             case "USE":
-                await ctx.response.send_modal(Use(ctx))
+                await ctx.send_modal(Use(ctx))
             case "BUY":
-                await ctx.response.send_modal(Buy(ctx))
+                await ctx.send_modal(Buy(ctx))
 
     @btw.command(name="annonce", description="Annoncer un message")
     @admin_only()
-    async def annonce(self, ctx,
+    async def annonce(self, ctx: discord.ApplicationContext,
                       channel: discord.Option(discord.TextChannel, description="Le salon où envoyer l'annonce",
                                               required=True),  # type: ignore
                       notif: discord.Option(bool, description="Notifier les membres ?",
