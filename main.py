@@ -32,7 +32,7 @@ class Bot(commands.Bot):
             title="Une erreur est survenue",
             description=f"Erreur provoquée par {ctx.author.mention}",
             color=discord.Color.red(),
-            footer={"text": f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>"}
+            footer=discord.EmbedFooter(f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
         )\
             .add_field(name="Commande", value=f"`/{ctx.command}`")\
             .add_field(name="Module", value=f"`{ctx.command.cog.__class__.__name__!r}`")\
