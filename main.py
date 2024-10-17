@@ -32,7 +32,7 @@ class Bot(commands.Bot):
             title="Une erreur est survenue",
             description=f"Erreur provoquée par {ctx.author.mention}",
             color=discord.Color.red(),
-            footer=discord.EmbedFooter(f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
+            footer=discord.EmbedFooter(f"Veuillez transmettre ceci à <@{Users.E_PSI_LON}> ou à <@{Users.LUXIO}>")
         )\
             .add_field(name="Commande", value=f"`/{ctx.command}`")\
             .add_field(name="Module", value=f"`{ctx.command.cog.__class__.__name__!r}`")\
@@ -43,8 +43,8 @@ class Bot(commands.Bot):
         except Exception:
             await ctx.channel.send("Ce message se supprimera d'ici 20s", embed=embed, delete_after=20)
         finally:
-            await self.get_user(Users.LUXIO.value).send(embed=embed)
-            await self.get_user(Users.E_PSI_LON.value).send(embed=embed)
+            await self.get_user(Users.LUXIO).send(embed=embed)
+            await self.get_user(Users.E_PSI_LON).send(embed=embed)
 
     async def on_error(self, event_method: str, *args, **kwargs) -> None:
         context = None
@@ -70,14 +70,14 @@ class Bot(commands.Bot):
             embed.add_field(name="Module", value=f"`{context.command.cog.__class__.__name__}`")
             embed.add_field(name="Message d'erreur", value=f"`{exc_value}`")
             embed.add_field(name="Traceback", value=f"```\n{traceback_str}```")
-            embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON.value}> ou à <@{Users.LUXIO.value}>")
+            embed.set_footer(text=f"Veuillez transmettre ceci à <@{Users.E_PSI_LON}> ou à <@{Users.LUXIO}>")
             try:
                 await context.respond(embed=embed, ephemeral=True)
             except Exception:
                 await context.send("Ce message se supprimera d'ici 20s", embed=embed, delete_after=20)
             finally:
-                await self.get_user(Users.LUXIO.value).send(embed=embed)
-                await self.get_user(Users.E_PSI_LON.value).send(embed=embed)
+                await self.get_user(Users.LUXIO).send(embed=embed)
+                await self.get_user(Users.E_PSI_LON).send(embed=embed)
         else:
             logging.error(
                 f"Error in {event_method}\n Error message: {exc_value}\n Traceback: {traceback_str}\n Args: {args}"
@@ -88,7 +88,7 @@ bot = Bot(intents=INTENTS)
 
 @bot.listen("on_message")
 async def on_message(message: discord.Message):
-    if message.channel.id == Channels.IDEES.value:
+    if message.channel.id == Channels.IDEES:
         await message.create_thread(
             name=message.content if len(message.content) < 100 else message.content[:97] + "...")
 

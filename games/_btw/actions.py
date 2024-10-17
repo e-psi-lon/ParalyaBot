@@ -81,7 +81,7 @@ class Open(discord.ui.View):
         webhook = await get_webhook(self.ctx.bot, self.ctx.channel.parent_id, "🔋")
         await webhook.send(
             f"J'ouvre une caisse de tier {select.values[0]} ! *Vous recevrez le contenu de la "
-            f"caisse quand <@{Users.LUXIO.value}> sera disponible*",
+            f"caisse quand <@{Users.LUXIO}> sera disponible*",
             username=interaction.user.display_name, avatar_url=interaction.user.display_avatar.url,
             thread=self.ctx.channel)
         await interaction.message.delete()

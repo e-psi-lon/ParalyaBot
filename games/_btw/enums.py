@@ -1,9 +1,9 @@
-from enum import Enum
+from enum import IntEnum
 
 from shared.enums import Users
 
 
-class Teams(Enum):
+class Teams(IntEnum):
     EQUIPE_1 = 987306226805256192
     EQUIPE_2 = 987306252637986846
     EQUIPE_3 = 987306252637986846
@@ -13,7 +13,7 @@ class Teams(Enum):
 
 
 # Classe de debug
-"""class Teams(Enum):
+"""class Teams(IntEnum):
     EQUIPE_1 = 1189925697905504266
     EQUIPE_2 = 1189925721578143764
     EQUIPE_3 = 1189925743942189186
