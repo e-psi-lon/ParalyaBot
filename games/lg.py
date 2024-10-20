@@ -50,7 +50,7 @@ class LG(commands.Cog):
     async def interview_command(self, ctx: discord.ApplicationContext, member: discord.Member):
         await ctx.guild.get_channel(LgGlobalChannel.RESUME).set_permissions(member, send_messages=True)
         # On attend que le membre envoie un message
-        await ctx.respond(f"Le channel a été ouvert pour {member.name}, vous pouvez lui poser vos questions !",
+        await ctx.respond(f"Le channel a été ouvert pour {member.display_name}, vous pouvez lui poser vos questions !",
                           ephemeral=True)
         self.interview.append(member.id)
 
@@ -91,7 +91,7 @@ class LG(commands.Cog):
                 await ctx.guild.get_member(max_votes_player[0]).remove_roles(
                     ctx.guild.get_role(LgRoles.LG_VIVANT),
                     reason="Joueur tué")
-                await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True)
+                await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).display_name} a été tué !", ephemeral=True)
         self.loup_votes["choices"] = []
         self.time = "jour"
         await ctx.guild.get_channel(LgGlobalChannel.VILLAGE).set_permissions(
@@ -164,7 +164,7 @@ class LG(commands.Cog):
                 await ctx.guild.get_member(max_votes_player[0]).remove_roles(
                     ctx.guild.get_role(LgRoles.LG_VIVANT),
                     reason="Joueur tué")
-                await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).name} a été tué !", ephemeral=True)
+                await ctx.respond(f"{ctx.guild.get_member(max_votes_player[0]).display_name} a été tué !", ephemeral=True)
         self.village_votes["choices"] = []
         self.time = "nuit"
         webhook = await get_webhook(self.bot, LgGlobalChannel.VILLAGE, "🐺")
@@ -210,7 +210,7 @@ class LG(commands.Cog):
         # On lui donne le role mort et on lui enlève le role vivant
         await member.add_roles(ctx.guild.get_role(LgRoles.LG_MORT), reason="Joueur tué")
         await member.remove_roles(ctx.guild.get_role(LgRoles.LG_VIVANT), reason="Joueur tué")
-        await ctx.respond(f"{member.name} a été tué !", ephemeral=True)
+        await ctx.respond(f"{member.display_name} a été tué !", ephemeral=True)
 
     vote = lg.create_subgroup(name="vote", description="Commandes pour voter")
 
@@ -224,7 +224,7 @@ class LG(commands.Cog):
             if self.village_votes["corbeau"] != 0:
                 return await ctx.respond("Vous avez déjà voté !", ephemeral=True)
             self.village_votes["corbeau"] = member.id
-            await ctx.respond(f"Vous avez voté contre {member.name} !", ephemeral=True)
+            await ctx.respond(f"Vous avez voté contre {member.display_name} !", ephemeral=True)
             return
         if ctx.channel.id != LgGlobalChannel.VOTE:
             return await ctx.respond("Vous ne pouvez pas voter ici !", ephemeral=True)
@@ -237,7 +237,7 @@ class LG(commands.Cog):
         else:
             deja_vote = False
         self.village_votes["votes"][ctx.author.id] = member.id
-        await ctx.respond(f"Vous avez voté contre {member.name} !", ephemeral=True)
+        await ctx.respond(f"Vous avez voté contre {member.display_name} !", ephemeral=True)
         webhook = await get_webhook(self.bot, LgGlobalChannel.VOTE, "🐺")
         if deja_vote:
             await webhook.send(
@@ -272,7 +272,7 @@ class LG(commands.Cog):
         else:
             deja_vote = False
         self.loup_votes["votes"][ctx.author.id] = member.id
-        await ctx.respond(f"Vous avez voté contre {member.name} !", ephemeral=True)
+        await ctx.respond(f"Vous avez voté contre {member.display_name} !", ephemeral=True)
         webhook = await get_webhook(self.bot, LgChannels.LOUP_VOTE, "🐺")
         if deja_vote:
             await webhook.send(
@@ -434,7 +434,7 @@ class LG(commands.Cog):
                 and message.author.id != self.bot.user.id and not message.author.bot):
             # On envoie le message avec un webhook dans le channel LgAdminChannel.MP
             webhook = await get_webhook(self.bot, LgAdminChannel.MP, "MP")
-            await webhook.send(message.content, username=message.author.name, avatar_url=message.author.avatar.url)
+            await webhook.send(message.content, username=message.author.display_name, avatar_url=message.author.avatar.url)
             return
         if message.channel.id == LgGlobalChannel.SUJET and not message.author.bot:
             await message.channel.create_thread(
