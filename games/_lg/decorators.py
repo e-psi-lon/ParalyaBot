@@ -8,9 +8,6 @@ from .enums import *
 def check_valid_vote(func):
     @functools.wraps(func)
     async def wrapper(self, ctx: discord.ApplicationContext, member: discord.Member, *args, **kwargs):
-        # Vérifie si l'utilisateur vote pour lui-même
-        if ctx.author.id == member.id:
-            return await ctx.respond("Vous ne pouvez pas voter contre vous même !", ephemeral=True)
         # Vérifie si l'utilisateur vote pour un mort
         if (LgRoles.LG_VIVANT not in [role.id for role in member.roles] and LgRoles.LG_MORT in
                 [role.id for role in member.roles]):
