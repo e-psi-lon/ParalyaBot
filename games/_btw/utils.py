@@ -1,7 +1,7 @@
 from shared.utils import *
 
 
-async def message_callback(self, interaction: discord.Interaction):
+async def message_callback(self: Message, interaction: discord.Interaction):
     if self.notif:
         message = f"@everyone\n {self.children[0].value}"
     else:
@@ -11,7 +11,7 @@ async def message_callback(self, interaction: discord.Interaction):
     await interaction.response.send_message("Message envoyé !", ephemeral=True)
 
 
-async def invalid_team(self, interaction: discord.Interaction) -> tuple[str | None, int | None, discord.Webhook | None]:
+async def invalid_team(self: discord.ui.Modal, interaction: discord.Interaction) -> tuple[str | None, int | None, discord.Webhook | None]:
     obj = self.children[0].value
     team = self.children[1].value
     # S'il n'y a pas de team, la team est celle de l'utilisateur

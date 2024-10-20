@@ -1,7 +1,7 @@
 from shared.utils import *
 
 
-async def message_callback(self, interaction: discord.Interaction):
+async def message_callback(self: Message, interaction: discord.Interaction):
     message = f"━━━━━━━━━━━━━━━━━━\n🐺 LGNotifications ¦ {self.children[0].value}\n━━━━━━━━━━━━━━━━━━"
     errors = []
     for member in self.members:
