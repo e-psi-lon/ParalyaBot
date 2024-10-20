@@ -1,4 +1,3 @@
-from curses.ascii import US
 import logging
 import os
 import sys
