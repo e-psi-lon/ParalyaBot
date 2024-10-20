@@ -398,7 +398,7 @@ class LG(commands.Cog):
                                               required=True)):
         webhook = await get_webhook(self.bot, LgGlobalChannel.ANNONCES_VILLAGE, "🐺")
         await webhook.send(
-            f"━━━━━━━━━━━━━━━━━━━━━\n⏲ | Fin du Jour {jour} à {heure} "
+            f"━━━━━━━━━━━━━━━━━━━━━\n⏲ | Fin du Jour {jour} à {heure}"
             f"{ctx.guild.get_role(LgRoles.LG_VIVANT).mention}\n━━━━━━━━━━━━━━━━━━━━━",
             username="ParalyaLG",
             avatar_url=get_asset("paralya_lg"))
@@ -432,8 +432,11 @@ class LG(commands.Cog):
         guild = message.guild
         if (guild is None and message.content != "" and message.content is not None
                 and message.author.id != self.bot.user.id and not message.author.bot):
-            # On envoie le message avec un webhook dans le channel LgAdminChannel.MP
             webhook = await get_webhook(self.bot, LgAdminChannel.MP, "MP")
+            await webhook.send(message.content, username=message.author.display_name, avatar_url=message.author.avatar.url)
+            return
+        if message.channel.id == LgChannels.DATE_MYSTERE and not message.author.bot:
+            webhook = await get_webhook(self.bot, LgChannels.CUPIDON, "🐺")
             await webhook.send(message.content, username=message.author.display_name, avatar_url=message.author.avatar.url)
             return
         if message.channel.id == LgGlobalChannel.SUJET and not message.author.bot:
@@ -443,6 +446,7 @@ class LG(commands.Cog):
             await message.add_reaction("🟢")
             await message.add_reaction("🤔")
             await message.add_reaction("🔴")
+            return
         if message.channel.id == LgGlobalChannel.RESUME and message.author.id in self.interview:
             self.interview.remove(message.author.id)
             await message.channel.set_permissions(message.author, send_messages=False)
