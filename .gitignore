@@ -44,4 +44,8 @@ bin/
 ### Mac OS ###
 .DS_Store
 
+## Env & runtime files
 .env
+data/**
+logs/**
+
