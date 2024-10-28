@@ -1,0 +1,14 @@
+[versions]
+kotlin = "2.0.20"
+kordex-plugin = "1.5.4"
+logback = "1.5.9"
+shadow = "8.3.3"
+
+[libraries]
+logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+
+[plugins]
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kordex-gradle = { id = "dev.kordex.gradle.kordex", version.ref = "kordex-plugin" }
+kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
