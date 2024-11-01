@@ -2,7 +2,6 @@ from enum import IntEnum
 
 
 class Users(IntEnum):
-    LUXIO = 265178325381677059
     E_PSI_LON = 708006478807695450
     SHXMELESS = 405721660403089420
 

@@ -36,13 +36,13 @@ class Bot(commands.Bot):
             .add_field(name="Module", value=f"`{ctx.command.cog.__class__.__name__!r}`")\
             .add_field(name="Message d'erreur", value=f"`{exc_value}`")\
             .add_field( name="Traceback", value=f"```\n{traceback_str[:1014]}...```")\
-            .set_footer(text=f"Veuillez transmettre ceci à {(await self.get_or_fetch_user(Users.E_PSI_LON)).display_name} ou à {(await self.get_or_fetch_user(Users.LUXIO)).display_name}")
+            .set_footer(text=f"Veuillez transmettre ceci à {(await self.get_or_fetch_user(Users.E_PSI_LON)).display_name} ou à {(await self.get_or_fetch_user(Users.SHXMELESS)).display_name}")
         try:
             await ctx.respond(embed=embed, ephemeral=True)
         except Exception:
             await ctx.channel.send("Ce message se supprimera d'ici 20s", embed=embed, delete_after=20)
         finally:
-            await (await self.get_or_fetch_user(Users.LUXIO)).send(embed=embed)
+            await (await self.get_or_fetch_user(Users.SHXMELESS)).send(embed=embed)
             await (await self.get_or_fetch_user(Users.E_PSI_LON)).send(embed=embed)
 
     async def on_error(self, event_method: str, *args, **kwargs) -> None:
@@ -69,13 +69,13 @@ class Bot(commands.Bot):
                 .add_field(name="Module", value=f"`{context.command.cog.__class__.__name__}`")\
                 .add_field(name="Message d'erreur", value=f"`{exc_value}`")\
                 .add_field(name="Traceback", value=f"```\n{traceback_str}```")\
-                .set_footer(text=f"Veuillez transmettre ceci à {(await self.get_or_fetch_user(Users.E_PSI_LON)).display_name} ou à {(await self.get_or_fetch_user(Users.LUXIO)).display_name}")
+                .set_footer(text=f"Veuillez transmettre ceci à {(await self.get_or_fetch_user(Users.E_PSI_LON)).display_name} ou à {(await self.get_or_fetch_user(Users.SHXMELESS)).display_name}")
             try:
                 await context.respond(embed=embed, ephemeral=True)
             except Exception:
                 await context.send("Ce message se supprimera d'ici 20s", embed=embed, delete_after=20)
             finally:
-                await (await self.get_or_fetch_user(Users.LUXIO)).send(embed=embed)
+                await (await self.get_or_fetch_user(Users.SHXMELESS)).send(embed=embed)
                 await (await self.get_or_fetch_user(Users.E_PSI_LON)).send(embed=embed)
         else:
             logging.error(
