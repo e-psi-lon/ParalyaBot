@@ -470,7 +470,7 @@ class LG(commands.Cog):
                     self.roles['LOUP_BAVARD'].mot_place = False
                     return
         if (message.channel.id == LgChannels.LOUP_CHAT and message.author.id not in
-                (self.bot.user.id, Users.LUXIO) and not message.author.bot):
+                (self.bot.user.id, Users.LUXIO, Users.SHXMELESS) and not message.author.bot):
             if message.content.startswith("!") or message.content.startswith("/"):
                 return
             content = message.content
@@ -484,7 +484,8 @@ class LG(commands.Cog):
             self.last_message_sender = message.author.id
             answer = message.reference
             if answer is not None and (
-                    await message.channel.fetch_message(answer.message_id)).author.id != Users.LUXIO:
+                    await message.channel.fetch_message(answer.message_id)).author.id != Users.LUXIO and (
+                    await message.channel.fetch_message(answer.message_id)).author.id != Users.SHXMELESS:
                 answer = await message.channel.fetch_message(answer.message_id)
                 answer = discord.Embed(title="En réponse à", description=answer.content)
             if len(contents) > 1:
@@ -502,14 +503,15 @@ class LG(commands.Cog):
     @commands.Cog.listener("on_message_edit")
     async def on_message_edit(self, before: discord.Message, after: discord.Message):
         if before.channel.id == LgChannels.LOUP_CHAT and before.content != after.content:
-            if before.author.id in (self.bot.user.id, Users.LUXIO):
+            if before.author.id in (self.bot.user.id, Users.LUXIO, Users.SHXMELESS):
                 return
             webhook = await get_webhook(self.bot, LgChannels.PETITE_FILLE, "🐺")
             previous_content = before.content
             new_content = after.content
             answer = after.reference
             if answer is not None and (
-                    await after.channel.fetch_message(answer.message_id)).author.id != Users.LUXIO:
+                    await after.channel.fetch_message(answer.message_id)).author.id != Users.LUXIO and (
+                    await after.channel.fetch_message(answer.message_id)).author.id != Users.SHXMELESS:
                 answer = await after.channel.fetch_message(answer.message_id)
                 answer = discord.Embed(title="En réponse à", description=answer.content)
             if len(new_content) > 2000:
@@ -538,7 +540,7 @@ class LG(commands.Cog):
                 message = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
                 await message.delete()
 
-        if payload.channel_id == LgChannels.LOUP_CHAT and payload.member.id != Users.LUXIO:
+        if payload.channel_id == LgChannels.LOUP_CHAT and payload.member.id != Users.LUXIO and payload.member.id != Users.SHXMELESS:
             message = await self.bot.get_channel(payload.channel_id).fetch_message(payload.message_id)
             webhook = await get_webhook(self.bot, LgChannels.PETITE_FILLE, "🐺")
             embed = discord.Embed(title="Réaction à un message",

@@ -2,6 +2,7 @@ from typing import Type
 
 import discord
 from discord.ext import commands
+from shared.enums import Users
 
 
 class Message(discord.ui.Modal):
@@ -25,7 +26,7 @@ class Message(discord.ui.Modal):
 
 def admin_only():
     async def predicate(ctx: discord.ApplicationContext):
-        if ctx.author.guild_permissions.administrator:
+        if ctx.author.id in Users:
             return True
         else:
             await ctx.respond("Vous n'avez pas la permission d'utiliser cette commande.", ephemeral=True)
