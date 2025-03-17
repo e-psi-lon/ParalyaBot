@@ -56,24 +56,36 @@ suspend fun main() {
     bot.start()
 }
 
+val environmentVariables = listOf(
+    "TOKEN",
+    "ADMINS",
+    "LG_ROLES_CATEGORY",
+    "LG_MAIN_CATEGORY",
+    "LG_ALIVE",
+    "LG_DEAD"
+)
+
+suspend inline fun <reified T : Any>ExtensibleBot.get(noinline block: QueryBuilder<T>.() -> Unit): T? {
+    return kordRef.cache.query<T> {
+        block()
+    }.singleOrNull()
+}
+
+suspend inline fun <reified T : Any>ExtensibleBot.set(value: T) {
+    kordRef.cache.put(value)
+}
+
 private fun checkEnv() {
     val file = File(".env")
     if (!file.exists()) {
         file.createNewFile()
-        file.writeText("TOKEN=\n")
-        file.writeText("ADMINS=\n")
-        file.writeText("LG_ROLES_CATEGORY=\n")
-        file.writeText("LG_MAIN_CATEGORY=\n")
+        file.writeText(environmentVariables.joinToString("\n") { "$it=" })
     } else {
         val lines = file.readLines()
-        if (lines.firstOrNull { it.startsWith("TOKEN=") } == null)
-            file.writeText("TOKEN=\n")
-        if (lines.firstOrNull { it.startsWith("ADMINS=") } == null)
-            file.writeText("ADMINS=\n")
-        if (lines.firstOrNull { it.startsWith("LG_ROLES_CATEGORY=") } == null)
-            file.writeText("LG_ROLES_CATEGORY=\n")
-        if (lines.firstOrNull { it.startsWith("LG_MAIN_CATEGORY=") } == null)
-            file.writeText("LG_MAIN_CATEGORY=\n")
+        for (variable in environmentVariables) {
+            if (lines.firstOrNull { it.startsWith("$variable=") } == null)
+                file.appendText("$variable=\n")
+        }
     }
 }
 
@@ -97,6 +109,18 @@ val LG_ROLES_CATEGORY = envOrNull("LG_ROLES_CATEGORY")?.toULong()?: run {
 
 val LG_MAIN_CATEGORY = envOrNull("LG_MAIN_CATEGORY")?.toULong()?: run {
     println("Please provide the id of the main category (lg) in the .env file in the same folder as the jar.")
+    checkEnv()
+    exitProcess(1)
+}
+
+val LG_ALIVE = envOrNull("LG_ALIVE")?.toULong()?: run {
+    println("Please provide the id of the alive role in the .env file in the same folder as the jar.")
+    checkEnv()
+    exitProcess(1)
+}
+
+val LG_DEAD = envOrNull("LG_DEAD")?.toULong()?: run {
+    println("Please provide the id of the dead role in the .env file in the same folder as the jar.")
     checkEnv()
     exitProcess(1)
 }
