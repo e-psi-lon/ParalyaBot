@@ -9,6 +9,9 @@ import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.forms.ModalForm
+import fr.paralya.bot.extensions.data.voteCorbeau
+import fr.paralya.bot.extensions.data.voteVillage
+import fr.paralya.bot.extensions.data.voteWereWolf
 import fr.paralya.bot.i18n.Translations.Lg
 import fr.paralya.bot.utils.getWebhook
 
@@ -19,13 +22,14 @@ suspend fun <A: Arguments, M: ModalForm>PublicSlashCommand<A, M>.registerVotingC
             name = Lg.Vote.Village.Command.name
             description = Lg.Vote.Village.Command.description
             action {
+
                 val target = arguments.target
                 val reason = arguments.reason
                 if (channel.id.value == extension.channels["CORBEAU"]) {
                     if (extension.villageVotes.corbeau != 0.toULong()) {
                         respond { content = "Vous avez déjà voté en tant que corbeau !" }
                     }
-                    extension.villageVotes.corbeau = target.id.value
+                    extension.voteCorbeau(target.id.value)
                     respond { content = "Vous avez voté contre ${target.effectiveName}" }
                 } else if (channel.id.value != extension.channels["VOTES"])
                     respond { content = "Vous ne pouvez pas voter ici !" }
@@ -35,7 +39,7 @@ suspend fun <A: Arguments, M: ModalForm>PublicSlashCommand<A, M>.registerVotingC
                     respond { content = "Aucun vote n'est actuellement en cours !" }
                 else {
                     val alreadyVoted = extension.villageVotes.votes.containsKey(target.id.value)
-                    extension.villageVotes.vote(target.id.value)
+                    extension.voteVillage(target)
                     respond {
                         content = "Vous avez voté contre ${target.effectiveName} !"
                     }
@@ -71,7 +75,7 @@ suspend fun <A: Arguments, M: ModalForm>PublicSlashCommand<A, M>.registerVotingC
                     respond { content = "Aucun vote n'est actuellement en cours !" }
                 else {
                     val alreadyVoted = extension.wereWolfVotes.votes.containsKey(target.id.value)
-                    extension.villageVotes.vote(target.id.value)
+                    extension.voteWereWolf(target)
                     respond {
                         content = "Vous avez voté contre ${target.effectiveName} !"
                     }

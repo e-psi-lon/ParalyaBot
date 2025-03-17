@@ -6,7 +6,11 @@ import dev.kordex.core.commands.converters.impl.role
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.publicSlashCommand
 import dev.kordex.core.utils.hasRole
-import fr.paralya.bot.extensions.base.Base
+import fr.paralya.bot.extensions.data.Channels
+import fr.paralya.bot.extensions.data.Interviews
+import fr.paralya.bot.extensions.data.VillageVotes
+import fr.paralya.bot.extensions.data.WereWolfVotes
+import fr.paralya.bot.get
 import fr.paralya.bot.i18n.Translations.Lg
 import fr.paralya.bot.i18n.Translations.Messages
 import fr.paralya.bot.utils.Message
@@ -15,13 +19,23 @@ import org.slf4j.LoggerFactory
 
 class LG: Extension() {
     override val name = "LG"
-    private val baseExtension: Base
-        get() = bot.extensions["Base"]?.let { it as Base } ?: error("Base extension not found")
-    val villageVotes = VillageVotes()
-    val wereWolfVotes = WereWolfVotes()
-    var timeState = LGState.DAY
-    val channels: MutableMap<String, ULong> = mutableMapOf()
     val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    var timeState: LGState
+        get() = runBlocking { bot.get<LGState> { } } ?: LGState.DAY
+        set(value) = runBlocking { bot.set(value) }
+    var wereWolfVotes: WereWolfVotes
+        get() = runBlocking { bot.get<WereWolfVotes> { } } ?: WereWolfVotes()
+        set(value) = runBlocking { bot.set(value) }
+    var villageVotes: VillageVotes
+        get() = runBlocking { bot.get<VillageVotes> { } } ?: VillageVotes()
+        set(value) = runBlocking { bot.set(value) }
+    var interviews: List<ULong>
+        get() = runBlocking { bot.get<Interviews> { } }?.interviews ?: emptyList()
+        set(value) = runBlocking { bot.set(Interviews(value)) }
+    var channels: Map<String, ULong>
+        get() = runBlocking { bot.get<Channels> { } }?.channels ?: emptyMap()
+        set(value) = runBlocking { bot.set(Channels(value)) }
+
 
     override suspend fun setup() {
         registerListeners()
