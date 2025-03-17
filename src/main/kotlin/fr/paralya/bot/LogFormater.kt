@@ -15,6 +15,7 @@ class LogFormater : LayoutWrappingEncoder<ILoggingEvent>() {
                 return format
                     .replace("%highlight(%-5level)", highlightLevel(event.level.toString()))
                     .replace("%msg", event.formattedMessage)
+                    .replace("%logger", event.loggerName)
                     .replace("%d{dd/MM/yyyy HH:mm:ss}", SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(Date(event.timeStamp)))
             }
 
