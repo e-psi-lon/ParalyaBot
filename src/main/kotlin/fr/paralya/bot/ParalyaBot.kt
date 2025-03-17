@@ -1,7 +1,9 @@
 package fr.paralya.bot
 
+import dev.kord.cache.api.QueryBuilder
+import dev.kord.cache.api.put
+import dev.kord.cache.api.query
 import dev.kord.common.Color
-import dev.kord.common.entity.PresenceStatus
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
 import dev.kord.rest.builder.message.embed
@@ -10,16 +12,22 @@ import dev.kordex.core.i18n.SupportedLocales
 import dev.kordex.core.utils.envOrNull
 import fr.paralya.bot.extensions.lg.LG
 import fr.paralya.bot.extensions.base.Base
+import fr.paralya.bot.extensions.base.GameModes
+import fr.paralya.bot.extensions.base.gameMode
+import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.system.exitProcess
 
-suspend fun main() {
+suspend fun main(args: Array<String>) {
     val bot = ExtensibleBot(TOKEN) {
+        val logger = LoggerFactory.getLogger("ParalyaBot")
+        devMode = args.contains("--dev")
+        logger.info("Starting bot in ${if (devMode) "development" else "production"} mode")
         extensions {
             add(::Base)
             add(::LG)
             help {
-                this.color { Color(0xAAFFAA) }
+                enableBundledExtension = false
             }
         }
 
@@ -34,13 +42,11 @@ suspend fun main() {
             defaultLocale = SupportedLocales.FRENCH
 
             applicationCommandLocale(SupportedLocales.FRENCH)
-
         }
 
-        presence {
-            status = PresenceStatus.Idle
-            this.watching("Paralya sans animation en cours")
-        }
+        members { all() }
+
+        presence { gameMode(GameModes.NONE) }
 
         errorResponse { message, type ->
             embed {
