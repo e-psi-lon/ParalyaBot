@@ -7,8 +7,10 @@ import dev.kord.core.entity.channel.TopGuildChannel
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.converters.impl.role
+import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.publicSlashCommand
+import dev.kordex.core.utils.dm
 import dev.kordex.core.utils.hasRole
 import fr.paralya.bot.extensions.data.Channels
 import fr.paralya.bot.extensions.data.Interviews
@@ -45,27 +47,30 @@ class LG: Extension() {
 
 
     override suspend fun setup() {
-        registerListeners()
         publicSlashCommand {
             name = Lg.Command.name
             description = Lg.Command.description
+            registerVotingCommands(this@LG)
+            registerDayCycleCommands(this@LG)
             ephemeralSubCommand(::NotifArguments, ::Message) {
                 name = Lg.Notif.Command.name
                 description = Lg.Notif.Command.description
                 action { modal ->
+                    val failed = mutableListOf<String>()
                     if (guild == null) {
                         respond {
-                            content = Messages.Error.only_in_guild.translate()
+                            content = Messages.Error.onlyInGuild.translate()
                         }
                         return@action
                     }
                     try {
-
+                        logger.debug("guild supplier : {}", guild?.supplier)
                         guild?.members?.collect { member ->
+                            logger.debug("Checking member ${member.username}")
                             if (member.hasRole(arguments.role)) {
-                                member.fetchUser().getDmChannelOrNull()?.createMessage(
+                                member.dm(
                                     "━━━━━━━━━━━━━━━━━━\n🐺 LGNotifications ¦ ${modal?.message?.value ?: "Une erreur a eu lieu, merci de la rapporter à l'équipe technique."}\n━━━━━━━━━━━━━━━━━━"
-                                )
+                                ) ?: failed.add(member.username)
                             }
                         }
                     } catch (e: Exception) {
@@ -74,7 +79,11 @@ class LG: Extension() {
                         }
                     }
                     respond {
-                        content = Lg.Notif.Response.success.translate()
+                        content = if (failed.isEmpty()) {
+                            Lg.Notif.Response.success.translate()
+                        } else {
+                            Lg.Notif.Response.failed.translate(failed.joinToString(", "))
+                        }
                     }
                 }
             }
