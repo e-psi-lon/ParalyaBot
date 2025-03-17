@@ -16,12 +16,12 @@ repositories {
 
 kordEx {
     bot {
-        dataCollection(DataCollection.Extra)
+        dataCollection(DataCollection.Minimal)
         mainClass = "fr.paralya.bot.ParalyaBotKt"
     }
     i18n {
         classPackage = "fr.paralya.bot.i18n"
-        translationBundle = "strings"
+        translationBundle = "paralyabot"
     }
 }
 
@@ -35,12 +35,13 @@ tasks.test {
 }
 
 tasks {
-    shadowJar{
+    shadowJar {
         archiveBaseName.set("paralya-bot")
-        archiveClassifier.set(version as String)
-        archiveVersion.set("")
+        archiveClassifier.set("")
+        archiveVersion.set(version as String)
     }
 }
+
 kotlin {
     jvmToolchain(21)
 }

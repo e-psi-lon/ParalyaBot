@@ -1,8 +1,8 @@
 [versions]
-kotlin = "2.0.20"
-kordex-plugin = "1.5.4"
-logback = "1.5.9"
-shadow = "8.3.3"
+kotlin = "2.1.10"
+kordex-plugin = "1.6.1"
+logback = "1.5.17"
+shadow = "8.3.5"
 
 [libraries]
 logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
