@@ -14,6 +14,8 @@ import dev.kord.core.entity.User
 import dev.kord.core.entity.channel.TopGuildChannel
 import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.core.event.message.MessageDeleteEvent
+import dev.kord.core.event.message.MessageUpdateEvent
 import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
 import fr.paralya.bot.LG_MAIN_CATEGORY
@@ -22,6 +24,8 @@ import fr.paralya.bot.extensions.data.addChannels
 import fr.paralya.bot.extensions.data.removeInterview
 import fr.paralya.bot.utils.getWebhook
 import fr.paralya.bot.utils.toSnowflake
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.toList
 
 
 fun DiscordUser?.asUser(kord: Kord) = this?.let { User(UserData.from(it), kord) }
@@ -96,9 +100,50 @@ suspend fun LG.registerListeners() {
                 }
             }
             logger.debug("Found ${lGMainMap.size} channels in the main category of werewolf game")
-            channels.putAll(lGRolesMap)
-            channels.putAll(lGMainMap)
+            addChannels(lGRolesMap)
+            addChannels(lGMainMap)
         }
     }
+}
 
+fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
+    // Compare content
+    if (msg1.content != msg2.content) {
+        return false
+    }
+
+    // Compare attachments
+    val attachments1 = msg1.attachments.map { Triple(it.filename, it.size, it.isSpoiler) }.sortedBy { it.first }
+    val attachments2 = msg2.attachments.map { Triple(it.filename, it.size, it.isSpoiler) }.sortedBy { it.first }
+
+    return attachments1 == attachments2
+}
+
+// Function to find corresponding message in a channel
+suspend fun getCorrespondingMessage(channel: MessageChannelBehavior, message: Message): Message? {
+    val date = message.timestamp
+
+    // Look for messages after the original message
+    channel.getMessagesBefore(Snowflake.max, 20)
+        .filter { it.timestamp >= date }
+        .toList()
+        .sortedBy { it.timestamp }
+        .forEach { msg ->
+            if (areMessagesSimilar(message, msg)) {
+                return msg
+            }
+        }
+
+    // Look for messages before the original message
+    channel.getMessagesAfter(Snowflake.min, 20)
+        .filter { it.timestamp <= date }
+        .toList()
+        .sortedByDescending { it.timestamp }
+        .forEach { msg ->
+            if (areMessagesSimilar(message, msg)) {
+                return msg
+            }
+        }
+
+    return null
 }
