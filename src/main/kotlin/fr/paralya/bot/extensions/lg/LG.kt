@@ -1,5 +1,9 @@
 package fr.paralya.bot.extensions.lg
 
+import dev.kord.common.entity.Permission
+import dev.kord.common.entity.Permissions
+import dev.kord.core.entity.PermissionOverwrite
+import dev.kord.core.entity.channel.TopGuildChannel
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.converters.impl.role
@@ -13,7 +17,9 @@ import fr.paralya.bot.extensions.data.WereWolfVotes
 import fr.paralya.bot.get
 import fr.paralya.bot.i18n.Translations.Lg
 import fr.paralya.bot.i18n.Translations.Messages
+import fr.paralya.bot.set
 import fr.paralya.bot.utils.Message
+import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -71,13 +77,36 @@ class LG: Extension() {
                     }
                 }
             }
+            ephemeralSubCommand(::InterviewArguments) {
+                name = Lg.Interview.Command.name
+                description = Lg.Interview.Command.description
+                action {
+                    val interviewChannel = channels["INTERVIEW"]?.toSnowflake()?.let { it1 -> guild?.getChannel(it1) } as TopGuildChannel?
+                    if (interviewChannel == null) {
+                        respond {
+                            content = Messages.Error.channelNotFound.translate("interview")
+                        }
+                        return@action
+                    }
+                    val user = arguments.user
+                    interviewChannel.addOverwrite(PermissionOverwrite.forMember(user.id, Permissions(Permission.SendMessages)))
+                }
+            }
         }
+        registerListeners()
     }
 
     inner class NotifArguments: Arguments() {
         val role by role {
             name = Lg.Notif.Argument.Role.name
             description = Lg.Notif.Argument.Role.description
+        }
+    }
+
+    inner class InterviewArguments: Arguments() {
+        val user by user {
+            name = Lg.Interview.Argument.User.name
+            description = Lg.Interview.Argument.User.description
         }
     }
 }
