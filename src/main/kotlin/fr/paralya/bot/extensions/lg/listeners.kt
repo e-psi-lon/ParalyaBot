@@ -23,18 +23,24 @@ import fr.paralya.bot.extensions.data.removeInterview
 import fr.paralya.bot.utils.getWebhook
 import fr.paralya.bot.utils.toSnowflake
 
+
+fun DiscordUser?.asUser(kord: Kord) = this?.let { User(UserData.from(it), kord) }
 suspend fun LG.registerListeners() {
     event<MessageCreateEvent> {
         action {
             val message = event.message
-            // Si e message a ete envoye en mp, pas par le bot et n'est pas vide
             if (message.getGuildOrNull() == null && message.author?.isSelf != true && message.content.isNotEmpty()) {
-                // On envoie un message via un webhook dans le channel de configuration
                 val webhook = getWebhook(939233865350938644.toULong(), bot, "LG")
                 webhook.execute(webhook.token!!) {
                     content = message.content
                     username = message.author?.tag ?: "Inconnu"
                     avatarUrl = message.author?.avatar?.cdnUrl?.toUrl()
+                }
+            }
+            else if (message.channelId.value == channels["INTERVIEW"]) {
+                if (message.author?.id?.value in interviews) {
+                    removeInterview(message.author!!.id.value)
+                    (message.channel as TopGuildChannel).addOverwrite(PermissionOverwrite.forMember(message.author!!.id, denied = Permissions(Permission.SendMessages)))
                 }
             }
         }

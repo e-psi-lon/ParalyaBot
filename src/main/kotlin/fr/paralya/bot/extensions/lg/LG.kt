@@ -19,6 +19,7 @@ import fr.paralya.bot.i18n.Translations.Lg
 import fr.paralya.bot.i18n.Translations.Messages
 import fr.paralya.bot.set
 import fr.paralya.bot.utils.Message
+import fr.paralya.bot.utils.toSnowflake
 import kotlinx.coroutines.runBlocking
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
