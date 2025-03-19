@@ -21,15 +21,14 @@ enum class LGState {
 
 
 suspend fun <A: Arguments, M: ModalForm>PublicSlashCommand<A, M>.registerDayCycleCommands(extension: LG) {
-    val day = ephemeralSubCommand(::DayArguments) {
+    ephemeralSubCommand(::DayArguments) {
         name = Lg.Day.Command.name
         description = Lg.Day.Command.description
-
         action {
             adminOnly {
                 val force = arguments.force
                 val kill = arguments.kill
-
+                
             }
         }
     }

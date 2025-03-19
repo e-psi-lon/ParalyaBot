@@ -20,7 +20,9 @@ import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
 import fr.paralya.bot.LG_MAIN_CATEGORY
 import fr.paralya.bot.LG_ROLES_CATEGORY
-import fr.paralya.bot.extensions.data.addChannels
+import fr.paralya.bot.extensions.data.getChannel
+import fr.paralya.bot.extensions.data.getInterviews
+import fr.paralya.bot.extensions.data.registerChannel
 import fr.paralya.bot.extensions.data.removeInterview
 import fr.paralya.bot.utils.getWebhook
 import fr.paralya.bot.utils.toSnowflake
@@ -41,9 +43,9 @@ suspend fun LG.registerListeners() {
                     avatarUrl = message.author?.avatar?.cdnUrl?.toUrl()
                 }
             }
-            else if (message.channelId.value == channels["INTERVIEW"]) {
-                if (message.author?.id?.value in interviews) {
-                    removeInterview(message.author!!.id.value)
+            else if (message.channelId == botCache.getChannel("INTERVIEW")) {
+                if (message.author?.id in botCache.getInterviews()) {
+                    botCache.removeInterview(message.author!!.id)
                     (message.channel as TopGuildChannel).addOverwrite(PermissionOverwrite.forMember(message.author!!.id, denied = Permissions(Permission.SendMessages)))
                 }
             }
@@ -78,14 +80,14 @@ suspend fun LG.registerListeners() {
         action {
             logger.debug("Fetching channels from categories loup-garou and roles from loup-garou")
             val paralya = event.guilds.first()
-            val lGRolesMap = mutableMapOf<String, ULong>()
-            val lGMainMap = mutableMapOf<String, ULong>()
+            val lGRolesMap = mutableMapOf<String, Snowflake>()
+            val lGMainMap = mutableMapOf<String, Snowflake>()
             paralya.channels.collect { channel ->
                 if (channel.getCategory()?.id == LG_ROLES_CATEGORY.toSnowflake()) {
                     val channelName = channel.name.replace(Regex("[^A-Za-z0-9_-]"), "")
                         .removePrefix("-").replace("-", "_").uppercase()
                     if (channelName != "_".repeat(channelName.length)) {
-                        lGRolesMap[channelName] = channel.id.value
+                        lGRolesMap[channelName] = channel.id
                     }
                 }
             }
@@ -95,13 +97,17 @@ suspend fun LG.registerListeners() {
                     val channelName = channel.name.replace(Regex("[^A-Za-z0-9_-]"), "")
                         .removePrefix("-").replace("-", "_").uppercase()
                     if (channelName != "_".repeat(channelName.length)) {
-                        lGMainMap[channelName] = channel.id.value
+                        lGMainMap[channelName] = channel.id
                     }
                 }
             }
             logger.debug("Found ${lGMainMap.size} channels in the main category of werewolf game")
-            addChannels(lGRolesMap)
-            addChannels(lGMainMap)
+            lGRolesMap.map { (name, value) ->
+                botCache.registerChannel(name, value)
+            }
+            lGMainMap.map { (name, value) ->
+                botCache.registerChannel(name, value)
+            }
         }
     }
 }

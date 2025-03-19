@@ -1,8 +1,5 @@
 package fr.paralya.bot
 
-import dev.kord.cache.api.QueryBuilder
-import dev.kord.cache.api.put
-import dev.kord.cache.api.query
 import dev.kord.common.Color
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
@@ -70,16 +67,6 @@ val environmentVariables = listOf(
     "LG_ALIVE",
     "LG_DEAD"
 )
-
-suspend inline fun <reified T : Any>ExtensibleBot.get(noinline block: QueryBuilder<T>.() -> Unit): T? {
-    return kordRef.cache.query<T> {
-        block()
-    }.singleOrNull()
-}
-
-suspend inline fun <reified T : Any>ExtensibleBot.set(value: T) {
-    kordRef.cache.put(value)
-}
 
 private fun checkEnv() {
     val file = File(".env")
