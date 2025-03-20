@@ -9,9 +9,9 @@ import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.forms.ModalForm
-import fr.paralya.bot.extensions.data.voteCorbeau
-import fr.paralya.bot.extensions.data.voteVillage
-import fr.paralya.bot.extensions.data.voteWereWolf
+import fr.paralya.bot.extensions.lg.data.voteCorbeau
+import fr.paralya.bot.extensions.lg.data.voteVillage
+import fr.paralya.bot.extensions.lg.data.voteWereWolf
 import fr.paralya.bot.i18n.Translations.Lg
 import fr.paralya.bot.utils.getWebhook
 

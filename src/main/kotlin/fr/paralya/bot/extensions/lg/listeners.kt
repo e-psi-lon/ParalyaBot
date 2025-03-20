@@ -20,10 +20,10 @@ import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
 import fr.paralya.bot.LG_MAIN_CATEGORY
 import fr.paralya.bot.LG_ROLES_CATEGORY
-import fr.paralya.bot.extensions.data.getChannel
-import fr.paralya.bot.extensions.data.getInterviews
-import fr.paralya.bot.extensions.data.registerChannel
-import fr.paralya.bot.extensions.data.removeInterview
+import fr.paralya.bot.extensions.lg.data.getChannel
+import fr.paralya.bot.extensions.lg.data.getInterviews
+import fr.paralya.bot.extensions.lg.data.registerChannel
+import fr.paralya.bot.extensions.lg.data.removeInterview
 import fr.paralya.bot.utils.getWebhook
 import fr.paralya.bot.utils.toSnowflake
 import kotlinx.coroutines.flow.filter

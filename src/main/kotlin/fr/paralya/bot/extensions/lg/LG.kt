@@ -12,9 +12,9 @@ import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.publicSlashCommand
 import dev.kordex.core.utils.dm
 import dev.kordex.core.utils.hasRole
-import fr.paralya.bot.extensions.data.GameData
-import fr.paralya.bot.extensions.data.VoteData
-import fr.paralya.bot.extensions.data.getChannel
+import fr.paralya.bot.extensions.lg.data.GameData
+import fr.paralya.bot.extensions.lg.data.VoteData
+import fr.paralya.bot.extensions.lg.data.getChannel
 import fr.paralya.bot.i18n.Translations.Lg
 import fr.paralya.bot.i18n.Translations.Messages
 import fr.paralya.bot.utils.Message

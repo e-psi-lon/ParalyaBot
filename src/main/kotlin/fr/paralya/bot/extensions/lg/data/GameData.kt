@@ -1,4 +1,4 @@
-package fr.paralya.bot.extensions.data
+package fr.paralya.bot.extensions.lg.data
 
 import dev.kord.cache.api.DataCache
 import dev.kord.cache.api.data.DataDescription
