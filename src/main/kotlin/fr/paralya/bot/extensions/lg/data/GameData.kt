@@ -48,6 +48,7 @@ suspend fun DataCache.getGameData(): GameData {
 	return query<GameData>().singleOrNull() ?: GameData()
 }
 
+
 suspend fun DataCache.updateGameData(modifier: (GameData) -> GameData) {
 	val current = getGameData()
 	val updated = modifier(current)

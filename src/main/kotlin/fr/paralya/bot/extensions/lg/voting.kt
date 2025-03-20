@@ -9,11 +9,13 @@ import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.forms.ModalForm
+import fr.paralya.bot.extensions.lg.data.getChannel
+import fr.paralya.bot.extensions.lg.data.getCurrentVote
+import fr.paralya.bot.extensions.lg.data.vote
 import fr.paralya.bot.extensions.lg.data.voteCorbeau
-import fr.paralya.bot.extensions.lg.data.voteVillage
-import fr.paralya.bot.extensions.lg.data.voteWereWolf
 import fr.paralya.bot.i18n.Translations.Lg
 import fr.paralya.bot.utils.getWebhook
+import fr.paralya.bot.utils.toSnowflake
 
 suspend fun <A: Arguments, M: ModalForm>PublicSlashCommand<A, M>.registerVotingCommands(extension: LG) {
     group(Lg.Vote.Command.name) {
@@ -25,25 +27,25 @@ suspend fun <A: Arguments, M: ModalForm>PublicSlashCommand<A, M>.registerVotingC
 
                 val target = arguments.target
                 val reason = arguments.reason
-                if (channel.id.value == extension.channels["CORBEAU"]) {
-                    if (extension.villageVotes.corbeau != 0.toULong()) {
+                if (channel.id == extension.botCache.getChannel("CORBEAU")) {
+                    if (extension.botCache.getCurrentVote(LGState.DAY)?.corbeau != 0.toSnowflake()) {
                         respond { content = "Vous avez déjà voté en tant que corbeau !" }
                     }
-                    extension.voteCorbeau(target.id.value)
+                    extension.botCache.voteCorbeau(target.id)
                     respond { content = "Vous avez voté contre ${target.effectiveName}" }
-                } else if (channel.id.value != extension.channels["VOTES"])
+                } else if (channel.id != extension.botCache.getChannel("VOTES"))
                     respond { content = "Vous ne pouvez pas voter ici !" }
-                else if (extension.villageVotes.choices.isNotEmpty() && !extension.villageVotes.choices.contains(target.id.value))
+                else if (extension.botCache.getCurrentVote(LGState.DAY)?.choices?.isNotEmpty() == true && extension.botCache.getCurrentVote(LGState.DAY)?.choices?.contains(target.id) != true)
                     respond { content = "Ce joueur n'est pas dans les choix disponibles !" }
-                else if (!extension.villageVotes.isCurrent)
+                else if (extension.botCache.getCurrentVote(LGState.DAY) == null)
                     respond { content = "Aucun vote n'est actuellement en cours !" }
                 else {
-                    val alreadyVoted = extension.villageVotes.votes.containsKey(target.id.value)
-                    extension.voteVillage(target)
+                    val alreadyVoted = extension.botCache.getCurrentVote(LGState.DAY)?.votes?.containsKey(target.id) == true
+                    extension.botCache.vote(user.id, target)
                     respond {
                         content = "Vous avez voté contre ${target.effectiveName} !"
                     }
-                    val webhook = extension.channels["VOTES"]?.let { it1 ->
+                    val webhook = extension.botCache.getChannel("VOTES")?.let { it1 ->
                         getWebhook(
                             it1,
                             extension.bot,
@@ -67,19 +69,19 @@ suspend fun <A: Arguments, M: ModalForm>PublicSlashCommand<A, M>.registerVotingC
             action {
                 val target = arguments.target
                 val reason = arguments.reason
-                if (channel.id.value != extension.channels["LOUPS_VOTE"])
+                if (channel.id != extension.botCache.getChannel("LOUPS_VOTE"))
                     respond { content = "Vous ne pouvez pas voter ici !" }
-                else if (extension.wereWolfVotes.choices.isNotEmpty() && !extension.wereWolfVotes.choices.contains(target.id.value))
+                else if (extension.botCache.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && extension.botCache.getCurrentVote(LGState.NIGHT)?.choices?.contains(target.id) != true)
                     respond { content = "Ce joueur n'est pas dans les choix disponibles !" }
-                else if (!extension.villageVotes.isCurrent)
+                else if (extension.botCache.getCurrentVote(LGState.NIGHT) == null)
                     respond { content = "Aucun vote n'est actuellement en cours !" }
                 else {
-                    val alreadyVoted = extension.wereWolfVotes.votes.containsKey(target.id.value)
-                    extension.voteWereWolf(target)
+                    val alreadyVoted = extension.botCache.getCurrentVote(LGState.NIGHT)?.votes?.containsKey(target.id) == true
+                    extension.botCache.vote(user.id, target)
                     respond {
                         content = "Vous avez voté contre ${target.effectiveName} !"
                     }
-                    val webhook = extension.channels["LOUP_VOTE"]?.let { it1 ->
+                    val webhook = extension.botCache.getChannel("LOUP_VOTE")?.let { it1 ->
                         getWebhook(
                             it1,
                             extension.bot,

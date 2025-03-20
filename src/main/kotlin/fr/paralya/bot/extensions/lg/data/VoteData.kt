@@ -8,13 +8,14 @@ import dev.kord.cache.api.query
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.cache.idEq
 import dev.kord.core.entity.User
+import fr.paralya.bot.extensions.lg.LGState
 import fr.paralya.bot.utils.toSnowflake
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class VoteData(
     val id: Snowflake,
-    val type: String, // "WEREWOLF" or "VILLAGE"
+    val type: String,
     val isCurrent: Boolean = false,
     val votes: Map<Snowflake, Snowflake> = emptyMap(), //
     val choices: List<Snowflake> = listOf(),
@@ -23,11 +24,11 @@ data class VoteData(
     companion object {
         val description: DataDescription<VoteData, Snowflake> = description(VoteData::id)
 
-        fun createWerewolfVote(id: Snowflake, isCurrent: Boolean = false): VoteData =
-            VoteData(id, "WEREWOLF", isCurrent)
+        fun createWerewolfVote(id: Snowflake, isCurrent: Boolean = true): VoteData =
+            VoteData(id, LGState.NIGHT.name, isCurrent)
 
-        fun createVillageVote(id: Snowflake, isCurrent: Boolean = false): VoteData =
-            VoteData(id, "VILLAGE", isCurrent)
+        fun createVillageVote(id: Snowflake, isCurrent: Boolean = true): VoteData =
+            VoteData(id, LGState.DAY.name, isCurrent)
     }
 
     fun vote(voterId: Snowflake, targetId: Snowflake): VoteData {
@@ -37,7 +38,7 @@ data class VoteData(
     }
 
     fun voteCorbeau(targetId: Snowflake): VoteData {
-        return if (type == "VILLAGE") copy(corbeau = targetId) else this
+        return if (type == LGState.DAY.name) copy(corbeau = targetId) else this
     }
 
     fun setChoices(choices: List<Snowflake>): VoteData = copy(choices = choices)
@@ -45,34 +46,41 @@ data class VoteData(
     fun setCurrent(isCurrent: Boolean): VoteData = copy(isCurrent = isCurrent)
 }
 
-suspend fun DataCache.getCurrentVote(type: String): VoteData? {
-    return query<VoteData> {
-        this.idEq(VoteData::type, type)
-        this.idEq(VoteData::isCurrent, true)
-    }.singleOrNull()
+suspend fun DataCache.getCurrentVote(type: LGState? = null): VoteData? {
+    return if (type == null) {
+        val time = getGameData().state
+        query<VoteData> {
+            this.idEq(VoteData::type, time.name)
+            this.idEq(VoteData::isCurrent, true)
+        }.singleOrNull()
+    }  else {
+        query<VoteData> {
+            this.idEq(VoteData::type, type.name)
+            this.idEq(VoteData::isCurrent, true)
+        }.singleOrNull()
+    }
 }
 
 suspend fun DataCache.updateVote(voteData: VoteData) {
     put(voteData)
 }
 
-suspend fun DataCache.vote(type: String, voterId: Snowflake, target: User): Boolean {
-    val vote = getCurrentVote(type) ?: return false
+suspend fun DataCache.vote(voterId: Snowflake, target: User): Boolean {
+    val vote = getCurrentVote() ?: return false
     val updated = vote.vote(voterId, target.id)
     put(updated)
     return true
 }
 
-suspend fun DataCache.setVoteChoices(voteType: String, choices: List<Snowflake>): Boolean {
-    val vote = getCurrentVote(voteType) ?: return false
+suspend fun DataCache.setVoteChoices(choices: List<Snowflake>): Boolean {
+    val vote = getCurrentVote() ?: return false
     val updated = vote.setChoices(choices)
     put(updated)
     return true
 }
 
-suspend fun DataCache.voteCorbeau(voteType: String, targetId: Snowflake): Boolean {
-    val vote = getCurrentVote(voteType) ?: return false
-    if (vote.type != "VILLAGE") return false
+suspend fun DataCache.voteCorbeau(targetId: Snowflake): Boolean {
+    val vote = getCurrentVote(LGState.DAY) ?: return false
     val updated = vote.voteCorbeau(targetId)
     put(updated)
     return true

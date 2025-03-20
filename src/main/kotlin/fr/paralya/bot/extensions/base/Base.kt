@@ -6,7 +6,6 @@ import dev.kordex.core.commands.application.slash.converters.impl.enumChoice
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.extensions.event
-import fr.paralya.bot.extensions.data.resetGame
 import fr.paralya.bot.i18n.Translations
 import org.slf4j.LoggerFactory
 
@@ -42,7 +41,6 @@ class Base: Extension() {
                 bKord.editPresence {
                     gameMode(GameModes.NONE)
                 }
-                bKord.cache.resetGame()
                 respond {
                     content = Translations.StopGame.Response.success.translate()
                 }

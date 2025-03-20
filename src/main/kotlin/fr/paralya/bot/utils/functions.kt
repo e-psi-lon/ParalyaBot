@@ -1,15 +1,16 @@
 package fr.paralya.bot.utils
 
+import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.Webhook
 import dev.kord.rest.Image
 import dev.kordex.core.ExtensibleBot
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 
-suspend fun getWebhook(channel: ULong, bot: ExtensibleBot, name: String): Webhook {
-    val webhooks = bot.kordRef.rest.webhook.getChannelWebhooks(channel.toSnowflake())
+suspend fun getWebhook(channel: Snowflake, bot: ExtensibleBot, name: String): Webhook {
+    val webhooks = bot.kordRef.rest.webhook.getChannelWebhooks(channel)
     return (webhooks.firstOrNull { it.name == name } ?: bot.kordRef.rest.webhook.createWebhook(
-        channel.toSnowflake(),
+        channel,
         name
     ) {
         val client = HttpClient(OkHttp) {
@@ -29,6 +30,6 @@ suspend fun getWebhook(channel: ULong, bot: ExtensibleBot, name: String): Webhoo
 fun getAssetLink(name: String) =
     "https://raw.githubusercontent.com/e-psi-lon/ParalyaBot/main/src/main/resources/assets/$name.webp"
 
-fun ULong.toSnowflake() = dev.kord.common.entity.Snowflake(this)
-fun Long.toSnowflake() = dev.kord.common.entity.Snowflake(this)
-fun Int.toSnowflake() = dev.kord.common.entity.Snowflake(this.toLong())
+fun ULong.toSnowflake() = Snowflake(this)
+fun Long.toSnowflake() = Snowflake(this)
+fun Int.toSnowflake() = Snowflake(this.toLong())
