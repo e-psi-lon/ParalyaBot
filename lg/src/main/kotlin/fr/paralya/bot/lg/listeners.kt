@@ -1,4 +1,4 @@
-package fr.paralya.bot.extensions.lg
+package fr.paralya.bot.lg
 
 import dev.kord.common.entity.DiscordUser
 import dev.kord.common.entity.Permission
@@ -18,25 +18,22 @@ import dev.kord.core.event.message.MessageDeleteEvent
 import dev.kord.core.event.message.MessageUpdateEvent
 import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
-import fr.paralya.bot.LG_MAIN_CATEGORY
-import fr.paralya.bot.LG_ROLES_CATEGORY
-import fr.paralya.bot.extensions.lg.data.getChannel
-import fr.paralya.bot.extensions.lg.data.getInterviews
-import fr.paralya.bot.extensions.lg.data.registerChannel
-import fr.paralya.bot.extensions.lg.data.removeInterview
-import fr.paralya.bot.utils.getWebhook
-import fr.paralya.bot.utils.toSnowflake
+import fr.paralya.bot.common.getWebhook
+import fr.paralya.bot.common.toSnowflake
+import fr.paralya.bot.lg.data.*
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.toList
+import org.koin.core.component.inject
 
 
 fun DiscordUser?.asUser(kord: Kord) = this?.let { User(UserData.from(it), kord) }
 suspend fun LG.registerListeners() {
+    val lgConfig by inject<LgConfig>()
     event<MessageCreateEvent> {
         action {
             val message = event.message
             if (message.getGuildOrNull() == null && message.author?.isSelf != true && message.content.isNotEmpty()) {
-                val webhook = getWebhook(939233865350938644.toULong(), bot, "LG")
+                val webhook = getWebhook(939233865350938644.toSnowflake(), bot, "LG")
                 webhook.execute(webhook.token!!) {
                     content = message.content
                     username = message.author?.tag ?: "Inconnu"
@@ -56,7 +53,7 @@ suspend fun LG.registerListeners() {
         action {
             val oldMessage = event.old?.let { getCorrespondingMessage(MessageChannelBehavior(939233865350938644.toSnowflake(), kord), it) }
             if (oldMessage == null) {
-                val webhook = getWebhook(939233865350938644.toULong(), bot, "LG")
+                val webhook = getWebhook(939233865350938644.toSnowflake(), bot, "LG")
                 webhook.execute(webhook.token!!) {
                     content = event.new.content.toString()
                     username = event.new.author.value?.asUser(kord)?.tag ?: "Inconnu"
@@ -70,7 +67,7 @@ suspend fun LG.registerListeners() {
         action {
             val oldMessage = event.message?.let { getCorrespondingMessage(MessageChannelBehavior(939233865350938644.toSnowflake(), kord), it) }
             if (oldMessage == null) {
-                val webhook = getWebhook(939233865350938644.toULong(), bot, "LG")
+                val webhook = getWebhook(939233865350938644.toSnowflake(), bot, "LG")
                 webhook.deleteMessage(webhook.token!!, event.message!!.id)
             }
         }
@@ -83,7 +80,7 @@ suspend fun LG.registerListeners() {
             val lGRolesMap = mutableMapOf<String, Snowflake>()
             val lGMainMap = mutableMapOf<String, Snowflake>()
             paralya.channels.collect { channel ->
-                if (channel.getCategory()?.id == LG_ROLES_CATEGORY.toSnowflake()) {
+                if (channel.getCategory()?.id == lgConfig.rolesCategory.toSnowflake()) {
                     val channelName = channel.name.replace(Regex("[^A-Za-z0-9_-]"), "")
                         .removePrefix("-").replace("-", "_").uppercase()
                     if (channelName != "_".repeat(channelName.length)) {
@@ -93,7 +90,7 @@ suspend fun LG.registerListeners() {
             }
             logger.debug("Found {} channels in the roles category of werewolf game", lGRolesMap.size)
             paralya.channels.collect { channel ->
-                if (channel.getCategory()?.id == LG_MAIN_CATEGORY.toSnowflake()) {
+                if (channel.getCategory()?.id == lgConfig.rolesCategory.toSnowflake()) {
                     val channelName = channel.name.replace(Regex("[^A-Za-z0-9_-]"), "")
                         .removePrefix("-").replace("-", "_").uppercase()
                     if (channelName != "_".repeat(channelName.length)) {

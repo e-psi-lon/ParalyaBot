@@ -1,4 +1,4 @@
-package fr.paralya.bot.extensions.lg.data
+package fr.paralya.bot.lg.data
 
 import dev.kord.cache.api.DataCache
 import dev.kord.cache.api.data.DataDescription
@@ -6,10 +6,8 @@ import dev.kord.cache.api.data.description
 import dev.kord.cache.api.put
 import dev.kord.cache.api.query
 import dev.kord.common.entity.Snowflake
-import fr.paralya.bot.extensions.lg.LGState
-import kotlinx.serialization.Serializable
+import fr.paralya.bot.lg.LGState
 
-@Serializable
 data class GameData(
 	val id: Snowflake = Snowflake(0),
 	val state: LGState = LGState.NIGHT,

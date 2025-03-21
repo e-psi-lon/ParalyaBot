@@ -16,7 +16,6 @@ class Base: Extension() {
         event<ReadyEvent> {
             action {
                 logger.info("Bot connected to Discord as ${event.self.username}")
-                logger.debug("Fetching channels from categories loup-garou and roles from loup-garou")
             }
         }
 

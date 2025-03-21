@@ -1,4 +1,4 @@
-package fr.paralya.bot.extensions.lg
+package fr.paralya.bot.lg
 
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.PublicSlashCommand

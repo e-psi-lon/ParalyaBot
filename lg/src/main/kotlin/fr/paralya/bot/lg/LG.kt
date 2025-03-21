@@ -1,4 +1,4 @@
-package fr.paralya.bot.extensions.lg
+package fr.paralya.bot.lg
 
 import dev.kord.common.entity.Permission
 import dev.kord.common.entity.Permissions
@@ -12,12 +12,15 @@ import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.publicSlashCommand
 import dev.kordex.core.utils.dm
 import dev.kordex.core.utils.hasRole
-import fr.paralya.bot.extensions.lg.data.GameData
-import fr.paralya.bot.extensions.lg.data.VoteData
-import fr.paralya.bot.extensions.lg.data.getChannel
-import fr.paralya.bot.i18n.Translations.Lg
-import fr.paralya.bot.i18n.Translations.Messages
-import fr.paralya.bot.utils.Message
+import fr.paralya.bot.common.ConfigManager
+import fr.paralya.bot.common.Message
+import fr.paralya.bot.lg.data.GameData
+import fr.paralya.bot.lg.data.VoteData
+import fr.paralya.bot.lg.data.getChannel
+import fr.paralya.bot.lg.i18n.Translations.Lg
+import fr.paralya.bot.common.i18n.Translations.Messages
+import fr.paralya.bot.lg.data.LgConfig
+import org.koin.core.component.inject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -28,6 +31,9 @@ class LG: Extension() {
 
 
     override suspend fun setup() {
+        val configManager = ConfigManager()
+        val lgConfig by inject<LgConfig>()
+        configManager.loadConfigSection(lgConfig, "games.lg")
         kord.cache.register(
             GameData.description,
             VoteData.description
