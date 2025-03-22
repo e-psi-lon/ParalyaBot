@@ -3,9 +3,12 @@ kotlin = "2.1.10"
 kordex-plugin = "1.6.2"
 logback = "1.5.17"
 shadow = "8.3.5"
+typesafe-config = "1.4.3"
 
 [libraries]
-logback = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
+typesafe-config = { group = "com.typesafe", name = "config", version.ref = "typesafe-config" }
+kotlin-reflection = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

@@ -48,4 +48,6 @@ bin/
 .env
 data/**
 logs/**
+games/**
+config.conf
 

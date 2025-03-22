@@ -5,20 +5,34 @@ import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
 import dev.kord.rest.builder.message.embed
 import dev.kordex.core.ExtensibleBot
+import dev.kordex.core.commands.converters.impl.TagConverter.Companion.getKoin
 import dev.kordex.core.i18n.SupportedLocales
-import dev.kordex.core.utils.envOrNull
-import fr.paralya.bot.extensions.lg.LG
+import dev.kordex.core.utils.loadModule
 import fr.paralya.bot.extensions.base.Base
 import fr.paralya.bot.extensions.base.GameModes
 import fr.paralya.bot.extensions.base.gameMode
+import fr.paralya.bot.common.ConfigManager
+import fr.paralya.bot.lg.LG
+import fr.paralya.bot.lg.data.LgConfig
+import org.koin.core.module.dsl.createdAtStart
+import org.koin.core.module.dsl.named
+import org.koin.core.module.dsl.singleOf
+import org.koin.core.module.dsl.withOptions
 import org.slf4j.LoggerFactory
-import java.io.File
-import kotlin.system.exitProcess
+import org.koin.core.qualifier.named
 
 suspend fun main(args: Array<String>) {
-    val bot = ExtensibleBot(TOKEN) {
+    val bot = buildBot(args)
+    bot.start()
+}
+
+
+suspend fun buildBot(args: Array<String>): ExtensibleBot {
+    val firstConfigManager = ConfigManager()
+    val token = firstConfigManager.botConfig.token
+    val bot = ExtensibleBot(token) {
         val logger = LoggerFactory.getLogger("ParalyaBot")
-        devMode = args.contains("--dev")
+        devMode = if (!devMode) args.contains("--dev") else true
         logger.info("Starting bot in ${if (devMode) "development" else "production"} mode")
         extensions {
             add(::Base)
@@ -37,7 +51,6 @@ suspend fun main(args: Array<String>) {
 
         i18n {
             defaultLocale = SupportedLocales.FRENCH
-
             applicationCommandLocale(SupportedLocales.FRENCH)
         }
 
@@ -52,68 +65,19 @@ suspend fun main(args: Array<String>) {
                 color = Color(0xFF0000)
             }
         }
-    }
-    for (extension in bot.extensions) {
-        bot.loadExtension(extension.value::class.qualifiedName!!)
-    }
-    bot.start()
-}
 
-val environmentVariables = listOf(
-    "TOKEN",
-    "ADMINS",
-    "LG_ROLES_CATEGORY",
-    "LG_MAIN_CATEGORY",
-    "LG_ALIVE",
-    "LG_DEAD"
-)
-
-private fun checkEnv() {
-    val file = File(".env")
-    if (!file.exists()) {
-        file.createNewFile()
-        file.writeText(environmentVariables.joinToString("\n") { "$it=" })
-    } else {
-        val lines = file.readLines()
-        for (variable in environmentVariables) {
-            if (lines.firstOrNull { it.startsWith("$variable=") } == null)
-                file.appendText("$variable=\n")
+        hooks {
+            beforeKoinSetup {
+                loadModule {
+                    singleOf(::ConfigManager) withOptions {
+                        named("configManager")
+                        createdAtStart()
+                    }
+                }
+                val configManager = getKoin().get<ConfigManager>(named("configManager"))
+                configManager.registerConfig(::LgConfig, "lgConfig")
+            }
         }
     }
-}
-
-private val TOKEN = envOrNull("TOKEN") ?: run {
-    println("Please provide a token in the .env file in the same folder as the jar.")
-    checkEnv()
-    exitProcess(1)
-}
-
-val ADMINS = envOrNull("ADMINS")?.split(",")?.map { it.toULong() } ?: run {
-    println("Please provide an admin list in the .env file in the same folder as the jar.")
-    checkEnv()
-    exitProcess(1)
-}
-
-val LG_ROLES_CATEGORY = envOrNull("LG_ROLES_CATEGORY")?.toULong()?: run {
-    println("Please provide the id of the roles category (lg) in the .env file in the same folder as the jar.")
-    checkEnv()
-    exitProcess(1)
-}
-
-val LG_MAIN_CATEGORY = envOrNull("LG_MAIN_CATEGORY")?.toULong()?: run {
-    println("Please provide the id of the main category (lg) in the .env file in the same folder as the jar.")
-    checkEnv()
-    exitProcess(1)
-}
-
-val LG_ALIVE = envOrNull("LG_ALIVE")?.toULong()?: run {
-    println("Please provide the id of the alive role in the .env file in the same folder as the jar.")
-    checkEnv()
-    exitProcess(1)
-}
-
-val LG_DEAD = envOrNull("LG_DEAD")?.toULong()?: run {
-    println("Please provide the id of the dead role in the .env file in the same folder as the jar.")
-    checkEnv()
-    exitProcess(1)
+    return bot
 }

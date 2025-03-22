@@ -1,4 +1,4 @@
-package fr.paralya.bot.utils
+package fr.paralya.bot.common
 
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.Webhook

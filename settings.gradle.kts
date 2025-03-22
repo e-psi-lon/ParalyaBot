@@ -10,3 +10,10 @@ pluginManagement {
 		maven("https://releases-repo.kordex.dev")
     }
 }
+
+// Enable type-safe project accessor
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
+
+include("common")
+include("lg")

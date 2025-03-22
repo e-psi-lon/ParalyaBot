@@ -1,4 +1,4 @@
-package fr.paralya.bot.extensions.lg.data
+package fr.paralya.bot.lg.data
 
 import dev.kord.cache.api.DataCache
 import dev.kord.cache.api.data.DataDescription
@@ -8,11 +8,9 @@ import dev.kord.cache.api.query
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.cache.idEq
 import dev.kord.core.entity.User
-import fr.paralya.bot.extensions.lg.LGState
-import fr.paralya.bot.utils.toSnowflake
-import kotlinx.serialization.Serializable
+import fr.paralya.bot.lg.LGState
+import fr.paralya.bot.common.toSnowflake
 
-@Serializable
 data class VoteData(
     val id: Snowflake,
     val type: String,

@@ -1,4 +1,4 @@
-package fr.paralya.bot.extensions.lg
+package fr.paralya.bot.lg
 
 import dev.kord.core.behavior.execute
 import dev.kord.core.entity.effectiveName
@@ -9,13 +9,13 @@ import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.forms.ModalForm
-import fr.paralya.bot.extensions.lg.data.getChannel
-import fr.paralya.bot.extensions.lg.data.getCurrentVote
-import fr.paralya.bot.extensions.lg.data.vote
-import fr.paralya.bot.extensions.lg.data.voteCorbeau
+import fr.paralya.bot.lg.data.getChannel
+import fr.paralya.bot.lg.data.getCurrentVote
+import fr.paralya.bot.lg.data.vote
+import fr.paralya.bot.lg.data.voteCorbeau
 import fr.paralya.bot.i18n.Translations.Lg
-import fr.paralya.bot.utils.getWebhook
-import fr.paralya.bot.utils.toSnowflake
+import fr.paralya.bot.common.toSnowflake
+import fr.paralya.bot.common.getWebhook
 
 suspend fun <A: Arguments, M: ModalForm>PublicSlashCommand<A, M>.registerVotingCommands(extension: LG) {
     group(Lg.Vote.Command.name) {
@@ -35,7 +35,9 @@ suspend fun <A: Arguments, M: ModalForm>PublicSlashCommand<A, M>.registerVotingC
                     respond { content = "Vous avez voté contre ${target.effectiveName}" }
                 } else if (channel.id != extension.botCache.getChannel("VOTES"))
                     respond { content = "Vous ne pouvez pas voter ici !" }
-                else if (extension.botCache.getCurrentVote(LGState.DAY)?.choices?.isNotEmpty() == true && extension.botCache.getCurrentVote(LGState.DAY)?.choices?.contains(target.id) != true)
+                else if (extension.botCache.getCurrentVote(LGState.DAY)?.choices?.isNotEmpty() == true && extension.botCache.getCurrentVote(
+						LGState.DAY
+					)?.choices?.contains(target.id) != true)
                     respond { content = "Ce joueur n'est pas dans les choix disponibles !" }
                 else if (extension.botCache.getCurrentVote(LGState.DAY) == null)
                     respond { content = "Aucun vote n'est actuellement en cours !" }
@@ -71,7 +73,9 @@ suspend fun <A: Arguments, M: ModalForm>PublicSlashCommand<A, M>.registerVotingC
                 val reason = arguments.reason
                 if (channel.id != extension.botCache.getChannel("LOUPS_VOTE"))
                     respond { content = "Vous ne pouvez pas voter ici !" }
-                else if (extension.botCache.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && extension.botCache.getCurrentVote(LGState.NIGHT)?.choices?.contains(target.id) != true)
+                else if (extension.botCache.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && extension.botCache.getCurrentVote(
+						LGState.NIGHT
+					)?.choices?.contains(target.id) != true)
                     respond { content = "Ce joueur n'est pas dans les choix disponibles !" }
                 else if (extension.botCache.getCurrentVote(LGState.NIGHT) == null)
                     respond { content = "Aucun vote n'est actuellement en cours !" }

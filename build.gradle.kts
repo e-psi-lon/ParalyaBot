@@ -15,6 +15,7 @@ repositories {
 }
 
 kordEx {
+    module("web-backend")
     bot {
         dataCollection(DataCollection.Minimal)
         mainClass = "fr.paralya.bot.ParalyaBotKt"
@@ -28,6 +29,8 @@ kordEx {
 dependencies {
     testImplementation(kotlin("test"))
     implementation(libs.logback)
+    implementation(projects.common)
+    implementation(projects.lg)
 }
 
 tasks.test {

@@ -1,4 +1,4 @@
-package fr.paralya.bot.utils
+package fr.paralya.bot.common
 
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.i18n.types.Key
