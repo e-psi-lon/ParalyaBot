@@ -9,9 +9,10 @@ import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.i18n.SupportedLocales
 import dev.kordex.core.utils.loadModule
 import fr.paralya.bot.extensions.base.Base
-import fr.paralya.bot.extensions.base.GameModes
-import fr.paralya.bot.extensions.base.gameMode
+import fr.paralya.bot.common.Registry
+import fr.paralya.bot.common.gameMode
 import fr.paralya.bot.common.ConfigManager
+import fr.paralya.bot.common.GAME_MODE_NONE
 import fr.paralya.bot.lg.LG
 import fr.paralya.bot.lg.data.LgConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -56,7 +57,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 
         members { all() }
 
-        presence { gameMode(GameModes.NONE) }
+        presence { gameMode(GAME_MODE_NONE) }
 
         errorResponse { message, type ->
             embed {
@@ -73,7 +74,12 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
                         named("configManager")
                         createdAtStart()
                     }
+                    singleOf(::Registry) withOptions {
+                        named("registry")
+                        createdAtStart()
+                    }
                 }
+
                 val configManager = getKoin().get<ConfigManager>(named("configManager"))
                 configManager.registerConfig(::LgConfig, "lgConfig")
             }

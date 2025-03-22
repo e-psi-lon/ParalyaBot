@@ -14,9 +14,11 @@ import dev.kordex.core.utils.dm
 import dev.kordex.core.utils.hasRole
 import fr.paralya.bot.common.ConfigManager
 import fr.paralya.bot.common.Message
+import fr.paralya.bot.common.Registry
 import fr.paralya.bot.lg.data.GameData
 import fr.paralya.bot.lg.data.VoteData
 import fr.paralya.bot.lg.data.getChannel
+import fr.paralya.bot.lg.i18n.Translations
 import fr.paralya.bot.lg.i18n.Translations.Lg
 import fr.paralya.bot.common.i18n.Translations.Messages
 import fr.paralya.bot.lg.data.LgConfig
@@ -33,6 +35,8 @@ class LG: Extension() {
         val configManager = ConfigManager()
         val lgConfig by inject<LgConfig>()
         configManager.loadConfigSection(lgConfig, "games.lg")
+        val registry by inject<Registry>()
+        registry.registerGameMode(Translations.GameMode.lg, "lg")
         kord.cache.register(
             GameData.description,
             VoteData.description
@@ -110,4 +114,3 @@ class LG: Extension() {
         }
     }
 }
-

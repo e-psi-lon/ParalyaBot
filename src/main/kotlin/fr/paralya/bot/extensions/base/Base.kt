@@ -2,10 +2,13 @@ package fr.paralya.bot.extensions.base
 
 import dev.kord.core.event.gateway.ReadyEvent
 import dev.kordex.core.commands.Arguments
-import dev.kordex.core.commands.application.slash.converters.impl.enumChoice
+import dev.kordex.core.commands.application.slash.converters.impl.stringChoice
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.extensions.event
+import fr.paralya.bot.common.GAME_MODE_NONE
+import fr.paralya.bot.common.Registry
+import fr.paralya.bot.common.gameMode
 import fr.paralya.bot.i18n.Translations
 import io.github.oshai.kotlinlogging.KotlinLogging
 
@@ -23,8 +26,9 @@ class Base: Extension() {
             name = Translations.StartGame.Command.name
             description = Translations.StartGame.Command.description
             action {
+                val registry = getKoin().get<Registry>()
                 this@Base.kord.editPresence {
-                    gameMode(arguments.game)
+                    gameMode(registry.getGameMode(arguments.game))
                 }
                 respond {
                     content = Translations.StartGame.Response.success.translate(arguments.game)
@@ -38,7 +42,7 @@ class Base: Extension() {
             action {
                 val bKord = this@Base.kord
                 bKord.editPresence {
-                    gameMode(GameModes.NONE)
+                    gameMode(GAME_MODE_NONE)
                 }
                 respond {
                     content = Translations.StopGame.Response.success.translate()
@@ -48,13 +52,10 @@ class Base: Extension() {
     }
 
     inner class StartGameArguments: Arguments() {
-        val game by enumChoice<GameModes> {
+        val game by stringChoice {
             name = Translations.StartGame.Argument.Game.name
             description = Translations.StartGame.Argument.Game.description
-            typeName = Translations.StartGame.Argument.Game.typeName
-            choices = GameModes.entries.associateBy { it.readableName }.toMutableMap().apply {
-                remove(GameModes.NONE.readableName)
-            }
+            choices = getKoin().get<Registry>().getGameModes()
         }
     }
 }
