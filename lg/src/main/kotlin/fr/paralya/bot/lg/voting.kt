@@ -13,7 +13,7 @@ import fr.paralya.bot.lg.data.getChannel
 import fr.paralya.bot.lg.data.getCurrentVote
 import fr.paralya.bot.lg.data.vote
 import fr.paralya.bot.lg.data.voteCorbeau
-import fr.paralya.bot.i18n.Translations.Lg
+import fr.paralya.bot.lg.i18n.Translations.Lg
 import fr.paralya.bot.common.toSnowflake
 import fr.paralya.bot.common.getWebhook
 

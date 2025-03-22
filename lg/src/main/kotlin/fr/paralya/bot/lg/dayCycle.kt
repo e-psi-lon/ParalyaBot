@@ -5,7 +5,7 @@ import dev.kordex.core.commands.application.slash.PublicSlashCommand
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.converters.impl.defaultingBoolean
 import dev.kordex.core.components.forms.ModalForm
-import fr.paralya.bot.i18n.Translations.Lg
+import fr.paralya.bot.lg.i18n.Translations.Lg
 
 enum class LGState {
     DAY,
