@@ -7,15 +7,15 @@ import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.extensions.event
 import fr.paralya.bot.i18n.Translations
-import org.slf4j.LoggerFactory
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 class Base: Extension() {
     override val name = "Base"
-    private val logger = LoggerFactory.getLogger(this::class.java)
+    private val logger = KotlinLogging.logger(this::class.java.name)
     override suspend fun setup() {
         event<ReadyEvent> {
             action {
-                logger.info("Bot connected to Discord as ${event.self.username}")
+                logger.info { "Bot connected to Discord as ${event.self.username}" }
             }
         }
 

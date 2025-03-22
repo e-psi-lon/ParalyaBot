@@ -5,6 +5,7 @@ import dev.kord.common.entity.Permission
 import dev.kord.common.entity.Permissions
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
+import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.execute
 import dev.kord.core.cache.data.UserData
@@ -75,30 +76,12 @@ suspend fun LG.registerListeners() {
 
     event<ReadyEvent> {
         action {
-            logger.debug("Fetching channels from categories loup-garou and roles from loup-garou")
+            logger.debug { "Fetching channels from categories loup-garou and roles from loup-garou" }
             val paralya = event.guilds.first()
-            val lGRolesMap = mutableMapOf<String, Snowflake>()
-            val lGMainMap = mutableMapOf<String, Snowflake>()
-            paralya.channels.collect { channel ->
-                if (channel.getCategory()?.id == lgConfig.rolesCategory.toSnowflake()) {
-                    val channelName = channel.name.replace(Regex("[^A-Za-z0-9_-]"), "")
-                        .removePrefix("-").replace("-", "_").uppercase()
-                    if (channelName != "_".repeat(channelName.length)) {
-                        lGRolesMap[channelName] = channel.id
-                    }
-                }
-            }
-            logger.debug("Found {} channels in the roles category of werewolf game", lGRolesMap.size)
-            paralya.channels.collect { channel ->
-                if (channel.getCategory()?.id == lgConfig.rolesCategory.toSnowflake()) {
-                    val channelName = channel.name.replace(Regex("[^A-Za-z0-9_-]"), "")
-                        .removePrefix("-").replace("-", "_").uppercase()
-                    if (channelName != "_".repeat(channelName.length)) {
-                        lGMainMap[channelName] = channel.id
-                    }
-                }
-            }
-            logger.debug("Found ${lGMainMap.size} channels in the main category of werewolf game")
+            val lGRolesMap = collectChannelsFromCategory(lgConfig.rolesCategory.toSnowflake(), paralya)
+            logger.debug { "Found ${lGRolesMap.size} channels in the roles category of werewolf game" }
+            val lGMainMap = collectChannelsFromCategory(lgConfig.rolesCategory.toSnowflake(), paralya)
+            logger.debug { "Found ${lGMainMap.size} channels in the main category of werewolf game" }
             lGRolesMap.map { (name, value) ->
                 botCache.registerChannel(name, value)
             }
@@ -107,6 +90,20 @@ suspend fun LG.registerListeners() {
             }
         }
     }
+}
+
+private suspend fun collectChannelsFromCategory(category: Snowflake, guild: GuildBehavior): Map<String, Snowflake> {
+    val channels = mutableMapOf<String, Snowflake>()
+    guild.channels.collect { channel ->
+        if (channel.getCategory()?.id == category) {
+            val channelName = channel.name.replace(Regex("[^A-Za-z0-9_-]"), "")
+                .removePrefix("-").replace("-", "_").uppercase()
+            if (channelName != "_".repeat(channelName.length)) {
+                channels[channelName] = channel.id
+            }
+        }
+    }
+    return channels
 }
 
 fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {

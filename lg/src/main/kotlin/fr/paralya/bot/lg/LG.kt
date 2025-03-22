@@ -20,13 +20,12 @@ import fr.paralya.bot.lg.data.getChannel
 import fr.paralya.bot.lg.i18n.Translations.Lg
 import fr.paralya.bot.common.i18n.Translations.Messages
 import fr.paralya.bot.lg.data.LgConfig
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.component.inject
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 
 class LG: Extension() {
     override val name = "LG"
-    val logger: Logger = LoggerFactory.getLogger(this::class.java)
+    val logger = KotlinLogging.logger(this::class.java.name)
     val botCache = kord.cache
 
 
@@ -55,9 +54,9 @@ class LG: Extension() {
                         return@action
                     }
                     try {
-                        logger.debug("guild supplier : {}", guild?.supplier)
+                        logger.debug { "guild supplier : ${guild?.supplier}" }
                         guild?.members?.collect { member ->
-                            logger.debug("Checking member ${member.username}")
+                            logger.debug { "Checking member ${member.username}" }
                             if (member.hasRole(arguments.role)) {
                                 member.dm(
                                     "━━━━━━━━━━━━━━━━━━\n🐺 LGNotifications ¦ ${modal?.message?.value ?: "Une erreur a eu lieu, merci de la rapporter à l'équipe technique."}\n━━━━━━━━━━━━━━━━━━"

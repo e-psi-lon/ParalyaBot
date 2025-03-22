@@ -4,8 +4,8 @@ import dev.kord.common.Color
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
 import dev.kord.rest.builder.message.embed
+import dev.kordex.core.utils.getKoin
 import dev.kordex.core.ExtensibleBot
-import dev.kordex.core.commands.converters.impl.TagConverter.Companion.getKoin
 import dev.kordex.core.i18n.SupportedLocales
 import dev.kordex.core.utils.loadModule
 import fr.paralya.bot.extensions.base.Base
@@ -14,11 +14,11 @@ import fr.paralya.bot.extensions.base.gameMode
 import fr.paralya.bot.common.ConfigManager
 import fr.paralya.bot.lg.LG
 import fr.paralya.bot.lg.data.LgConfig
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.named
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.withOptions
-import org.slf4j.LoggerFactory
 import org.koin.core.qualifier.named
 
 suspend fun main(args: Array<String>) {
@@ -31,9 +31,9 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
     val firstConfigManager = ConfigManager()
     val token = firstConfigManager.botConfig.token
     val bot = ExtensibleBot(token) {
-        val logger = LoggerFactory.getLogger("ParalyaBot")
+        val logger = KotlinLogging.logger("ParalyaBot")
         devMode = if (!devMode) args.contains("--dev") else true
-        logger.info("Starting bot in ${if (devMode) "development" else "production"} mode")
+        logger.info { "Starting bot in ${if (devMode) "development" else "production"} mode" }
         extensions {
             add(::Base)
             add(::LG)
