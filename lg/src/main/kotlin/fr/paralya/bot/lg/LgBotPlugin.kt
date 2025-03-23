@@ -5,7 +5,7 @@ import fr.paralya.bot.common.ConfigManager
 import fr.paralya.bot.lg.data.LgConfig
 import org.koin.core.component.inject
 
-class LgBotPlugin: KordExPlugin() {
+class LgBotPlugin : KordExPlugin() {
 	override suspend fun setup() {
 		bot.logger.info { "Setting up LG plugin" }
 		try {

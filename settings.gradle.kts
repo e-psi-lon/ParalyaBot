@@ -2,13 +2,13 @@ rootProject.name = "ParalyaBot"
 
 
 pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        mavenCentral()
+	repositories {
+		gradlePluginPortal()
+		mavenCentral()
 
 		maven("https://snapshots-repo.kordex.dev")
 		maven("https://releases-repo.kordex.dev")
-    }
+	}
 }
 
 // Enable type-safe project accessor

@@ -41,7 +41,8 @@ class ConfigManager() {
 	}
 
 	private fun createDefaultConfig() {
-		configFile.writeText("""
+		configFile.writeText(
+			"""
             bot {
                 token = ""
                 admins = []
@@ -50,7 +51,8 @@ class ConfigManager() {
             # Game-specific configurations will be added here
             games {
             }
-        """.trimIndent())
+        """.trimIndent()
+		)
 
 		println("Default config created at ${configFile.absolutePath}. Please fill in required values.")
 		exitProcess(1)

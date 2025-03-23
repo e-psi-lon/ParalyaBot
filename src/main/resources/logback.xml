@@ -3,7 +3,7 @@
 
     <!-- Custom Console Appender -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="fr.paralya.bot.LogFormater" />
+        <encoder class="fr.paralya.bot.LogFormater"/>
     </appender>
 
     <!-- File Appender -->
@@ -17,8 +17,8 @@
 
     <!-- Root Logger -->
     <root level="debug">
-        <appender-ref ref="CONSOLE" />
-        <appender-ref ref="FILE" />
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
     </root>
 
 </configuration>
