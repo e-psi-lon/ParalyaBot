@@ -3,10 +3,11 @@ package fr.paralya.bot.common
 import dev.kord.common.entity.PresenceStatus
 import dev.kord.gateway.builder.PresenceBuilder
 import dev.kordex.core.i18n.types.Key
+import dev.kordex.core.koin.KordExKoinComponent
 import fr.paralya.bot.common.i18n.Translations
 
 
-class GameRegistry {
+class GameRegistry: KordExKoinComponent {
 	private val gameModes = mutableMapOf<Key, String>()
 
 	fun registerGameMode(key: Key, gameMode: String) {

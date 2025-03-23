@@ -33,9 +33,6 @@ class LG : Extension() {
 
 
 	override suspend fun setup() {
-		val configManager = ConfigManager()
-		val lgConfig by inject<LgConfig>()
-		configManager.loadConfigSection(lgConfig, "games.lg")
 		val gameRegistry by inject<GameRegistry>()
 		gameRegistry.registerGameMode(Translations.GameMode.lg, "lg")
 		kord.cache.register(

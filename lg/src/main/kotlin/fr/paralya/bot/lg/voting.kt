@@ -24,7 +24,6 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			name = Lg.Vote.Village.Command.name
 			description = Lg.Vote.Village.Command.description
 			action {
-
 				val target = arguments.target
 				val reason = arguments.reason
 				if (channel.id == extension.botCache.getChannel("CORBEAU")) {

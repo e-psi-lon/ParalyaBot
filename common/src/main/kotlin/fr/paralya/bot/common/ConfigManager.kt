@@ -3,8 +3,10 @@ package fr.paralya.bot.common
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
 import com.typesafe.config.ConfigValueType
+import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.utils.envOrNull
 import dev.kordex.core.utils.loadModule
+import org.koin.core.component.inject
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.withOptions
@@ -15,11 +17,11 @@ import kotlin.reflect.full.memberProperties
 import kotlin.system.exitProcess
 
 
-class ConfigManager() {
+class ConfigManager: KordExKoinComponent {
 	private lateinit var config: Config
 	private val configFile = File("config.conf")
 
-	// Core bot configuration
+	// Core bot configuration, directly integrated into the ConfigManager
 	val botConfig = BotConfig()
 
 	init {
@@ -65,8 +67,8 @@ class ConfigManager() {
 				createdAtStart()
 			}
 		}
-		// val config = getKoin().get<T>(named(name))
-		// loadConfigSection(config, path)
+		val config by inject<T>()
+		loadConfigSection(config, "games.${name.removeSuffix("Config").lowercase()}")
 	}
 
 	// Helper method to load config values into a data class
@@ -130,7 +132,14 @@ class ConfigManager() {
 	}
 }
 
-// Core bot configuration
+/**
+ * Data class representing the core bot configuration.
+ *
+ * @property token The bot token used for authentication.
+ * @property admins A list of admin user IDs.
+ * @property dmLogChannelId A channel ID to copy direct messages to.
+ * @property paralyaId The ID of the Paralya guild.
+ */
 data class BotConfig(
 	var token: String = "",
 	var admins: List<ULong> = emptyList()
