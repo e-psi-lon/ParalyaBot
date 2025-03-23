@@ -4,6 +4,9 @@ import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.Webhook
 import dev.kord.rest.Image
 import dev.kordex.core.ExtensibleBot
+import dev.kordex.core.i18n.types.Key
+import dev.kordex.core.i18n.withContext
+import dev.kordex.core.types.TranslatableContext
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 
@@ -26,6 +29,8 @@ suspend fun getWebhook(channel: Snowflake, bot: ExtensibleBot, name: String): We
 		bot.kordRef.getWebhook(it.id)
 	}
 }
+
+suspend fun Key.translateWithContext(context: TranslatableContext, vararg replacements: Any?) = withContext(context).translate(*replacements)
 
 fun getAssetLink(name: String) =
 	"https://raw.githubusercontent.com/e-psi-lon/ParalyaBot/main/src/main/resources/assets/$name.webp"

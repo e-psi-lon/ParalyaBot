@@ -8,6 +8,7 @@ import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.extensions.event
 import fr.paralya.bot.common.GameRegistry
 import fr.paralya.bot.common.gameMode
+import fr.paralya.bot.common.translateWithContext
 import fr.paralya.bot.i18n.Translations
 import io.github.oshai.kotlinlogging.KotlinLogging
 
@@ -30,7 +31,7 @@ class Base : Extension() {
 					gameMode(gameRegistry.getGameMode(arguments.game))
 				}
 				respond {
-					content = Translations.StartGame.Response.success.translate(arguments.game)
+					content = Translations.StartGame.Response.success.translateWithContext(this@action, arguments.game)
 				}
 			}
 		}
@@ -44,7 +45,7 @@ class Base : Extension() {
 					gameMode(GameRegistry.NONE)
 				}
 				respond {
-					content = Translations.StopGame.Response.success.translate()
+					content = Translations.StopGame.Response.success.translateWithContext(this@action)
 				}
 			}
 		}

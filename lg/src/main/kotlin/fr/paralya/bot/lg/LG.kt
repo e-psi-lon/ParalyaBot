@@ -16,6 +16,7 @@ import fr.paralya.bot.common.ConfigManager
 import fr.paralya.bot.common.GameRegistry
 import fr.paralya.bot.common.Message
 import fr.paralya.bot.common.i18n.Translations.Messages
+import fr.paralya.bot.common.translateWithContext
 import fr.paralya.bot.lg.data.GameData
 import fr.paralya.bot.lg.data.LgConfig
 import fr.paralya.bot.lg.data.VoteData
@@ -53,7 +54,7 @@ class LG : Extension() {
 					val failed = mutableListOf<String>()
 					if (guild == null) {
 						respond {
-							content = Messages.Error.onlyInGuild.translate()
+							content = Messages.Error.onlyInGuild.translateWithContext(this@action)
 						}
 						return@action
 					}
@@ -69,14 +70,14 @@ class LG : Extension() {
 						}
 					} catch (e: Exception) {
 						respond {
-							content = Lg.Notif.Response.success.translate(e.message)
+							content = Lg.Notif.Response.success.translateWithContext(this@action, e.message)
 						}
 					}
 					respond {
 						content = if (failed.isEmpty()) {
-							Lg.Notif.Response.success.translate()
+							Lg.Notif.Response.success.translateWithContext(this@action)
 						} else {
-							Lg.Notif.Response.failed.translate(failed.joinToString(", "))
+							Lg.Notif.Response.failed.translateWithContext(this@action, failed.joinToString(", "))
 						}
 					}
 				}
@@ -89,7 +90,7 @@ class LG : Extension() {
 						botCache.getChannel("INTERVIEW")?.let { it1 -> guild?.getChannel(it1) } as TopGuildChannel?
 					if (interviewChannel == null) {
 						respond {
-							content = Messages.Error.channelNotFound.translate("interview")
+							content = Messages.Error.channelNotFound.translateWithContext(this@action,"interview")
 						}
 						return@action
 					}
