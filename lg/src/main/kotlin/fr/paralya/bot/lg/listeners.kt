@@ -19,10 +19,12 @@ import dev.kord.core.event.message.MessageDeleteEvent
 import dev.kord.core.event.message.MessageUpdateEvent
 import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
+import fr.paralya.bot.common.ConfigManager
 import fr.paralya.bot.common.getWebhook
 import fr.paralya.bot.common.toSnowflake
 import fr.paralya.bot.lg.data.*
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import org.koin.core.component.inject
 
@@ -30,11 +32,13 @@ import org.koin.core.component.inject
 fun DiscordUser?.asUser(kord: Kord) = this?.let { User(UserData.from(it), kord) }
 suspend fun LG.registerListeners() {
 	val lgConfig by inject<LgConfig>()
+	val manager by inject<ConfigManager>()
+	val botConfig = manager.botConfig
 	event<MessageCreateEvent> {
 		action {
 			val message = event.message
 			if (message.getGuildOrNull() == null && message.author?.isSelf != true && message.content.isNotEmpty()) {
-				val webhook = getWebhook(939233865350938644.toSnowflake(), bot, "LG")
+				val webhook = getWebhook(botConfig.dmLogChannelId.toSnowflake(), bot, "LG")
 				webhook.execute(webhook.token!!) {
 					content = message.content
 					username = message.author?.tag ?: "Inconnu"
@@ -58,12 +62,12 @@ suspend fun LG.registerListeners() {
 		action {
 			val oldMessage = event.old?.let {
 				getCorrespondingMessage(
-					MessageChannelBehavior(939233865350938644.toSnowflake(), kord),
+					MessageChannelBehavior(botConfig.dmLogChannelId.toSnowflake(), kord),
 					it
 				)
 			}
 			if (oldMessage == null) {
-				val webhook = getWebhook(939233865350938644.toSnowflake(), bot, "LG")
+				val webhook = getWebhook(botConfig.dmLogChannelId.toSnowflake(), bot, "LG")
 				webhook.execute(webhook.token!!) {
 					content = event.new.content.toString()
 					username = event.new.author.value?.asUser(kord)?.tag ?: "Inconnu"
@@ -78,13 +82,13 @@ suspend fun LG.registerListeners() {
 			val oldMessage = event.message?.let {
 				getCorrespondingMessage(
 					MessageChannelBehavior(
-						939233865350938644.toSnowflake(),
+						botConfig.dmLogChannelId.toSnowflake(),
 						kord
 					), it
 				)
 			}
 			if (oldMessage == null) {
-				val webhook = getWebhook(939233865350938644.toSnowflake(), bot, "LG")
+				val webhook = getWebhook(botConfig.dmLogChannelId.toSnowflake(), bot, "LG")
 				webhook.deleteMessage(webhook.token!!, event.message!!.id)
 			}
 		}
@@ -93,7 +97,7 @@ suspend fun LG.registerListeners() {
 	event<ReadyEvent> {
 		action {
 			logger.debug { "Fetching channels from categories loup-garou and roles from loup-garou" }
-			val paralya = event.guilds.first()
+			val paralya = event.guilds.firstOrNull { it.id.value == botConfig.paralyaId } ?: throw IllegalStateException("Paralya guild not found")
 			val lGRolesMap = collectChannelsFromCategory(lgConfig.rolesCategory.toSnowflake(), paralya)
 			logger.debug { "Found ${lGRolesMap.size} channels in the roles category of werewolf game" }
 			val lGMainMap = collectChannelsFromCategory(lgConfig.rolesCategory.toSnowflake(), paralya)
@@ -108,27 +112,25 @@ suspend fun LG.registerListeners() {
 	}
 }
 
-private suspend fun collectChannelsFromCategory(category: Snowflake, guild: GuildBehavior): Map<String, Snowflake> {
-	val channels = mutableMapOf<String, Snowflake>()
-	guild.channels.collect { channel ->
-		if (channel.getCategory()?.id == category) {
-			val channelName = channel.name.replace(Regex("[^A-Za-z0-9_-]"), "")
-				.removePrefix("-").replace("-", "_").uppercase()
-			if (channelName != "_".repeat(channelName.length)) {
-				channels[channelName] = channel.id
-			}
-		}
-	}
-	return channels
+private suspend fun collectChannelsFromCategory(categoryId: Snowflake, guild: GuildBehavior): Map<String, Snowflake> {
+	return guild.channels
+		.filter { it.getCategory()?.id == categoryId }
+		.map { channel ->
+			val channelName = channel.name
+				.replace(Regex("[^A-Za-z0-9_-]"), "")
+				.removePrefix("-")
+				.replace("-", "_")
+				.uppercase()
+
+			channelName to channel.id
+		}.toList().toMap()
+		.filterKeys { it.isNotBlank() && it != "_".repeat(it.length) }
 }
 
-fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
-	// Compare content
-	if (msg1.content != msg2.content) {
-		return false
-	}
 
-	// Compare attachments
+fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
+	if (msg1.content != msg2.content) return false
+
 	val attachments1 = msg1.attachments.map { Triple(it.filename, it.size, it.isSpoiler) }.sortedBy { it.first }
 	val attachments2 = msg2.attachments.map { Triple(it.filename, it.size, it.isSpoiler) }.sortedBy { it.first }
 

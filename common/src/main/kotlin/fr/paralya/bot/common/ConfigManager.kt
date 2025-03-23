@@ -142,5 +142,7 @@ class ConfigManager: KordExKoinComponent {
  */
 data class BotConfig(
 	var token: String = "",
-	var admins: List<ULong> = emptyList()
+	var admins: List<ULong> = emptyList(),
+	var dmLogChannelId: ULong = ULong.MIN_VALUE,
+	var paralyaId: ULong = ULong.MIN_VALUE
 )
