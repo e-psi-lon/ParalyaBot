@@ -6,6 +6,8 @@ import dev.kord.cache.api.data.description
 import dev.kord.cache.api.put
 import dev.kord.cache.api.query
 import dev.kord.common.entity.Snowflake
+import dev.kord.core.entity.channel.TextChannel
+import dev.kordex.core.commands.application.ApplicationCommandContext
 import fr.paralya.bot.lg.LGState
 
 data class GameData(
@@ -65,9 +67,12 @@ suspend fun DataCache.registerChannel(type: String, channelId: Snowflake) {
 	updateGameData { it.registerChannel(type, channelId) }
 }
 
-suspend fun DataCache.getChannel(type: String): Snowflake? {
+suspend fun DataCache.getChannelId(type: String): Snowflake? {
 	return getGameData().channels[type]
 }
+
+context(ApplicationCommandContext)
+suspend fun DataCache.getChannel(type: String) = getChannelId(type)?.let { channelId -> (guild!!.getChannel(channelId) as TextChannel) }
 
 suspend fun DataCache.addInterview(interviewId: Snowflake) {
 	updateGameData { it.addInterview(interviewId) }

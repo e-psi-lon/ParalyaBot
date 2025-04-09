@@ -12,15 +12,13 @@ import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.publicSlashCommand
 import dev.kordex.core.utils.dm
 import dev.kordex.core.utils.hasRole
-import fr.paralya.bot.common.ConfigManager
 import fr.paralya.bot.common.GameRegistry
 import fr.paralya.bot.common.Message
 import fr.paralya.bot.common.i18n.Translations.Messages
 import fr.paralya.bot.common.translateWithContext
 import fr.paralya.bot.lg.data.GameData
-import fr.paralya.bot.lg.data.LgConfig
 import fr.paralya.bot.lg.data.VoteData
-import fr.paralya.bot.lg.data.getChannel
+import fr.paralya.bot.lg.data.getChannelId
 import fr.paralya.bot.lg.i18n.Translations
 import fr.paralya.bot.lg.i18n.Translations.Lg
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -51,7 +49,7 @@ class LG : Extension() {
 					val failed = mutableListOf<String>()
 					if (guild == null) {
 						respond {
-							content = Messages.Error.onlyInGuild.translateWithContext(this@action)
+							content = Messages.Error.onlyInGuild.translateWithContext()
 						}
 						return@action
 					}
@@ -67,14 +65,14 @@ class LG : Extension() {
 						}
 					} catch (e: Exception) {
 						respond {
-							content = Lg.Notif.Response.success.translateWithContext(this@action, e.message)
+							content = Lg.Notif.Response.success.translateWithContext(e.message)
 						}
 					}
 					respond {
 						content = if (failed.isEmpty()) {
-							Lg.Notif.Response.success.translateWithContext(this@action)
+							Lg.Notif.Response.success.translateWithContext()
 						} else {
-							Lg.Notif.Response.failed.translateWithContext(this@action, failed.joinToString(", "))
+							Lg.Notif.Response.failed.translateWithContext(failed.joinToString(", "))
 						}
 					}
 				}
@@ -84,10 +82,10 @@ class LG : Extension() {
 				description = Lg.Interview.Command.description
 				action {
 					val interviewChannel =
-						botCache.getChannel("INTERVIEW")?.let { it1 -> guild?.getChannel(it1) } as TopGuildChannel?
+						botCache.getChannelId("INTERVIEW")?.let { it1 -> guild?.getChannel(it1) } as TopGuildChannel?
 					if (interviewChannel == null) {
 						respond {
-							content = Messages.Error.channelNotFound.translateWithContext(this@action,"interview")
+							content = Messages.Error.channelNotFound.translateWithContext("interview")
 						}
 						return@action
 					}

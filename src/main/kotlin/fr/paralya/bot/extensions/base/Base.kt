@@ -31,7 +31,7 @@ class Base : Extension() {
 					gameMode(gameRegistry.getGameMode(arguments.game))
 				}
 				respond {
-					content = Translations.StartGame.Response.success.translateWithContext(this@action, arguments.game)
+					content = Translations.StartGame.Response.success.translateWithContext(arguments.game)
 				}
 			}
 		}
@@ -45,7 +45,7 @@ class Base : Extension() {
 					gameMode(GameRegistry.NONE)
 				}
 				respond {
-					content = Translations.StopGame.Response.success.translateWithContext(this@action)
+					content = Translations.StopGame.Response.success.translateWithContext()
 				}
 			}
 		}

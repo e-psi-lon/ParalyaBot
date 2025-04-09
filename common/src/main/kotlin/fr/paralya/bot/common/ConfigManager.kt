@@ -138,7 +138,7 @@ class ConfigManager: KordExKoinComponent {
  * @property token The bot token used for authentication.
  * @property admins A list of admin user IDs.
  * @property dmLogChannelId A channel ID to copy direct messages to.
- * @property paralyaId The ID of the Paralya guild.
+ * @property paralyaId The ID of the Paralya guild. (can be changed for testing purposes)
  */
 data class BotConfig(
 	var token: String = "",

@@ -11,7 +11,7 @@ import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.forms.ModalForm
 import fr.paralya.bot.common.getWebhook
 import fr.paralya.bot.common.toSnowflake
-import fr.paralya.bot.lg.data.getChannel
+import fr.paralya.bot.lg.data.getChannelId
 import fr.paralya.bot.lg.data.getCurrentVote
 import fr.paralya.bot.lg.data.vote
 import fr.paralya.bot.lg.data.voteCorbeau
@@ -26,13 +26,13 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			action {
 				val target = arguments.target
 				val reason = arguments.reason
-				if (channel.id == extension.botCache.getChannel("CORBEAU")) {
+				if (channel.id == extension.botCache.getChannelId("CORBEAU")) {
 					if (extension.botCache.getCurrentVote(LGState.DAY)?.corbeau != 0.toSnowflake()) {
 						respond { content = "Vous avez déjà voté en tant que corbeau !" }
 					}
 					extension.botCache.voteCorbeau(target.id)
 					respond { content = "Vous avez voté contre ${target.effectiveName}" }
-				} else if (channel.id != extension.botCache.getChannel("VOTES"))
+				} else if (channel.id != extension.botCache.getChannelId("VOTES"))
 					respond { content = "Vous ne pouvez pas voter ici !" }
 				else if (extension.botCache.getCurrentVote(LGState.DAY)?.choices?.isNotEmpty() == true && extension.botCache.getCurrentVote(
 						LGState.DAY
@@ -48,7 +48,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 					respond {
 						content = "Vous avez voté contre ${target.effectiveName} !"
 					}
-					val webhook = extension.botCache.getChannel("VOTES")?.let { it1 ->
+					val webhook = extension.botCache.getChannelId("VOTES")?.let { it1 ->
 						getWebhook(
 							it1,
 							extension.bot,
@@ -72,7 +72,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			action {
 				val target = arguments.target
 				val reason = arguments.reason
-				if (channel.id != extension.botCache.getChannel("LOUPS_VOTE"))
+				if (channel.id != extension.botCache.getChannelId("LOUPS_VOTE"))
 					respond { content = "Vous ne pouvez pas voter ici !" }
 				else if (extension.botCache.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && extension.botCache.getCurrentVote(
 						LGState.NIGHT
@@ -88,7 +88,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 					respond {
 						content = "Vous avez voté contre ${target.effectiveName} !"
 					}
-					val webhook = extension.botCache.getChannel("LOUP_VOTE")?.let { it1 ->
+					val webhook = extension.botCache.getChannelId("LOUP_VOTE")?.let { it1 ->
 						getWebhook(
 							it1,
 							extension.bot,

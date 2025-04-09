@@ -44,7 +44,7 @@ suspend fun LG.registerListeners() {
 					username = message.author?.tag ?: "Inconnu"
 					avatarUrl = message.author?.avatar?.cdnUrl?.toUrl()
 				}
-			} else if (message.channelId == botCache.getChannel("INTERVIEW")) {
+			} else if (message.channelId == botCache.getChannelId("INTERVIEW")) {
 				if (message.author?.id in botCache.getInterviews()) {
 					botCache.removeInterview(message.author!!.id)
 					(message.channel as TopGuildChannel).addOverwrite(
