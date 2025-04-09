@@ -1,7 +1,7 @@
 [versions]
-kotlin = "2.1.10"
+kotlin = "2.1.20"
 kordex-plugin = "1.6.2"
-logback = "1.5.17"
+logback = "1.5.18"
 shadow = "8.3.5"
 typesafe-config = "1.4.3"
 
