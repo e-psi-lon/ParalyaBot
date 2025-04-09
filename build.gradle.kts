@@ -47,4 +47,7 @@ tasks {
 
 kotlin {
 	jvmToolchain(21)
+	compilerOptions {
+		freeCompilerArgs.add("-Xcontext-receivers")
+	}
 }
