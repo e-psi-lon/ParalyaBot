@@ -1,77 +1,57 @@
 package fr.paralya.bot.lg
 
-import dev.kord.common.entity.DiscordUser
-import dev.kord.common.entity.Permission
-import dev.kord.common.entity.Permissions
-import dev.kord.common.entity.Snowflake
+import dev.kord.common.entity.*
 import dev.kord.core.Kord
 import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.behavior.channel.MessageChannelBehavior
-import dev.kord.core.behavior.execute
 import dev.kord.core.cache.data.UserData
+import dev.kord.core.entity.*
 import dev.kord.core.entity.Message
-import dev.kord.core.entity.PermissionOverwrite
-import dev.kord.core.entity.User
 import dev.kord.core.entity.channel.TopGuildChannel
 import dev.kord.core.event.gateway.ReadyEvent
-import dev.kord.core.event.message.MessageCreateEvent
-import dev.kord.core.event.message.MessageDeleteEvent
-import dev.kord.core.event.message.MessageUpdateEvent
+import dev.kord.core.event.message.*
 import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
-import fr.paralya.bot.common.ConfigManager
-import fr.paralya.bot.common.getWebhook
-import fr.paralya.bot.common.toSnowflake
+import fr.paralya.bot.common.*
 import fr.paralya.bot.lg.data.*
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.*
 import org.koin.core.component.inject
 
-
 fun DiscordUser?.asUser(kord: Kord) = this?.let { User(UserData.from(it), kord) }
+
 suspend fun LG.registerListeners() {
 	val lgConfig by inject<LgConfig>()
-	val manager by inject<ConfigManager>()
-	val botConfig = manager.botConfig
+	val botConfig = inject<ConfigManager>().value.botConfig
+	val dmChannelId = botConfig.dmLogChannelId.toSnowflake()
+
 	event<MessageCreateEvent> {
 		action {
 			val message = event.message
+
 			if (message.getGuildOrNull() == null && message.author?.isSelf != true && message.content.isNotEmpty()) {
-				val webhook = getWebhook(botConfig.dmLogChannelId.toSnowflake(), bot, "LG")
-				webhook.execute(webhook.token!!) {
+				sendAsWebhook(bot, dmChannelId,message.author?.tag ?: "Inconnu", message.author?.avatar?.cdnUrl?.toUrl(), "DM") {
 					content = message.content
-					username = message.author?.tag ?: "Inconnu"
-					avatarUrl = message.author?.avatar?.cdnUrl?.toUrl()
 				}
-			} else if (message.channelId == botCache.getChannelId("INTERVIEW")) {
-				if (message.author?.id in botCache.getInterviews()) {
-					botCache.removeInterview(message.author!!.id)
-					(message.channel as TopGuildChannel).addOverwrite(
-						PermissionOverwrite.forMember(
-							message.author!!.id,
-							denied = Permissions(Permission.SendMessages)
-						)
+			}
+			else if (message.channelId == botCache.getChannelId("INTERVIEW") && message.author?.id in botCache.getInterviews()) {
+				botCache.removeInterview(message.author!!.id)
+				(message.channel as TopGuildChannel).addOverwrite(
+					PermissionOverwrite.forMember(
+						message.author!!.id,
+						denied = Permissions(Permission.SendMessages)
 					)
-				}
+				)
 			}
 		}
 	}
 
 	event<MessageUpdateEvent> {
 		action {
-			val oldMessage = event.old?.let {
-				getCorrespondingMessage(
-					MessageChannelBehavior(botConfig.dmLogChannelId.toSnowflake(), kord),
-					it
-				)
-			}
+			val oldMessage = event.old?.let { getCorrespondingMessage(MessageChannelBehavior(dmChannelId, kord), it) }
+
 			if (oldMessage == null) {
-				val webhook = getWebhook(botConfig.dmLogChannelId.toSnowflake(), bot, "LG")
-				webhook.execute(webhook.token!!) {
+				sendAsWebhook(bot, dmChannelId,event.new.author.value?.asUser(kord)?.tag ?: "Inconnu", event.new.author.value.asUser(kord)?.avatar?.cdnUrl?.toUrl(), "DM") {
 					content = event.new.content.toString()
-					username = event.new.author.value?.asUser(kord)?.tag ?: "Inconnu"
-					avatarUrl = event.new.author.value.asUser(kord)?.avatar?.cdnUrl?.toUrl()
 				}
 			}
 		}
@@ -79,16 +59,10 @@ suspend fun LG.registerListeners() {
 
 	event<MessageDeleteEvent> {
 		action {
-			val oldMessage = event.message?.let {
-				getCorrespondingMessage(
-					MessageChannelBehavior(
-						botConfig.dmLogChannelId.toSnowflake(),
-						kord
-					), it
-				)
-			}
-			if (oldMessage == null) {
-				val webhook = getWebhook(botConfig.dmLogChannelId.toSnowflake(), bot, "LG")
+			val oldMessage = event.message?.let { getCorrespondingMessage(MessageChannelBehavior(dmChannelId, kord), it) }
+
+			if (oldMessage == null && event.message != null) {
+				val webhook = getWebhook(dmChannelId, bot, "DM")
 				webhook.deleteMessage(webhook.token!!, event.message!!.id)
 			}
 		}
@@ -96,17 +70,18 @@ suspend fun LG.registerListeners() {
 
 	event<ReadyEvent> {
 		action {
-			logger.debug { "Fetching channels from categories loup-garou and roles from loup-garou" }
-			val paralya = event.guilds.firstOrNull { it.id.value == botConfig.paralyaId } ?: throw IllegalStateException("Paralya guild not found")
-			val lGRolesMap = collectChannelsFromCategory(lgConfig.rolesCategory.toSnowflake(), paralya)
-			logger.debug { "Found ${lGRolesMap.size} channels in the roles category of werewolf game" }
-			val lGMainMap = collectChannelsFromCategory(lgConfig.rolesCategory.toSnowflake(), paralya)
-			logger.debug { "Found ${lGMainMap.size} channels in the main category of werewolf game" }
-			lGRolesMap.map { (name, value) ->
-				botCache.registerChannel(name, value)
-			}
-			lGMainMap.map { (name, value) ->
-				botCache.registerChannel(name, value)
+			logger.debug { "Récupération des canaux des catégories loup-garou" }
+			val paralya = event.guilds.firstOrNull { it.id.value == botConfig.paralyaId }
+				?: throw IllegalStateException("Serveur Paralya non trouvé")
+
+			val rolesChannels = collectChannelsFromCategory(lgConfig.rolesCategory.toSnowflake(), paralya)
+			val mainChannels = collectChannelsFromCategory(lgConfig.rolesCategory.toSnowflake(), paralya)
+
+			logger.debug { "Trouvé ${rolesChannels.size} canaux dans la catégorie des rôles" }
+			logger.debug { "Trouvé ${mainChannels.size} canaux dans la catégorie principale" }
+
+			(rolesChannels + mainChannels).forEach { (name, id) ->
+				botCache.registerChannel(name, id)
 			}
 		}
 	}
@@ -123,10 +98,11 @@ private suspend fun collectChannelsFromCategory(categoryId: Snowflake, guild: Gu
 				.uppercase()
 
 			channelName to channel.id
-		}.toList().toMap()
+		}
+		.toList()
+		.toMap()
 		.filterKeys { it.isNotBlank() && it != "_".repeat(it.length) }
 }
-
 
 fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
 	if (msg1.content != msg2.content) return false
@@ -137,31 +113,20 @@ fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
 	return attachments1 == attachments2
 }
 
-// Function to find corresponding message in a channel
 suspend fun getCorrespondingMessage(channel: MessageChannelBehavior, message: Message): Message? {
 	val date = message.timestamp
 
-	// Look for messages after the original message
 	channel.getMessagesBefore(Snowflake.max, 20)
 		.filter { it.timestamp >= date }
 		.toList()
 		.sortedBy { it.timestamp }
-		.forEach { msg ->
-			if (areMessagesSimilar(message, msg)) {
-				return msg
-			}
-		}
+		.forEach { if (areMessagesSimilar(message, it)) return it }
 
-	// Look for messages before the original message
 	channel.getMessagesAfter(Snowflake.min, 20)
 		.filter { it.timestamp <= date }
 		.toList()
 		.sortedByDescending { it.timestamp }
-		.forEach { msg ->
-			if (areMessagesSimilar(message, msg)) {
-				return msg
-			}
-		}
+		.forEach { if (areMessagesSimilar(message, it)) return it }
 
 	return null
 }

@@ -10,9 +10,6 @@ import dev.kord.core.entity.channel.TextChannel
 import dev.kord.rest.Image
 import dev.kord.rest.builder.message.create.WebhookMessageCreateBuilder
 import dev.kordex.core.ExtensibleBot
-import dev.kordex.core.commands.Arguments
-import dev.kordex.core.commands.application.slash.SlashCommandContext
-import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.i18n.types.Key
 import dev.kordex.core.i18n.withContext
 import dev.kordex.core.types.TranslatableContext
@@ -57,16 +54,35 @@ suspend fun getWebhook(channel: Snowflake, bot: ExtensibleBot, name: String, ava
  * with the provided content and properties. The webhook is identified by its name and optionally customized
  * with an avatar image.
  */
-context(C)
-suspend fun <C : SlashCommandContext<*, A, M>, A : Arguments, M : ModalForm> sendAsWebhook(
+suspend fun sendAsWebhook(
 	bot: ExtensibleBot,
 	channel: Snowflake,
 	name: String,
 	avatar: Image? = null,
+	webhookName: String? = null,
 	message: suspend WebhookMessageCreateBuilder.() -> Unit
 ): Message? {
-	val webhook = getWebhook(channel, bot, name, avatar)
-	return webhook.token?.let { webhook.execute(it) { message() } }
+	val webhook = getWebhook(channel, bot, webhookName ?: name, avatar)
+	return webhook.token?.let { webhook.execute(it) {
+		username = name
+		message()
+	} }
+}
+
+suspend fun sendAsWebhook(
+	bot: ExtensibleBot,
+	channel: Snowflake,
+	name: String,
+	avatar: String? = null,
+	webhookName: String? = null,
+	message: suspend WebhookMessageCreateBuilder.() -> Unit
+): Message? {
+	val webhook = getWebhook(channel, bot, webhookName ?: name)
+	return webhook.token?.let { webhook.execute(it) {
+		avatarUrl = avatar
+		username = name
+		message()
+	} }
 }
 
 /**

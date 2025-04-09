@@ -1,10 +1,7 @@
 package fr.paralya.bot.lg.data
 
-import dev.kord.cache.api.DataCache
-import dev.kord.cache.api.data.DataDescription
-import dev.kord.cache.api.data.description
-import dev.kord.cache.api.put
-import dev.kord.cache.api.query
+import dev.kord.cache.api.*
+import dev.kord.cache.api.data.*
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.channel.TextChannel
 import dev.kordex.core.commands.application.ApplicationCommandContext
@@ -19,73 +16,42 @@ data class GameData(
 	val interviews: List<Snowflake> = listOf()
 ) {
 	companion object {
-		val description: DataDescription<GameData, Snowflake> = description(GameData::id)
+		val description = description<GameData, Snowflake>(GameData::id)
 	}
 
-	fun nextDay(): GameData = copy(state = LGState.DAY, dayCount = dayCount + 1)
-	fun nextNight(): GameData = copy(state = LGState.NIGHT, nightCount = nightCount + 1)
+	fun nextDay() = copy(state = LGState.DAY, dayCount = dayCount + 1)
+	fun nextNight() = copy(state = LGState.NIGHT, nightCount = nightCount + 1)
 
-	fun registerChannel(type: String, channelId: Snowflake): GameData {
-		val updatedChannels = channels.toMutableMap()
-		updatedChannels[type] = channelId
-		return copy(channels = updatedChannels)
-	}
+	fun registerChannel(type: String, channelId: Snowflake) =
+		copy(channels = channels + (type to channelId))
 
-	fun addInterview(interviewId: Snowflake): GameData {
-		val updatedInterviews = interviews.toMutableList()
-		updatedInterviews.add(interviewId)
-		return copy(interviews = updatedInterviews)
-	}
+	fun addInterview(interviewId: Snowflake) =
+		copy(interviews = interviews + interviewId)
 
-	fun removeInterview(interviewId: Snowflake): GameData {
-		val updatedInterviews = interviews.filter { it != interviewId }
-		return copy(interviews = updatedInterviews)
-	}
+	fun removeInterview(interviewId: Snowflake) =
+		copy(interviews = interviews.filter { it != interviewId })
 }
 
 // Cache extension functions
-suspend fun DataCache.getGameData(): GameData {
-	return query<GameData>().singleOrNull() ?: GameData()
-}
-
+suspend fun DataCache.getGameData() = query<GameData>().singleOrNull() ?: GameData()
 
 suspend fun DataCache.updateGameData(modifier: (GameData) -> GameData) {
-	val current = getGameData()
-	val updated = modifier(current)
-	put(updated)
+	put(modifier(getGameData()))
 }
 
-suspend fun DataCache.nextDay() {
-	updateGameData { it.nextDay() }
-}
-
-suspend fun DataCache.nextNight() {
-	updateGameData { it.nextNight() }
-}
-
-suspend fun DataCache.registerChannel(type: String, channelId: Snowflake) {
+suspend fun DataCache.nextDay() = updateGameData { it.nextDay() }
+suspend fun DataCache.nextNight() = updateGameData { it.nextNight() }
+suspend fun DataCache.registerChannel(type: String, channelId: Snowflake) =
 	updateGameData { it.registerChannel(type, channelId) }
-}
-
-suspend fun DataCache.getChannelId(type: String): Snowflake? {
-	return getGameData().channels[type]
-}
+suspend fun DataCache.getChannelId(type: String) = getGameData().channels[type]
 
 context(ApplicationCommandContext)
-suspend fun DataCache.getChannel(type: String) = getChannelId(type)?.let { channelId -> (guild!!.getChannel(channelId) as TextChannel) }
+suspend fun DataCache.getChannel(type: String) =
+	getChannelId(type)?.let { guild!!.getChannel(it) as TextChannel }
 
-suspend fun DataCache.addInterview(interviewId: Snowflake) {
+suspend fun DataCache.addInterview(interviewId: Snowflake) =
 	updateGameData { it.addInterview(interviewId) }
-}
-
-suspend fun DataCache.getInterviews(): List<Snowflake> {
-	return getGameData().interviews
-}
-
-suspend fun DataCache.removeInterview(interviewId: Snowflake) {
+suspend fun DataCache.getInterviews() = getGameData().interviews
+suspend fun DataCache.removeInterview(interviewId: Snowflake) =
 	updateGameData { it.removeInterview(interviewId) }
-}
-
-suspend fun DataCache.resetGame() {
-	put(GameData())
-}
+suspend fun DataCache.resetGame() = put(GameData())

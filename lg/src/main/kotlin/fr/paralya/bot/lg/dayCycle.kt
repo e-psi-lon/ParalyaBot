@@ -24,7 +24,8 @@ enum class LGState {
 	}
 }
 
-suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayCycleCommands(extension: LG) {
+context(LG)
+suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayCycleCommands() {
 	ephemeralSubCommand(::DayArguments) {
 		name = Lg.Day.Command.name
 		description = Lg.Day.Command.description
@@ -33,7 +34,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			adminOnly {
 				val force = arguments.force
 				val kill = arguments.kill
-				val botCache = extension.botCache
+				val botCache = this@LG.botCache
 				val gameData = botCache.getGameData()
 
 				if (gameData.state == LGState.DAY) {
@@ -59,7 +60,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					val maxVotedPlayers = voteCount.filter { it.key == maxVote }.keys
 					when {
 						maxVotedPlayers.size > 1 && !force -> {
-							sendAsWebhook(extension.bot, botCache.getChannelId("LOUPS_VOTE")!!, "ParalyaLG", getAsset("lg")) {
+							sendAsWebhook(this@LG.bot, botCache.getChannelId("LOUPS_VOTE")!!, "ParalyaLG", getAsset("lg")) {
 								content = Lg.Day.Response.Other.equality.translateWithContext(
 									maxVotedPlayers.joinToString(", ") { "<@${it.value}>" }
 								)

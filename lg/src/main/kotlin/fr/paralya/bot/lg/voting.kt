@@ -17,41 +17,43 @@ import fr.paralya.bot.lg.data.vote
 import fr.paralya.bot.lg.data.voteCorbeau
 import fr.paralya.bot.lg.i18n.Translations.Lg
 
-suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVotingCommands(extension: LG) {
+context(LG)
+suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVotingCommands() {
 	group(Lg.Vote.Command.name) {
 		description = Lg.Vote.Command.description
 		ephemeralSubCommand(::VoteArguments) {
 			name = Lg.Vote.Village.Command.name
 			description = Lg.Vote.Village.Command.description
+			val botCache = this@LG.botCache
 			action {
 				val target = arguments.target
 				val reason = arguments.reason
-				if (channel.id == extension.botCache.getChannelId("CORBEAU")) {
-					if (extension.botCache.getCurrentVote(LGState.DAY)?.corbeau != 0.toSnowflake()) {
+				if (channel.id == botCache.getChannelId("CORBEAU")) {
+					if (botCache.getCurrentVote(LGState.DAY)?.corbeau != 0.toSnowflake()) {
 						respond { content = "Vous avez déjà voté en tant que corbeau !" }
 					}
-					extension.botCache.voteCorbeau(target.id)
+					botCache.voteCorbeau(target.id)
 					respond { content = "Vous avez voté contre ${target.effectiveName}" }
-				} else if (channel.id != extension.botCache.getChannelId("VOTES"))
+				} else if (channel.id != botCache.getChannelId("VOTES"))
 					respond { content = "Vous ne pouvez pas voter ici !" }
-				else if (extension.botCache.getCurrentVote(LGState.DAY)?.choices?.isNotEmpty() == true && extension.botCache.getCurrentVote(
+				else if (botCache.getCurrentVote(LGState.DAY)?.choices?.isNotEmpty() == true && botCache.getCurrentVote(
 						LGState.DAY
 					)?.choices?.contains(target.id) != true
 				)
 					respond { content = "Ce joueur n'est pas dans les choix disponibles !" }
-				else if (extension.botCache.getCurrentVote(LGState.DAY) == null)
+				else if (botCache.getCurrentVote(LGState.DAY) == null)
 					respond { content = "Aucun vote n'est actuellement en cours !" }
 				else {
 					val alreadyVoted =
-						extension.botCache.getCurrentVote(LGState.DAY)?.votes?.containsKey(target.id) == true
-					extension.botCache.vote(user.id, target)
+						this@LG.botCache.getCurrentVote(LGState.DAY)?.votes?.containsKey(target.id) == true
+					this@LG.botCache.vote(user.id, target)
 					respond {
 						content = "Vous avez voté contre ${target.effectiveName} !"
 					}
-					val webhook = extension.botCache.getChannelId("VOTES")?.let { it1 ->
+					val webhook = botCache.getChannelId("VOTES")?.let { it1 ->
 						getWebhook(
 							it1,
-							extension.bot,
+							this@LG.bot,
 							"votes"
 						)
 					}
@@ -72,26 +74,26 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			action {
 				val target = arguments.target
 				val reason = arguments.reason
-				if (channel.id != extension.botCache.getChannelId("LOUPS_VOTE"))
+				if (channel.id != botCache.getChannelId("LOUPS_VOTE"))
 					respond { content = "Vous ne pouvez pas voter ici !" }
-				else if (extension.botCache.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && extension.botCache.getCurrentVote(
+				else if (botCache.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && botCache.getCurrentVote(
 						LGState.NIGHT
 					)?.choices?.contains(target.id) != true
 				)
 					respond { content = "Ce joueur n'est pas dans les choix disponibles !" }
-				else if (extension.botCache.getCurrentVote(LGState.NIGHT) == null)
+				else if (botCache.getCurrentVote(LGState.NIGHT) == null)
 					respond { content = "Aucun vote n'est actuellement en cours !" }
 				else {
 					val alreadyVoted =
-						extension.botCache.getCurrentVote(LGState.NIGHT)?.votes?.containsKey(target.id) == true
-					extension.botCache.vote(user.id, target)
+						botCache.getCurrentVote(LGState.NIGHT)?.votes?.containsKey(target.id) == true
+					botCache.vote(user.id, target)
 					respond {
 						content = "Vous avez voté contre ${target.effectiveName} !"
 					}
-					val webhook = extension.botCache.getChannelId("LOUP_VOTE")?.let { it1 ->
+					val webhook = botCache.getChannelId("LOUP_VOTE")?.let { it1 ->
 						getWebhook(
 							it1,
-							extension.bot,
+							this@LG.bot,
 							"votes"
 						)
 					}

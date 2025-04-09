@@ -29,34 +29,30 @@ class LG : Extension() {
 	val logger = KotlinLogging.logger(this::class.java.name)
 	val botCache = kord.cache
 
-
 	override suspend fun setup() {
 		val gameRegistry by inject<GameRegistry>()
 		gameRegistry.registerGameMode(Translations.GameMode.lg, "lg")
-		kord.cache.register(
-			GameData.description,
-			VoteData.description
-		)
+		kord.cache.register(GameData.description, VoteData.description)
+
 		publicSlashCommand {
 			name = Lg.Command.name
 			description = Lg.Command.description
-			registerVotingCommands(this@LG)
-			registerDayCycleCommands(this@LG)
+
+			registerVotingCommands()
+			registerDayCycleCommands()
+
 			ephemeralSubCommand(::NotifArguments, ::Message) {
 				name = Lg.Notif.Command.name
 				description = Lg.Notif.Command.description
 				action { modal ->
-					val failed = mutableListOf<String>()
 					if (guild == null) {
-						respond {
-							content = Messages.Error.onlyInGuild.translateWithContext()
-						}
+						respond { content = Messages.Error.onlyInGuild.translateWithContext() }
 						return@action
 					}
+
+					val failed = mutableListOf<String>()
 					try {
-						logger.debug { "guild supplier : ${guild?.supplier}" }
 						guild?.members?.collect { member ->
-							logger.debug { "Checking member ${member.username}" }
 							if (member.hasRole(arguments.role)) {
 								member.dm(
 									"━━━━━━━━━━━━━━━━━━\n🐺 LGNotifications ¦ ${modal?.message?.value ?: "Une erreur a eu lieu, merci de la rapporter à l'équipe technique."}\n━━━━━━━━━━━━━━━━━━"
@@ -64,10 +60,9 @@ class LG : Extension() {
 							}
 						}
 					} catch (e: Exception) {
-						respond {
-							content = Lg.Notif.Response.success.translateWithContext(e.message)
-						}
+						respond { content = Lg.Notif.Response.success.translateWithContext(e.message) }
 					}
+
 					respond {
 						content = if (failed.isEmpty()) {
 							Lg.Notif.Response.success.translateWithContext()
@@ -77,28 +72,25 @@ class LG : Extension() {
 					}
 				}
 			}
+
 			ephemeralSubCommand(::InterviewArguments) {
 				name = Lg.Interview.Command.name
 				description = Lg.Interview.Command.description
 				action {
-					val interviewChannel =
-						botCache.getChannelId("INTERVIEW")?.let { it1 -> guild?.getChannel(it1) } as TopGuildChannel?
+					val interviewChannel = botCache.getChannelId("INTERVIEW")?.let { guild?.getChannel(it) } as TopGuildChannel?
 					if (interviewChannel == null) {
-						respond {
-							content = Messages.Error.channelNotFound.translateWithContext("interview")
-						}
+						respond { content = Messages.Error.channelNotFound.translateWithContext("interview") }
 						return@action
 					}
+
 					val user = arguments.user
 					interviewChannel.addOverwrite(
-						PermissionOverwrite.forMember(
-							user.id,
-							Permissions(Permission.SendMessages)
-						)
+						PermissionOverwrite.forMember(user.id, Permissions(Permission.SendMessages))
 					)
 				}
 			}
 		}
+
 		registerListeners()
 	}
 
