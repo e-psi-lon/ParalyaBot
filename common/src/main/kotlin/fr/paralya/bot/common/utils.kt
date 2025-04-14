@@ -1,10 +1,15 @@
 package fr.paralya.bot.common
 
+import dev.kord.common.entity.DiscordUser
 import dev.kord.common.entity.Permission
 import dev.kord.common.entity.Snowflake
+import dev.kord.core.Kord
+import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.execute
+import dev.kord.core.cache.data.UserData
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.Message
+import dev.kord.core.entity.User
 import dev.kord.core.entity.Webhook
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.rest.Image
@@ -17,6 +22,7 @@ import dev.kordex.core.utils.permissionsForMember
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 
 /**
@@ -123,6 +129,34 @@ suspend fun TextChannel.getMembersWithAccess(): Flow<Member> {
 	}
 }
 
+fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
+	if (msg1.content != msg2.content) return false
+
+	val attachments1 = msg1.attachments.map { Triple(it.filename, it.size, it.isSpoiler) }.sortedBy { it.first }
+	val attachments2 = msg2.attachments.map { Triple(it.filename, it.size, it.isSpoiler) }.sortedBy { it.first }
+
+	return attachments1 == attachments2
+}
+
+suspend fun getCorrespondingMessage(channel: MessageChannelBehavior, message: Message): Message? {
+	val date = message.timestamp
+
+	channel.getMessagesBefore(Snowflake.max, 20)
+		.filter { it.timestamp >= date }
+		.toList()
+		.sortedBy { it.timestamp }
+		.forEach { if (areMessagesSimilar(message, it)) return it }
+
+	channel.getMessagesAfter(Snowflake.min, 20)
+		.filter { it.timestamp <= date }
+		.toList()
+		.sortedByDescending { it.timestamp }
+		.forEach { if (areMessagesSimilar(message, it)) return it }
+
+	return null
+}
+
+fun DiscordUser?.asUser(kord: Kord) = this?.let { User(UserData.from(it), kord) }
 fun ULong.toSnowflake() = Snowflake(this)
 fun Long.toSnowflake() = Snowflake(this)
 fun Int.toSnowflake() = Snowflake(this.toLong())

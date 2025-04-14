@@ -1,23 +1,36 @@
 package fr.paralya.bot.lg
 
 import dev.kord.common.entity.*
-import dev.kord.core.Kord
 import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.behavior.channel.MessageChannelBehavior
-import dev.kord.core.cache.data.UserData
+import dev.kord.core.behavior.edit
 import dev.kord.core.entity.*
-import dev.kord.core.entity.Message
 import dev.kord.core.entity.channel.TopGuildChannel
 import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.event.message.*
+import dev.kord.rest.builder.message.embed
 import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
 import fr.paralya.bot.common.*
+import fr.paralya.bot.common.i18n.Translations.Common
 import fr.paralya.bot.lg.data.*
 import kotlinx.coroutines.flow.*
 import org.koin.core.component.inject
 
-fun DiscordUser?.asUser(kord: Kord) = this?.let { User(UserData.from(it), kord) }
+
+private val requiredRoleChannels = listOf(
+	"LOUPS_CHAT",
+	"LOUPS_VOTE",
+	"CORBEAU",
+	"PETITE_FILLE"
+)
+
+private val requiredMainChannels = listOf(
+	"VOTES",
+	"INTERVIEW",
+	"SUJETS",
+	"VILLAGE"
+)
 
 suspend fun LG.registerListeners() {
 	val lgConfig by inject<LgConfig>()
@@ -28,12 +41,7 @@ suspend fun LG.registerListeners() {
 		action {
 			val message = event.message
 
-			if (message.getGuildOrNull() == null && message.author?.isSelf != true && message.content.isNotEmpty()) {
-				sendAsWebhook(bot, dmChannelId,message.author?.tag ?: "Inconnu", message.author?.avatar?.cdnUrl?.toUrl(), "DM") {
-					content = message.content
-				}
-			}
-			else if (message.channelId == botCache.getChannelId("INTERVIEW") && message.author?.id in botCache.getInterviews()) {
+			if (message.channelId == botCache.getChannelId("INTERVIEW") && message.author?.id in botCache.getInterviews()) {
 				botCache.removeInterview(message.author!!.id)
 				(message.channel as TopGuildChannel).addOverwrite(
 					PermissionOverwrite.forMember(
@@ -41,17 +49,68 @@ suspend fun LG.registerListeners() {
 						denied = Permissions(Permission.SendMessages)
 					)
 				)
+			} else if (
+				message.channelId == botCache.getChannelId("LOUPS_CHAT") && !message.author.isAdmin(botConfig) &&
+				message.author?.isBot == false && message.author?.isSelf == false
+				) {
+				val cached = botCache.getLastWerewolfMessageSender().value
+				logger.debug { "Message sender is ${message.author?.id?.value} and cache is $cached" }
+				if (message.author?.id != botCache.getLastWerewolfMessageSender()) {
+					botCache.setLastWerewolfMessageSender(message.author!!.id)
+					botCache.updateProfilePicture()
+				}
+				val wolfName = if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme"
+				val wolfAvatar = if (botCache.getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1"
+				logger.debug { "Avatar is $wolfAvatar and name is $wolfName" }
+				sendAsWebhook(bot, botCache.getChannelId("PETITE_FILLE")!!, wolfName , getAsset(wolfAvatar, this@LG.prefix), "PF") {
+					content = message.content
+
+					if (message.referencedMessage != null) embed {
+						title = Common.Transmission.Reference.title.translateWithContext()
+						description = message.referencedMessage!!.content
+					}
+				}
+			} else if (message.channelId == botCache.getChannelId("SUJET")) {
+				return@action
 			}
 		}
+
 	}
 
 	event<MessageUpdateEvent> {
 		action {
 			val oldMessage = event.old?.let { getCorrespondingMessage(MessageChannelBehavior(dmChannelId, kord), it) }
-
-			if (oldMessage == null) {
-				sendAsWebhook(bot, dmChannelId,event.new.author.value?.asUser(kord)?.tag ?: "Inconnu", event.new.author.value.asUser(kord)?.avatar?.cdnUrl?.toUrl(), "DM") {
-					content = event.new.content.toString()
+			val webhook = getWebhook(botCache.getChannelId("PETITE_FILLE")!!, bot, "PF")
+			val newMessage = event.message.asMessage()
+			if (oldMessage != null) {
+				try {
+					webhook.token?.let {
+						webhook.getMessage(it, oldMessage.id).edit {
+							content = newMessage.content
+							if (newMessage.referencedMessage != null) {
+								embed {
+									title = Common.Transmission.Reference.title.translateWithContext()
+									description = newMessage.referencedMessage!!.content
+								}
+							} else {
+								embeds?.clear()
+							}
+						}
+					}
+				} catch (e:Exception) {
+					val wolfName = if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme"
+					val wolfAvatar = if (botCache.getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1"
+					sendAsWebhook(bot, botCache.getChannelId("PETITE_FILLE")!!, wolfName , wolfAvatar, "PF") {
+						content = newMessage.content
+						embed {
+							title = Common.Transmission.Reference.title.translateWithContext()
+							description = newMessage.referencedMessage!!.content
+						}
+						embed {
+							title = Common.Transmission.Update.title.translateWithContext()
+							description = oldMessage.content
+						}
+					}
 				}
 			}
 		}
@@ -60,12 +119,24 @@ suspend fun LG.registerListeners() {
 	event<MessageDeleteEvent> {
 		action {
 			val oldMessage = event.message?.let { getCorrespondingMessage(MessageChannelBehavior(dmChannelId, kord), it) }
-
-			if (oldMessage == null && event.message != null) {
-				val webhook = getWebhook(dmChannelId, bot, "DM")
-				webhook.deleteMessage(webhook.token!!, event.message!!.id)
+			if (oldMessage != null && event.message?.channelId == botCache.getChannelId("PETITE_FILLE")) {
+				val webhook = getWebhook(botCache.getChannelId("PETITE_FILLE")!!, bot, "PF")
+				try {
+					webhook.token?.let { webhook.deleteMessage(it, oldMessage.id) }
+				} catch (e: Exception) {
+					logger.error(e) { "Error while deleting message" }
+				}
 			}
 		}
+	}
+
+	event<ReactionAddEvent> {
+		action {
+
+		}
+	}
+	event<ReactionRemoveEvent> {
+		action {  }
 	}
 
 	event<ReadyEvent> {
@@ -75,10 +146,22 @@ suspend fun LG.registerListeners() {
 				?: throw IllegalStateException("Serveur Paralya non trouvé")
 
 			val rolesChannels = collectChannelsFromCategory(lgConfig.rolesCategory.toSnowflake(), paralya)
-			val mainChannels = collectChannelsFromCategory(lgConfig.rolesCategory.toSnowflake(), paralya)
+			val mainChannels = collectChannelsFromCategory(lgConfig.mainCategory.toSnowflake(), paralya)
 
-			logger.debug { "Trouvé ${rolesChannels.size} canaux dans la catégorie des rôles" }
-			logger.debug { "Trouvé ${mainChannels.size} canaux dans la catégorie principale" }
+			logger.debug { "Found ${rolesChannels.size} channels in the roles category" }
+			logger.debug { "Found ${mainChannels.size} channels in the main category" }
+
+			// If the required channels are not found, throw an exception
+			requiredRoleChannels.forEach { channelName ->
+				if (rolesChannels[channelName] == null) {
+					throw IllegalStateException("Channel $channelName not found in the roles category")
+				}
+			}
+			requiredMainChannels.forEach { channelName ->
+				if (mainChannels[channelName] == null) {
+					throw IllegalStateException("Channel $channelName not found in the main category")
+				}
+			}
 
 			(rolesChannels + mainChannels).forEach { (name, id) ->
 				botCache.registerChannel(name, id)
@@ -104,29 +187,3 @@ private suspend fun collectChannelsFromCategory(categoryId: Snowflake, guild: Gu
 		.filterKeys { it.isNotBlank() && it != "_".repeat(it.length) }
 }
 
-fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
-	if (msg1.content != msg2.content) return false
-
-	val attachments1 = msg1.attachments.map { Triple(it.filename, it.size, it.isSpoiler) }.sortedBy { it.first }
-	val attachments2 = msg2.attachments.map { Triple(it.filename, it.size, it.isSpoiler) }.sortedBy { it.first }
-
-	return attachments1 == attachments2
-}
-
-suspend fun getCorrespondingMessage(channel: MessageChannelBehavior, message: Message): Message? {
-	val date = message.timestamp
-
-	channel.getMessagesBefore(Snowflake.max, 20)
-		.filter { it.timestamp >= date }
-		.toList()
-		.sortedBy { it.timestamp }
-		.forEach { if (areMessagesSimilar(message, it)) return it }
-
-	channel.getMessagesAfter(Snowflake.min, 20)
-		.filter { it.timestamp <= date }
-		.toList()
-		.sortedByDescending { it.timestamp }
-		.forEach { if (areMessagesSimilar(message, it)) return it }
-
-	return null
-}

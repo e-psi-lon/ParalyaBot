@@ -71,6 +71,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 		ephemeralSubCommand(::VoteArguments) {
 			name = Lg.Vote.Werewolf.Command.name
 			description = Lg.Vote.Werewolf.Command.description
+			val botCache = this@LG.botCache
 			action {
 				val target = arguments.target
 				val reason = arguments.reason
