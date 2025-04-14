@@ -47,7 +47,7 @@ suspend fun DataCache.getChannelId(type: String) = getGameData().channels[type]
 
 context(ApplicationCommandContext)
 suspend fun DataCache.getChannel(type: String) =
-	getChannelId(type)?.let { guild!!.getChannel(it) as TextChannel }
+	getChannelId(type)?.let { this@ApplicationCommandContext.guild!!.getChannel(it) as TextChannel }
 
 suspend fun DataCache.addInterview(interviewId: Snowflake) =
 	updateGameData { it.addInterview(interviewId) }

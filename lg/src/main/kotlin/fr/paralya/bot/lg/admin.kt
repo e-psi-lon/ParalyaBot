@@ -1,31 +1,36 @@
 package fr.paralya.bot.lg
 
+import dev.kord.core.entity.Member
+import dev.kord.core.entity.User
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.EphemeralSlashCommandContext
 import dev.kordex.core.commands.application.slash.PublicSlashCommandContext
+import dev.kordex.core.commands.application.slash.SlashCommand
+import dev.kordex.core.commands.application.slash.SlashCommandContext
 import dev.kordex.core.components.forms.ModalForm
+import fr.paralya.bot.common.BotConfig
 import fr.paralya.bot.common.ConfigManager
 import org.koin.core.component.inject
 
 
-suspend fun <A : Arguments, M : ModalForm> EphemeralSlashCommandContext<A, M>.adminOnly(
-	action: suspend EphemeralSlashCommandContext<A, M>.() -> Unit
-) {
-	val configManager by inject<ConfigManager>()
-	if (configManager.botConfig.admins.contains(this.member?.id?.value)) {
-		action()
-	} else {
-		respond { content = "Vous n'avez pas les permissions nécessaires pour effectuer cette commande." }
+fun <C: SlashCommandContext<*, A, M>, A: Arguments, M : ModalForm>SlashCommand<C, A, M>.adminOnly(action: suspend C.(M?) -> Unit) {
+	action { modal ->
+		val configManager by inject<ConfigManager>()
+		if (configManager.botConfig.admins.contains(this.member?.id?.value)) {
+			action(modal)
+		} else {
+			when (this) {
+				is PublicSlashCommandContext<*, *> -> respond { content = "Vous n'avez pas les permissions nécessaires pour effectuer cette commande." }
+				is EphemeralSlashCommandContext<*, *> -> respond { content = "Vous n'avez pas les permissions nécessaires pour effectuer cette commande." }
+			}
+		}
 	}
 }
 
-suspend fun <A : Arguments, M : ModalForm> PublicSlashCommandContext<A, M>.adminOnly(
-	action: suspend PublicSlashCommandContext<A, M>.() -> Unit
-) {
-	val configManager by inject<ConfigManager>()
-	if (configManager.botConfig.admins.contains(this.member?.id?.value)) {
-		action()
-	} else {
-		respond { content = "Vous n'avez pas les permissions nécessaires pour effectuer cette commande." }
-	}
+fun User?.isAdmin(config: BotConfig): Boolean {
+	return this != null && config.admins.contains(this.id.value)
+}
+
+fun Member?.isAdmin(config: BotConfig): Boolean {
+	return this != null && config.admins.contains(this.id.value)
 }

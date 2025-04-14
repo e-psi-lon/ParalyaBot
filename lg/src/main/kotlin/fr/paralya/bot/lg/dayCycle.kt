@@ -7,6 +7,7 @@ import dev.kordex.core.commands.application.slash.PublicSlashCommand
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.converters.impl.defaultingBoolean
 import dev.kordex.core.components.forms.ModalForm
+import dev.kordex.core.i18n.types.Key
 import dev.kordex.core.utils.getTopChannel
 import dev.kordex.core.utils.hasRole
 import fr.paralya.bot.common.*
@@ -30,20 +31,19 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 		name = Lg.Day.Command.name
 		description = Lg.Day.Command.description
 
-		action {
-			adminOnly {
-				val force = arguments.force
-				val kill = arguments.kill
-				val botCache = this@LG.botCache
-				val gameData = botCache.getGameData()
+		adminOnly {
+			val force = arguments.force
+			val kill = arguments.kill
+			val botCache = this@LG.botCache
+			val gameData = botCache.getGameData()
 
-				if (gameData.state == LGState.DAY) {
-					respond { content = Lg.Day.Response.Error.alreadyDay.translateWithContext() }
-					return@adminOnly
-				}
-				val newVote = botCache.getCurrentVote(LGState.DAY)
-					?: VoteData.createVillageVote(System.currentTimeMillis().toSnowflake()).setCurrent(true)
-				botCache.updateVote(newVote)
+			if (gameData.state == LGState.DAY) {
+				respond { content = Lg.Day.Response.Error.alreadyDay.translateWithContext() }
+				return@adminOnly
+			}
+			val newVote = botCache.getCurrentVote(LGState.DAY)
+				?: VoteData.createVillageVote(System.currentTimeMillis().toSnowflake()).setCurrent(true)
+			botCache.updateVote(newVote)
 
 				val oldWerewolfVote = botCache.getCurrentVote(LGState.NIGHT)?.apply {
 					setCurrent(false)
@@ -66,10 +66,10 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 								)
 							}
 
-							newVoteWerewolf.apply {
-								setChoices(maxVotedPlayers.toList())
-								botCache.updateVote(this)
-							}
+						newVoteWerewolf.apply {
+							setChoices(maxVotedPlayers.toList())
+							botCache.updateVote(this)
+						}
 
 							respond { content = Lg.Day.Response.Other.secondVote.translateWithContext() }
 							return@adminOnly
@@ -104,19 +104,18 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					?.toList()?.forEach { member ->
 						val reason = Lg.System.Permissions.Day.reason.translateWithContext()
 
-						botCache.getChannel("LOUPS_VOTE")?.apply {
-							addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
-							removeMemberPermission(member.id, Permission.SendMessages, reason = reason)
-						}
-
-						botCache.getChannel("LOUP_CHAT")?.apply {
-							addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
-							removeMemberPermission(member.id, Permission.SendMessages, reason = reason)
-						}
+					botCache.getChannel("LOUPS_VOTE")?.apply {
+						addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
+						removeMemberPermission(member.id, Permission.SendMessages, reason = reason)
 					}
 
-				respond { content = Lg.Day.Response.success.translateWithContext() }
-			}
+					botCache.getChannel("LOUP_CHAT")?.apply {
+						addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
+						removeMemberPermission(member.id, Permission.SendMessages, reason = reason)
+					}
+				}
+
+			respond { content = Lg.Day.Response.success.translateWithContext() }
 		}
 	}
 }
