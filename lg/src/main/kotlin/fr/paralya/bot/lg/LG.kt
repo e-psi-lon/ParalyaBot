@@ -28,6 +28,7 @@ class LG : Extension() {
 	override val name = "LG"
 	val logger = KotlinLogging.logger(this::class.java.name)
 	val botCache = kord.cache
+	val prefix = "lg"
 
 	override suspend fun setup() {
 		val gameRegistry by inject<GameRegistry>()

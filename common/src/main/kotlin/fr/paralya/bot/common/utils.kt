@@ -102,9 +102,9 @@ suspend fun Key.translateWithContext(vararg replacements: Any?) =
  * @return The image as an `Image` object.
  * @throws IllegalArgumentException if the resource is not found at the specified path.
  */
-suspend fun getAsset(path: String): Image {
-	val resource = object {}.javaClass.getResourceAsStream("/assets/$path.webp")
-		?: throw IllegalArgumentException("Resource at $path not found")
+suspend fun getAsset(path: String, game: String? = null): Image {
+	val resource = object {}.javaClass.getResourceAsStream("/assets/${if (game != null) "$game/" else ""}$path.webp")
+		?: throw IllegalArgumentException("Resource at path /assets/${if (game != null) "$game/" else ""}$path not found")
 	return Image.raw(withContext(Dispatchers.IO) {
 		resource.readAllBytes().also {
 			resource.close()
