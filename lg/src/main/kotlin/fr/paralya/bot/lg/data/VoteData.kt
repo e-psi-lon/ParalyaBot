@@ -27,7 +27,7 @@ data class VoteData(
 	val corbeau: Snowflake = 0.snowflake,
 ) {
 	companion object {
-		/** Cache description for VoteData, allowing it to be stored and retrieved from the DataCache */
+		/** Cache description for [VoteData], allowing it to be stored and retrieved from the [DataCache] */
 		val description = description<VoteData, Snowflake>(VoteData::id)
 
 		/**
@@ -44,7 +44,7 @@ data class VoteData(
 		 *
 		 * @param id The unique identifier for this vote
 		 * @param isCurrent Whether this vote should be marked as current
-		 * @return A new VoteData instance for village voting
+		 * @return A new [VoteData] instance for village voting
 		 */
 		fun createVillageVote(id: Snowflake, isCurrent: Boolean = true) =
 			VoteData(id, LGState.DAY.name, isCurrent)
@@ -55,7 +55,7 @@ data class VoteData(
 	 *
 	 * @param voterId The ID of the player casting the vote
 	 * @param targetId The ID of the player being voted for
-	 * @return A new VoteData with the updated votes map
+	 * @return A new [VoteData] with the updated votes map
 	 */
 	fun vote(voterId: Snowflake, targetId: Snowflake) =
 		copy(votes = votes + (voterId to targetId))
@@ -65,7 +65,7 @@ data class VoteData(
 	 * The Corbeau role can place an additional vote on a player.
 	 *
 	 * @param targetId The ID of the player receiving the Corbeau's vote
-	 * @return A new VoteData with the updated Corbeau vote, or unchanged if not a day vote
+	 * @return A new [VoteData] with the updated Corbeau vote, or unchanged if not a day vote
 	 */
 	fun voteCorbeau(targetId: Snowflake) =
 		if (type == LGState.DAY.name) copy(corbeau = targetId) else this
@@ -74,7 +74,7 @@ data class VoteData(
 	 * Updates the list of valid voting choices/targets.
 	 *
 	 * @param choices The list of player IDs that can be voted for
-	 * @return A new VoteData with the updated choices
+	 * @return A new [VoteData] with the updated choices
 	 */
 	fun setChoices(choices: List<Snowflake>) = copy(choices = choices)
 
@@ -82,7 +82,7 @@ data class VoteData(
 	 * Updates the current status of this vote.
 	 *
 	 * @param isCurrent Whether this vote is the current active vote
-	 * @return A new VoteData with the updated current status
+	 * @return A new [VoteData] with the updated current status
 	 */
 	fun setCurrent(isCurrent: Boolean) = copy(isCurrent = isCurrent)
 }
@@ -91,7 +91,7 @@ data class VoteData(
  * Retrieves the current active vote of the specified type from the cache.
  *
  * @param type Optional game state to specify which type of vote to retrieve
- * @return The current VoteData matching the type, or null if none exists
+ * @return The current Vo[]teData matching the type, or null if none exists
  */
 suspend fun DataCache.getCurrentVote(type: LGState? = null): VoteData? {
 	val queryType = type?.name ?: getGameData().state.name
@@ -138,7 +138,7 @@ suspend fun DataCache.setVoteChoices(choices: List<Snowflake>) =
  * Records a special Corbeau (Raven) vote in the current day vote.
  *
  * @param targetId The ID of the player receiving the Corbeau's vote
- * @return true if the Corbeau vote was recorded, false if there's no current day vote
+ * @return true if the Corbeau vote was recorded, false if there's no current-day vote
  */
 suspend fun DataCache.voteCorbeau(targetId: Snowflake) =
 	getCurrentVote(LGState.DAY)?.let {
