@@ -129,6 +129,13 @@ suspend fun TextChannel.getMembersWithAccess(): Flow<Member> {
 	}
 }
 
+/**
+ * Checks if two messages are similar based on their content and attachments.
+ *
+ * @param msg1 The first message to compare.
+ * @param msg2 The second message to compare.
+ * @return `true` if the messages are similar, `false` otherwise.
+ */
 fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
 	if (msg1.content != msg2.content) return false
 
@@ -138,6 +145,13 @@ fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
 	return attachments1 == attachments2
 }
 
+/**
+ * Retrieves the corresponding message in the channel based on the timestamp of the provided message.
+ *
+ * @param channel The channel where the messages are located.
+ * @param message The message to find the corresponding message for.
+ * @return The corresponding message if found, or null if not found.
+ */
 suspend fun getCorrespondingMessage(channel: MessageChannelBehavior, message: Message): Message? {
 	val date = message.timestamp
 

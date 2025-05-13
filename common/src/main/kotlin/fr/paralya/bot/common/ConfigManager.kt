@@ -16,7 +16,16 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.memberProperties
 import kotlin.system.exitProcess
 
-
+/**
+ * Configuration manager for the bot.
+ * Handles loading and managing the bot's configuration.
+ * Allows for dynamic registration of game-specific configurations.
+ *
+ * @property configFile The file where the configuration is stored.
+ * @property config The loaded configuration object.
+ * @property botConfig The core bot configuration.
+ * @constructor Creates a new ConfigManager instance.
+ */
 class ConfigManager: KordExKoinComponent {
 	private lateinit var config: Config
 	private val configFile = File("config.conf")
@@ -28,6 +37,11 @@ class ConfigManager: KordExKoinComponent {
 		loadConfig()
 	}
 
+	/**
+	 * Loads the configuration from the config file.
+	 * If the config file does not exist, it creates a default one.
+	 * It also loads the core bot configuration and any game-specific configurations.
+	 */
 	private fun loadConfig() {
 		if (!configFile.exists()) {
 			createDefaultConfig()
@@ -42,6 +56,10 @@ class ConfigManager: KordExKoinComponent {
 		}
 	}
 
+	/**
+	 * Creates a default configuration file with placeholders for required values.
+	 * This method is called if the config file does not exist.
+	 */
 	private fun createDefaultConfig() {
 		configFile.writeText(
 			"""
@@ -60,6 +78,14 @@ class ConfigManager: KordExKoinComponent {
 		exitProcess(1)
 	}
 
+	/**
+	 * Registers a game-specific configuration.
+	 * This method allows for dynamic registration of configurations for different games.
+	 * It uses Koin to manage the lifecycle of the configuration object and is completely type-safe.
+	 *
+	 * @param configBuilder A lambda function that builds the configuration object.
+	 * @param name The name of the configuration, used as a key in the config file.
+	 */
 	inline fun <reified T : Any> registerConfig(crossinline configBuilder: () -> T, name: String) {
 		loadModule {
 			singleOf(configBuilder) withOptions {
@@ -71,7 +97,13 @@ class ConfigManager: KordExKoinComponent {
 		loadConfigSection(config, "games.${name.removeSuffix("Config").lowercase()}")
 	}
 
-	// Helper method to load config values into a data class
+	/**
+	 * Loads a configuration section into the provided object.
+	 * This method uses reflection to set properties on the object based on the loaded configuration.
+	 *
+	 * @param configObject The object to load the configuration into.
+	 * @param path The path in the config file where the configuration is located.
+	 */
 	fun <T : Any> loadConfigSection(configObject: T, path: String) {
 		val cls = configObject::class
 
@@ -100,12 +132,28 @@ class ConfigManager: KordExKoinComponent {
 		}
 	}
 
+	/**
+	 * Sets a property on the given object using reflection.
+	 * This method is used to set properties dynamically based on the loaded configuration.
+	 *
+	 * @param obj The object whose property is to be set.
+	 * @param propName The name of the property to set.
+	 * @param value The value to set the property to.
+	 */
 	private fun setProperty(obj: Any, propName: String, value: Any) {
 		val property = obj::class.java.getDeclaredField(propName)
 		property.isAccessible = true
 		property.set(obj, value)
 	}
 
+	/**
+	 * Converts an environment variable value to the appropriate type.
+	 * This method is used to convert string values from environment variables to their respective types.
+	 *
+	 * @param value The string value from the environment variable.
+	 * @param type The type to convert the value to.
+	 * @return The converted value.
+	 */
 	private fun convertEnvValue(value: String, type: KClass<*>): Any {
 		return when (type) {
 			String::class -> value
@@ -118,6 +166,14 @@ class ConfigManager: KordExKoinComponent {
 		}
 	}
 
+	/**
+	 * Loads a configuration value from the config file.
+	 * This method handles different types of values (list, boolean, number, string, object).
+	 *
+	 * @param config The config object.
+	 * @param path The path in the config file where the value is located.
+	 * @return The loaded value.
+	 */
 	private fun loadConfigValue(config: Config, path: String): Any {
 		val value = config.getValue(path)
 		return when (value.valueType()) {

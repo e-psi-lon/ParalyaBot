@@ -7,23 +7,53 @@ import dev.kordex.core.koin.KordExKoinComponent
 import fr.paralya.bot.common.i18n.Translations
 
 
+/**
+ * GameRegistry is a singleton class that manages game modes for the bot.
+ * It allows for the registration, retrieval, and unloading of game modes.
+ *
+ * @constructor Creates a new GameRegistry instance.
+ *
+ * @property gameModes A mutable map that stores game modes with their associated keys.
+ */
 class GameRegistry: KordExKoinComponent {
 	private val gameModes = mutableMapOf<Key, String>()
 
+	/**
+	 * Registers a new game mode with the given key and value.
+	 *
+	 * @param key The translation key for the game mode.
+	 * @param gameMode The name of the game mode.
+	 */
 	fun registerGameMode(key: Key, gameMode: String) {
 		gameModes[key] = gameMode
 	}
 
+	/**
+	 * Retrieves the game mode associated with the given value.
+	 *
+	 * @param value The name of the game mode.
+	 * @return A pair containing the key and value of the game mode, or NONE if not found.
+	 */
 	fun getGameMode(value: String) = if (gameModes.containsValue(value)) {
 		gameModes.filterValues { it == value }.keys.first() to value
 	} else {
 		NONE
 	}
 
+	/**
+	 * Retrieves all registered game modes.
+	 *
+	 * @return A mutable map containing all game modes with their associated keys.
+	 */
 	fun getGameModes(): MutableMap<Key, String> {
 		return gameModes
 	}
 
+	/**
+	 * Unloads a game mode by removing it from the registry.
+	 *
+	 * @param value The name of the game mode to unload.
+	 */
 	fun unloadGameMode(value: String) {
 		gameModes.remove(gameModes.filterValues { it == value }.keys.first())
 	}
@@ -33,6 +63,11 @@ class GameRegistry: KordExKoinComponent {
 	}
 }
 
+/**
+ * Extension function to set the game mode in a PresenceBuilder.
+ *
+ * @param gameMode A pair containing the key and value of the game mode.
+ */
 fun PresenceBuilder.gameMode(gameMode: Pair<Key, String>) {
 	if (gameMode == GameRegistry.NONE) {
 		status = PresenceStatus.Idle

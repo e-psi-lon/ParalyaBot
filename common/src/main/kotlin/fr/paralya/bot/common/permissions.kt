@@ -7,7 +7,13 @@ import dev.kord.core.behavior.channel.TopGuildChannelBehavior
 import dev.kord.core.behavior.channel.editMemberPermission
 import dev.kord.core.behavior.channel.editRolePermission
 
-
+/**
+ * Adds a permission to a role in a channel.
+ *
+ * @param id The ID of the role to which the permission will be added.
+ * @param permission The permission to be added.
+ * @param reason An optional reason for the permission change.
+ */
 suspend fun TopGuildChannelBehavior.addRolePermission(
 	id: Snowflake,
 	permission: Permission,
@@ -20,6 +26,13 @@ suspend fun TopGuildChannelBehavior.addRolePermission(
 	}
 }
 
+/**
+ * Adds a permission to a member in a channel.
+ *
+ * @param id The ID of the member to which the permission will be added.
+ * @param permission The permission to be added.
+ * @param reason An optional reason for the permission change.
+ */
 suspend fun TopGuildChannelBehavior.addMemberPermission(
 	id: Snowflake,
 	permission: Permission,
@@ -32,6 +45,13 @@ suspend fun TopGuildChannelBehavior.addMemberPermission(
 	}
 }
 
+/**
+ * Adds multiple permissions to a role in a channel.
+ *
+ * @param id The ID of the role to which the permissions will be added.
+ * @param permissions The permissions to be added.
+ * @param reason An optional reason for the permission change.
+ */
 suspend fun TopGuildChannelBehavior.addRolePermissions(
 	id: Snowflake,
 	vararg permissions: Permission,
@@ -44,6 +64,13 @@ suspend fun TopGuildChannelBehavior.addRolePermissions(
 	}
 }
 
+/**
+ * Adds multiple permissions to a member in a channel.
+ *
+ * @param id The ID of the member to which the permissions will be added.
+ * @param permissions The permissions to be added.
+ * @param reason An optional reason for the permission change.
+ */
 suspend fun TopGuildChannelBehavior.addMemberPermissions(
 	id: Snowflake,
 	vararg permissions: Permission,
@@ -56,6 +83,13 @@ suspend fun TopGuildChannelBehavior.addMemberPermissions(
 	}
 }
 
+/**
+ * Remove a permission from a role in a channel.
+ *
+ * @param id The ID of the role to which the permission will be removed.
+ * @param permission The permission to be removed.
+ * @param reason An optional reason for the permission change.
+ */
 suspend fun TopGuildChannelBehavior.removeRolePermission(
 	id: Snowflake,
 	permission: Permission,
@@ -68,6 +102,13 @@ suspend fun TopGuildChannelBehavior.removeRolePermission(
 	}
 }
 
+/**
+ * Remove a permission from a member in a channel.
+ *
+ * @param id The ID of the member to which the permission will be removed.
+ * @param permission The permission to be removed.
+ * @param reason An optional reason for the permission change.
+ */
 suspend fun TopGuildChannelBehavior.removeMemberPermission(
 	id: Snowflake,
 	permission: Permission,
@@ -79,7 +120,13 @@ suspend fun TopGuildChannelBehavior.removeMemberPermission(
 		this.reason = reason
 	}
 }
-
+/**
+ * Remove multiple permissions from a role in a channel.
+ *
+ * @param id The ID of the role to which the permissions will be removed.
+ * @param permissions The permissions to be removed.
+ * @param reason An optional reason for the permission change.
+ */
 suspend fun TopGuildChannelBehavior.removeRolePermissions(
 	id: Snowflake,
 	vararg permissions: Permission,
@@ -92,6 +139,13 @@ suspend fun TopGuildChannelBehavior.removeRolePermissions(
 	}
 }
 
+/**
+ * Remove multiple permissions from a member in a channel.
+ *
+ * @param id The ID of the member to which the permissions will be removed.
+ * @param permissions The permissions to be removed.
+ * @param reason An optional reason for the permission change.
+ */
 suspend fun TopGuildChannelBehavior.removeMemberPermissions(
 	id: Snowflake,
 	vararg permissions: Permission,
