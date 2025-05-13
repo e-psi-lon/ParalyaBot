@@ -141,9 +141,9 @@ suspend fun LG.registerListeners() {
 
 	event<ReadyEvent> {
 		action {
-			logger.debug { "Récupération des canaux des catégories loup-garou" }
+			logger.debug { "Fetching channels from werewolf related categories" }
 			val paralya = event.guilds.firstOrNull { it.id.value == botConfig.paralyaId }
-				?: throw IllegalStateException("Serveur Paralya non trouvé")
+				?: throw IllegalStateException("Paralya guild not found")
 
 			val rolesChannels = collectChannelsFromCategory(lgConfig.rolesCategory.toSnowflake(), paralya)
 			val mainChannels = collectChannelsFromCategory(lgConfig.mainCategory.toSnowflake(), paralya)

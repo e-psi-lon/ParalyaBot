@@ -45,64 +45,64 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				?: VoteData.createVillageVote(System.currentTimeMillis().toSnowflake()).setCurrent(true)
 			botCache.updateVote(newVote)
 
-				val oldWerewolfVote = botCache.getCurrentVote(LGState.NIGHT)?.apply {
-					setCurrent(false)
-					botCache.updateVote(this)
-				}
-				val newVoteWerewolf = botCache.getCurrentVote(LGState.NIGHT)
-					?: VoteData.createWerewolfVote(System.currentTimeMillis().toSnowflake()).setCurrent(true)
-				botCache.updateVote(newVoteWerewolf)
-				val config = getKoin().get<LgConfig>()
-				val aliveRole = config.aliveRole.toSnowflake()
-				if (oldWerewolfVote?.votes?.isNotEmpty() == true) {
-					val voteCount = oldWerewolfVote.votes.values.groupingBy { it }.eachCount()
-					val maxVote = voteCount.maxByOrNull { it.value }?.key
-					val maxVotedPlayers = voteCount.filter { it.key == maxVote }.keys
-					when {
-						maxVotedPlayers.size > 1 && !force -> {
-							sendAsWebhook(this@LG.bot, botCache.getChannelId("LOUPS_VOTE")!!, "ParalyaLG", getAsset("lg")) {
-								content = Lg.Day.Response.Other.equality.translateWithContext(
-									maxVotedPlayers.joinToString(", ") { "<@${it.value}>" }
-								)
-							}
+			val oldWerewolfVote = botCache.getCurrentVote(LGState.NIGHT)?.apply {
+				setCurrent(false)
+				botCache.updateVote(this)
+			}
+			val newVoteWerewolf = botCache.getCurrentVote(LGState.NIGHT)
+				?: VoteData.createWerewolfVote(System.currentTimeMillis().toSnowflake()).setCurrent(true)
+			botCache.updateVote(newVoteWerewolf)
+			val config = getKoin().get<LgConfig>()
+			val aliveRole = config.aliveRole.toSnowflake()
+			if (oldWerewolfVote?.votes?.isNotEmpty() == true) {
+				val voteCount = oldWerewolfVote.votes.values.groupingBy { it }.eachCount()
+				val maxVote = voteCount.maxByOrNull { it.value }?.key
+				val maxVotedPlayers = voteCount.filter { it.key == maxVote }.keys
+				when {
+					maxVotedPlayers.size > 1 && !force -> {
+						sendAsWebhook(this@LG.bot, botCache.getChannelId("LOUPS_VOTE")!!, "ParalyaLG", getAsset("lg", this@LG.prefix)) {
+							content = Lg.DayCycle.Response.Other.equality.translateWithContext(
+								maxVotedPlayers.joinToString(", ") { "<@${it.value}>" }
+							)
+						}
 
 						newVoteWerewolf.apply {
 							setChoices(maxVotedPlayers.toList())
 							botCache.updateVote(this)
 						}
 
-							respond { content = Lg.Day.Response.Other.secondVote.translateWithContext() }
-							return@adminOnly
+						respond { content = Lg.DayCycle.Response.Other.secondVote.translateWithContext() }
+						return@adminOnly
+					}
+					maxVotedPlayers.size == 1 && kill -> {
+						val playerToKill = maxVotedPlayers.first()
+						guild!!.getMember(playerToKill).apply {
+							addRole(config.deadRole.toSnowflake(), Lg.System.Permissions.PlayerKilled.reason.translateWithContext())
+							removeRole(aliveRole, Lg.System.Permissions.PlayerKilled.reason.translateWithContext())
 						}
-						maxVotedPlayers.size == 1 && kill -> {
-							val playerToKill = maxVotedPlayers.first()
-							guild!!.getMember(playerToKill).apply {
-								addRole(config.deadRole.toSnowflake(), Lg.System.Permissions.PlayerKilled.reason.translateWithContext())
-								removeRole(aliveRole, Lg.System.Permissions.PlayerKilled.reason.translateWithContext())
-							}
 
-							respond {
-								content = Lg.Day.Response.Success.killed.translateWithContext(guild!!.getMember(playerToKill).effectiveName)
-							}
+						respond {
+							content = Lg.DayCycle.Response.Success.killed.translateWithContext(guild!!.getMember(playerToKill).effectiveName)
 						}
 					}
 				}
-				newVoteWerewolf.apply {
-					setChoices(emptyList())
-					botCache.updateVote(this)
-				}
-				botCache.nextDay()
-				listOf("VILLAGE", "VOTES", "SUJET").forEach { channelName ->
-					botCache.getChannel(channelName)
-						?.getTopChannel()
-						?.addRolePermissions(aliveRole, Permission.ViewChannel, Permission.SendMessages)
-				}
-				// For each thread in the SUJET channel, unlock it
-				botCache.getChannel("SUJET")?.activeThreads?.collect { it.edit { locked = false } }
-				botCache.getChannel("LOUP_CHAT")?.getMembersWithAccess()
-					?.filter { it.hasRole(guild!!.getRole(aliveRole)) }
-					?.toList()?.forEach { member ->
-						val reason = Lg.System.Permissions.Day.reason.translateWithContext()
+			}
+			newVoteWerewolf.apply {
+				setChoices(emptyList())
+				botCache.updateVote(this)
+			}
+			botCache.nextDay()
+			listOf("VILLAGE", "VOTES", "SUJET").forEach { channelName ->
+				botCache.getChannel(channelName)
+					?.getTopChannel()
+					?.addRolePermissions(aliveRole, Permission.ViewChannel, Permission.SendMessages)
+			}
+			// For each thread in the SUJET channel, unlock it
+			botCache.getChannel("SUJET")?.activeThreads?.collect { it.edit { locked = false } }
+			botCache.getChannel("LOUPS_CHAT")?.getMembersWithAccess()
+				?.filter { it.hasRole(guild!!.getRole(aliveRole)) }
+				?.toList()?.forEach { member ->
+					val reason = Lg.System.Permissions.Day.reason.translateWithContext()
 
 					botCache.getChannel("LOUPS_VOTE")?.apply {
 						addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
@@ -118,18 +118,36 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			respond { content = Lg.Day.Response.success.translateWithContext() }
 		}
 	}
+	ephemeralSubCommand(::NightArguments) {
+		name = Lg.Night.Command.name
+		description = Lg.Night.Command.description
+
+		adminOnly {
+			val force = arguments.force
+			val kill = arguments.kill
+			val botCache = this@LG.botCache
+			val gameData = botCache.getGameData()
+
+		}
+	}
 }
 
-private class DayArguments : Arguments() {
+private abstract class BaseDayCycleArguments : Arguments() {
 	val force by defaultingBoolean {
-		name = Lg.Day.Argument.Force.name
-		description = Lg.Day.Argument.Force.description
+		name = Lg.DayCycle.Argument.Force.name
+		description = getForceDescription()
 		defaultValue = false
 	}
-
 	val kill by defaultingBoolean {
-		name = Lg.Day.Argument.Kill.name
-		description = Lg.Day.Argument.Kill.description
+		name = Lg.DayCycle.Argument.Kill.name
+		description = Lg.DayCycle.Argument.Kill.description
 		defaultValue = true
 	}
+	abstract fun getForceDescription(): Key
+}
+private class DayArguments : BaseDayCycleArguments() {
+	override fun getForceDescription() = Lg.Day.Argument.Force.description
+}
+private class NightArguments : BaseDayCycleArguments() {
+	override fun getForceDescription() = Lg.Night.Argument.Force.description
 }

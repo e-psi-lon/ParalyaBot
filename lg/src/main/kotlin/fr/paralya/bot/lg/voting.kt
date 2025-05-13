@@ -108,7 +108,6 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 					}
 				}
 			}
-
 		}
 	}
 }

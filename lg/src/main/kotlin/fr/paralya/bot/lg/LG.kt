@@ -56,7 +56,9 @@ class LG : Extension() {
 						guild?.members?.collect { member ->
 							if (member.hasRole(arguments.role)) {
 								member.dm(
-									"━━━━━━━━━━━━━━━━━━\n🐺 LGNotifications ¦ ${modal?.message?.value ?: "Une erreur a eu lieu, merci de la rapporter à l'équipe technique."}\n━━━━━━━━━━━━━━━━━━"
+									Lg.Notif.Content.main.translateWithContext(
+										modal?.message?.value ?: Lg.Notif.Content.error.translateWithContext()
+									)
 								) ?: failed.add(member.username)
 							}
 						}
