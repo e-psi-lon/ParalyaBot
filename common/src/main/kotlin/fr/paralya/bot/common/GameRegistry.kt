@@ -8,10 +8,9 @@ import fr.paralya.bot.common.i18n.Translations
 
 
 /**
- * GameRegistry is a singleton class that manages game modes for the bot.
+ * [GameRegistry] is a singleton class that manages game modes for the bot.
  * It allows for the registration, retrieval, and unloading of game modes.
- *
- * @constructor Creates a new GameRegistry instance.
+ * Registration and unloading are currently unused because the at-runtime game loading is not implemented yet.
  *
  * @property gameModes A mutable map that stores game modes with their associated keys.
  */

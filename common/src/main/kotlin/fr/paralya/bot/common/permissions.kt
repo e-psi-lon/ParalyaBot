@@ -17,7 +17,7 @@ import dev.kord.core.behavior.channel.editRolePermission
 suspend fun TopGuildChannelBehavior.addRolePermission(
 	id: Snowflake,
 	permission: Permission,
-	reason : String? = null,
+	reason: String? = null,
 ) {
 	editRolePermission(id) {
 		allowed = allowed.plus(permission)
@@ -36,7 +36,7 @@ suspend fun TopGuildChannelBehavior.addRolePermission(
 suspend fun TopGuildChannelBehavior.addMemberPermission(
 	id: Snowflake,
 	permission: Permission,
-	reason : String? = null,
+	reason: String? = null,
 ) {
 	editMemberPermission(id) {
 		allowed = allowed.plus(permission)

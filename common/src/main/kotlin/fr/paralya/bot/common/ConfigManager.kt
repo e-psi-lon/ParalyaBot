@@ -24,7 +24,7 @@ import kotlin.system.exitProcess
  * @property configFile The file where the configuration is stored.
  * @property config The loaded configuration object.
  * @property botConfig The core bot configuration.
- * @constructor Creates a new ConfigManager instance.
+ * @constructor Creates a new [ConfigManager] instance and automatically populates the base configuration.
  */
 class ConfigManager: KordExKoinComponent {
 	private lateinit var config: Config

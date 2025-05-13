@@ -29,7 +29,7 @@ import kotlinx.coroutines.withContext
  * Retrieves or creates a webhook in a specified channel.
  *
  * @param channel The ID of the channel where the webhook will be retrieved or created.
- * @param bot The instance of the ExtensibleBot used to interact with Discord.
+ * @param bot The instance of the [ExtensibleBot] used to interact with Discord.
  * @param name The name of the webhook to retrieve or create.
  * @param avatar An optional avatar image for the webhook. If not provided, Discord's default avatar will be used.
  * @return The retrieved or newly created webhook.
@@ -49,7 +49,7 @@ suspend fun getWebhook(channel: Snowflake, bot: ExtensibleBot, name: String, ava
 /**
  * Sends a message as a webhook in a specified channel.
  *
- * @param bot The instance of the ExtensibleBot used to interact with Discord.
+ * @param bot The instance of the [ExtensibleBot] used to interact with Discord.
  * @param channel The ID of the channel where the message will be sent.
  * @param name The name of the webhook to use or create.
  * @param avatar An optional avatar image for the webhook. If not provided, Discord's default avatar will be used.
@@ -75,6 +75,16 @@ suspend fun sendAsWebhook(
 	} }
 }
 
+/**
+ * Sends a message as a webhook in a specified channel with a string avatar URL.
+ *
+ * @param bot The instance of the [ExtensibleBot] used to interact with Discord.
+ * @param channel The ID of the channel where the message will be sent.
+ * @param name The name of the webhook to use or create.
+ * @param avatar An optional avatar URL for the webhook. If not provided, Discord's default avatar will be used.
+ * @param message A message builder block to configure the message content and properties.
+ * @return The message sent by the webhook, or null if the webhook token is unavailable.
+ */
 suspend fun sendAsWebhook(
 	bot: ExtensibleBot,
 	channel: Snowflake,
@@ -105,7 +115,7 @@ suspend fun Key.translateWithContext(vararg replacements: Any?) =
  * Retrieves an image asset from the specified path.
  *
  * @param path The path to the asset file (in the `assets` resource directory).
- * @return The image as an `Image` object.
+ * @return The image as an [Image] object.
  * @throws IllegalArgumentException if the resource is not found at the specified path.
  */
 suspend fun getAsset(path: String, game: String? = null): Image {
@@ -121,7 +131,7 @@ suspend fun getAsset(path: String, game: String? = null): Image {
 /**
  * Retrieves a flow of members who have access to the current text channel.
  *
- * @return A flow of `Member` objects representing the members with access to the channel.
+ * @return A flow of [Member] objects representing the members with access to the channel.
  */
 suspend fun TextChannel.getMembersWithAccess(): Flow<Member> {
 	return guild.members.filter { member ->
@@ -170,6 +180,15 @@ suspend fun getCorrespondingMessage(channel: MessageChannelBehavior, message: Me
 	return null
 }
 
+/**
+ * Converts a [DiscordUser] to a [User] using the provided [Kord] instance.
+ *
+ * @param kord The [Kord] instance used to create the [User].
+ * @return The converted [User], or null if the [DiscordUser] is null.
+ */
 fun DiscordUser?.asUser(kord: Kord) = this?.let { User(UserData.from(it), kord) }
+
+/** Extension properties to convert various number types to a [Snowflake] */
 val Number.snowflake get() = Snowflake(this.toLong())
+/** @see [Number.snowflake] */
 val ULong.snowflake get() = Snowflake(this)
