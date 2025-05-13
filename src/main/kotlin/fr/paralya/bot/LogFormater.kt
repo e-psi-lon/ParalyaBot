@@ -23,6 +23,12 @@ class LogFormater : LayoutWrappingEncoder<ILoggingEvent>() {
 					).replace("%ex", event.throwableProxy?.let { formatException(it) } ?: "")
 			}
 
+			/**
+			 * Highlights the log level with ANSI color codes.
+			 *
+			 * @param level The log level to highlight.
+			 * @return The highlighted log level.
+			 */
 			private fun highlightLevel(level: String): String {
 				return when (level) {
 					"DEBUG" -> "\u001B[34m$level\u001B[0m"  // Blue
@@ -34,6 +40,12 @@ class LogFormater : LayoutWrappingEncoder<ILoggingEvent>() {
 				}
 			}
 
+			/**
+			 * Formats the exception stack trace to a human-readable string.
+			 *
+			 * @param throwableProxy The throwable proxy to format.
+			 * @return The formatted stack trace.
+			 */
 			private fun formatException(throwableProxy: IThrowableProxy): String {
 				val stackTrace = StringBuilder()
 				stackTrace.append("\n\t").append(throwableProxy.className)

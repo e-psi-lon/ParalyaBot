@@ -17,6 +17,15 @@ import fr.paralya.bot.common.i18n.Translations.Common
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.component.inject
 
+/**
+ * Base extension for the bot.
+ *
+ * This extension handles the basic setup and configuration of the bot.
+ * It includes basic commands and event listeners.
+ *
+ * @property name The name of the extension.
+ * @property logger The logger for the extension.
+ */
 class Base : Extension() {
 	override val name = "Base"
 	private val logger = KotlinLogging.logger(this::class.java.name)
@@ -113,6 +122,13 @@ class Base : Extension() {
 		}
 	}
 
+	/**
+	 * Arguments for the start game command.
+	 * This class defines the arguments required to start a game.
+	 * It includes a game argument to specify the game mode.
+	 *
+	 * @property game The game mode to start. Loaded from the game registry.
+	 */
 	inner class StartGameArguments : Arguments() {
 		val game by stringChoice {
 			name = Translations.StartGame.Argument.Game.name

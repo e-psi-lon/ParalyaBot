@@ -21,12 +21,25 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.withOptions
 import org.koin.core.qualifier.named
 
+/**
+ * Main entry point for the Paralya's Discord bot.
+ *
+ * This function gets the bot instance and starts it.
+ *
+ * @param args Command line arguments for the bot.
+ */
 suspend fun main(args: Array<String>) {
 	val bot = buildBot(args)
 	bot.start()
 }
 
 
+/**
+ * Builds and configures the bot instance.
+ *
+ * @param args Command line arguments for the bot.
+ * @return An instance of [ExtensibleBot], ready to be started.
+ */
 suspend fun buildBot(args: Array<String>): ExtensibleBot {
 	val firstConfigManager = ConfigManager()
 	val token = firstConfigManager.botConfig.token
