@@ -32,6 +32,12 @@ private val requiredMainChannels = listOf(
 	"VILLAGE"
 )
 
+/**
+ * Registers all event listeners for the Werewolf (Loup-Garou) game.
+ *
+ * This function sets up listeners for different Discord events like message creation,
+ * message updates, message deletion, reactions, and bot ready event.
+ */
 suspend fun LG.registerListeners() {
 	val lgConfig by inject<LgConfig>()
 	val botConfig = inject<ConfigManager>().value.botConfig
@@ -170,6 +176,16 @@ suspend fun LG.registerListeners() {
 	}
 }
 
+/**
+ * Collects channels from a specified category in a guild.
+ *
+ * This function retrieves all channels in the given category and maps them to a map of channel names to their IDs.
+ * It filters out any channels that do not have a valid name or ID. And formats their name to SCREAMING_SNAKE_CASE.
+ *
+ * @param categoryId The ID of the category to collect channels from.
+ * @param guild The guild to collect channels from.
+ * @return A map of channel names to their IDs.
+ */
 private suspend fun collectChannelsFromCategory(categoryId: Snowflake, guild: GuildBehavior): Map<String, Snowflake> {
 	return guild.channels
 		.filter { it.getCategory()?.id == categoryId }
@@ -186,4 +202,3 @@ private suspend fun collectChannelsFromCategory(categoryId: Snowflake, guild: Gu
 		.toMap()
 		.filterKeys { it.isNotBlank() && it != "_".repeat(it.length) }
 }
-

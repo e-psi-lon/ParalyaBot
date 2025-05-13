@@ -24,6 +24,18 @@ import fr.paralya.bot.lg.i18n.Translations.Lg
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.component.inject
 
+
+/**
+ * The main extension class for the Werewolf (Loup-Garou) game.
+ *
+ * This class is responsible for registering commands, event listeners and managing game state.
+ *
+ *
+ * @property name The name of the extension.
+ * @property logger The logger for the extension.
+ * @property botCache An alias for the bot's cache for easier access.
+ * @property prefix The internal prefix for assets, game registry, etc.
+ */
 class LG : Extension() {
 	override val name = "LG"
 	val logger = KotlinLogging.logger(this::class.java.name)
@@ -97,6 +109,11 @@ class LG : Extension() {
 		registerListeners()
 	}
 
+	/**
+	 * Nested class to define /lg notif command arguments.
+	 *
+	 * @property role The role to notify.
+	 */
 	inner class NotifArguments : Arguments() {
 		val role by role {
 			name = Lg.Notif.Argument.Role.name
@@ -104,6 +121,11 @@ class LG : Extension() {
 		}
 	}
 
+	/**
+	 * Nested class to define /lg interview command arguments.
+	 *
+	 * @property user The user to be interviewed.
+	 */
 	inner class InterviewArguments : Arguments() {
 		val user by user {
 			name = Lg.Interview.Argument.User.name

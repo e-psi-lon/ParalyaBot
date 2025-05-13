@@ -17,6 +17,12 @@ import fr.paralya.bot.lg.data.vote
 import fr.paralya.bot.lg.data.voteCorbeau
 import fr.paralya.bot.lg.i18n.Translations.Lg
 
+/**
+ * Registers the commands for voting in the game.
+ * This includes commands for voting during the day and night phases.
+ *
+ * @receiver The instance of the [LG] extension that will handle the commands.
+ */
 context(LG)
 suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVotingCommands() {
 	group(Lg.Vote.Command.name) {
@@ -112,6 +118,13 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 	}
 }
 
+/**
+ * Arguments for the vote command.
+ * This class defines the arguments that can be passed to the vote command.
+ *
+ * @property target The user to vote for.
+ * @property reason An optional reason for the vote.
+ */
 private class VoteArguments : Arguments() {
 	val target by user {
 		name = Lg.Vote.Argument.Target.name

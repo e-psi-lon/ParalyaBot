@@ -12,7 +12,18 @@ import fr.paralya.bot.common.BotConfig
 import fr.paralya.bot.common.ConfigManager
 import org.koin.core.component.inject
 
-
+/**
+ * Extension function to register a command that admins can only execute.
+ *
+ * This function takes a lambda action that will be executed
+ * only if the user is an admin.
+ * It works as a wrapper around the existing command registration
+ *
+ * @param C The type of the [SlashCommandContext].
+ * @param A The type of the [Arguments].
+ * @param M The type of the [ModalForm].
+ * @param action The action to be executed if the user is an admin.
+ */
 fun <C: SlashCommandContext<*, A, M>, A: Arguments, M : ModalForm>SlashCommand<C, A, M>.adminOnly(action: suspend C.(M?) -> Unit) {
 	action { modal ->
 		val configManager by inject<ConfigManager>()
@@ -27,10 +38,22 @@ fun <C: SlashCommandContext<*, A, M>, A: Arguments, M : ModalForm>SlashCommand<C
 	}
 }
 
+/**
+ * Extension function to check if a user is an admin.
+ *
+ * @param config The [BotConfig] instance containing the list of admin IDs.
+ * @return true if the user is an admin, false otherwise.
+ */
 fun User?.isAdmin(config: BotConfig): Boolean {
 	return this != null && config.admins.contains(this.id.value)
 }
 
+/**
+ * Extension function to check if a member is an admin.
+ *
+ * @param config The [BotConfig] instance containing the list of admin IDs.
+ * @return true if the member is an admin, false otherwise.
+ */
 fun Member?.isAdmin(config: BotConfig): Boolean {
 	return this != null && config.admins.contains(this.id.value)
 }
