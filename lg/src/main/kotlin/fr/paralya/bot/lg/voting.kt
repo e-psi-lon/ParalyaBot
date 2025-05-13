@@ -10,7 +10,7 @@ import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.forms.ModalForm
 import fr.paralya.bot.common.getWebhook
-import fr.paralya.bot.common.toSnowflake
+import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.lg.data.getChannelId
 import fr.paralya.bot.lg.data.getCurrentVote
 import fr.paralya.bot.lg.data.vote
@@ -29,7 +29,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 				val target = arguments.target
 				val reason = arguments.reason
 				if (channel.id == botCache.getChannelId("CORBEAU")) {
-					if (botCache.getCurrentVote(LGState.DAY)?.corbeau != 0.toSnowflake()) {
+					if (botCache.getCurrentVote(LGState.DAY)?.corbeau != 0.snowflake) {
 						respond { content = "Vous avez déjà voté en tant que corbeau !" }
 					}
 					botCache.voteCorbeau(target.id)

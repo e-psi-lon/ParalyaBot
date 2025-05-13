@@ -171,6 +171,5 @@ suspend fun getCorrespondingMessage(channel: MessageChannelBehavior, message: Me
 }
 
 fun DiscordUser?.asUser(kord: Kord) = this?.let { User(UserData.from(it), kord) }
-fun ULong.toSnowflake() = Snowflake(this)
-fun Long.toSnowflake() = Snowflake(this)
-fun Int.toSnowflake() = Snowflake(this.toLong())
+val Number.snowflake get() = Snowflake(this.toLong())
+val ULong.snowflake get() = Snowflake(this)

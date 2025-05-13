@@ -22,7 +22,7 @@ class Base : Extension() {
 	private val logger = KotlinLogging.logger(this::class.java.name)
 	override suspend fun setup() {
 		val botConfig = inject<ConfigManager>().value.botConfig
-		val dmChannelId = botConfig.dmLogChannelId.toSnowflake()
+		val dmChannelId = botConfig.dmLogChannelId.snowflake
 		event<ReadyEvent> {
 			action {
 				logger.info { "Bot connected to Discord as ${event.self.username}" }

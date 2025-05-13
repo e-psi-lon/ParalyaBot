@@ -42,7 +42,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				return@adminOnly
 			}
 			val newVote = botCache.getCurrentVote(LGState.DAY)
-				?: VoteData.createVillageVote(System.currentTimeMillis().toSnowflake()).setCurrent(true)
+				?: VoteData.createVillageVote(System.currentTimeMillis().snowflake).setCurrent(true)
 			botCache.updateVote(newVote)
 
 			val oldWerewolfVote = botCache.getCurrentVote(LGState.NIGHT)?.apply {
@@ -50,10 +50,10 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				botCache.updateVote(this)
 			}
 			val newVoteWerewolf = botCache.getCurrentVote(LGState.NIGHT)
-				?: VoteData.createWerewolfVote(System.currentTimeMillis().toSnowflake()).setCurrent(true)
+				?: VoteData.createWerewolfVote(System.currentTimeMillis().snowflake).setCurrent(true)
 			botCache.updateVote(newVoteWerewolf)
 			val config = getKoin().get<LgConfig>()
-			val aliveRole = config.aliveRole.toSnowflake()
+			val aliveRole = config.aliveRole.snowflake
 			if (oldWerewolfVote?.votes?.isNotEmpty() == true) {
 				val voteCount = oldWerewolfVote.votes.values.groupingBy { it }.eachCount()
 				val maxVote = voteCount.maxByOrNull { it.value }?.key
@@ -77,7 +77,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					maxVotedPlayers.size == 1 && kill -> {
 						val playerToKill = maxVotedPlayers.first()
 						guild!!.getMember(playerToKill).apply {
-							addRole(config.deadRole.toSnowflake(), Lg.System.Permissions.PlayerKilled.reason.translateWithContext())
+							addRole(config.deadRole.snowflake, Lg.System.Permissions.PlayerKilled.reason.translateWithContext())
 							removeRole(aliveRole, Lg.System.Permissions.PlayerKilled.reason.translateWithContext())
 						}
 

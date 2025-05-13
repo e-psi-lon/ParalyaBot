@@ -35,7 +35,7 @@ private val requiredMainChannels = listOf(
 suspend fun LG.registerListeners() {
 	val lgConfig by inject<LgConfig>()
 	val botConfig = inject<ConfigManager>().value.botConfig
-	val dmChannelId = botConfig.dmLogChannelId.toSnowflake()
+	val dmChannelId = botConfig.dmLogChannelId.snowflake
 
 	event<MessageCreateEvent> {
 		action {
@@ -145,8 +145,8 @@ suspend fun LG.registerListeners() {
 			val paralya = event.guilds.firstOrNull { it.id.value == botConfig.paralyaId }
 				?: throw IllegalStateException("Paralya guild not found")
 
-			val rolesChannels = collectChannelsFromCategory(lgConfig.rolesCategory.toSnowflake(), paralya)
-			val mainChannels = collectChannelsFromCategory(lgConfig.mainCategory.toSnowflake(), paralya)
+			val rolesChannels = collectChannelsFromCategory(lgConfig.rolesCategory.snowflake, paralya)
+			val mainChannels = collectChannelsFromCategory(lgConfig.mainCategory.snowflake, paralya)
 
 			logger.debug { "Found ${rolesChannels.size} channels in the roles category" }
 			logger.debug { "Found ${mainChannels.size} channels in the main category" }

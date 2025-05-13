@@ -5,7 +5,7 @@ import dev.kord.cache.api.data.description
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.cache.idEq
 import dev.kord.core.entity.User
-import fr.paralya.bot.common.toSnowflake
+import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.lg.LGState
 
 data class VoteData(
@@ -14,7 +14,7 @@ data class VoteData(
 	val isCurrent: Boolean = false,
 	val votes: Map<Snowflake, Snowflake> = emptyMap(),
 	val choices: List<Snowflake> = listOf(),
-	val corbeau: Snowflake = 0.toSnowflake()
+	val corbeau: Snowflake = 0.snowflake,
 ) {
 	companion object {
 		val description = description<VoteData, Snowflake>(VoteData::id)
