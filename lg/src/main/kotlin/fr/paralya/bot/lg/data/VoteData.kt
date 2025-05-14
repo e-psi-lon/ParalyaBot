@@ -39,6 +39,7 @@ data class VoteData(
 		 */
 		fun createWerewolfVote(id: Snowflake, isCurrent: Boolean = true) =
 			VoteData(id, LGState.NIGHT.name, isCurrent)
+
 		/**
 		 * Creates a new village vote for the day phase.
 		 *
@@ -109,6 +110,7 @@ suspend fun DataCache.getCurrentVote(type: LGState? = null): VoteData? {
 suspend fun DataCache.updateVote(voteData: VoteData) {
 	put(voteData)
 }
+
 /**
  * Records a vote from a player to a target in the current vote.
  *

@@ -55,7 +55,7 @@ suspend fun TopGuildChannelBehavior.addMemberPermission(
 suspend fun TopGuildChannelBehavior.addRolePermissions(
 	id: Snowflake,
 	vararg permissions: Permission,
-	reason : String? = null
+	reason: String? = null
 ) {
 	editRolePermission(id) {
 		allowed = allowed.plus(Permissions(permissions.toSet()))
@@ -74,7 +74,7 @@ suspend fun TopGuildChannelBehavior.addRolePermissions(
 suspend fun TopGuildChannelBehavior.addMemberPermissions(
 	id: Snowflake,
 	vararg permissions: Permission,
-	reason : String? = null
+	reason: String? = null
 ) {
 	editMemberPermission(id) {
 		allowed = allowed.plus(Permissions(permissions.toSet()))
@@ -93,7 +93,7 @@ suspend fun TopGuildChannelBehavior.addMemberPermissions(
 suspend fun TopGuildChannelBehavior.removeRolePermission(
 	id: Snowflake,
 	permission: Permission,
-	reason : String? = null,
+	reason: String? = null,
 ) {
 	editRolePermission(id) {
 		allowed = allowed.minus(permission)
@@ -112,7 +112,7 @@ suspend fun TopGuildChannelBehavior.removeRolePermission(
 suspend fun TopGuildChannelBehavior.removeMemberPermission(
 	id: Snowflake,
 	permission: Permission,
-	reason : String? = null,
+	reason: String? = null,
 ) {
 	editMemberPermission(id) {
 		allowed = allowed.minus(permission)
@@ -120,6 +120,7 @@ suspend fun TopGuildChannelBehavior.removeMemberPermission(
 		this.reason = reason
 	}
 }
+
 /**
  * Remove multiple permissions from a role in a channel.
  *
@@ -130,7 +131,7 @@ suspend fun TopGuildChannelBehavior.removeMemberPermission(
 suspend fun TopGuildChannelBehavior.removeRolePermissions(
 	id: Snowflake,
 	vararg permissions: Permission,
-	reason : String? = null
+	reason: String? = null
 ) {
 	editRolePermission(id) {
 		allowed = allowed.minus(Permissions(permissions.toSet()))
@@ -149,7 +150,7 @@ suspend fun TopGuildChannelBehavior.removeRolePermissions(
 suspend fun TopGuildChannelBehavior.removeMemberPermissions(
 	id: Snowflake,
 	vararg permissions: Permission,
-	reason : String? = null
+	reason: String? = null
 ) {
 	editMemberPermission(id) {
 		allowed = allowed.minus(Permissions(permissions.toSet()))

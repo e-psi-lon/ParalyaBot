@@ -24,15 +24,20 @@ import org.koin.core.component.inject
  * @param M The type of the [ModalForm].
  * @param action The action to be executed if the user is an admin.
  */
-fun <C: SlashCommandContext<*, A, M>, A: Arguments, M : ModalForm>SlashCommand<C, A, M>.adminOnly(action: suspend C.(M?) -> Unit) {
+fun <C : SlashCommandContext<*, A, M>, A : Arguments, M : ModalForm> SlashCommand<C, A, M>.adminOnly(action: suspend C.(M?) -> Unit) {
 	action { modal ->
 		val configManager by inject<ConfigManager>()
 		if (configManager.botConfig.admins.contains(this.member?.id?.value)) {
 			action(modal)
 		} else {
 			when (this) {
-				is PublicSlashCommandContext<*, *> -> respond { content = "Vous n'avez pas les permissions nécessaires pour effectuer cette commande." }
-				is EphemeralSlashCommandContext<*, *> -> respond { content = "Vous n'avez pas les permissions nécessaires pour effectuer cette commande." }
+				is PublicSlashCommandContext<*, *> -> respond {
+					content = "Vous n'avez pas les permissions nécessaires pour effectuer cette commande."
+				}
+
+				is EphemeralSlashCommandContext<*, *> -> respond {
+					content = "Vous n'avez pas les permissions nécessaires pour effectuer cette commande."
+				}
 			}
 		}
 	}

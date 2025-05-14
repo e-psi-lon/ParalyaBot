@@ -43,7 +43,13 @@ class Base : Extension() {
 				val message = event.message
 
 				if (message.getGuildOrNull() == null && message.author?.isSelf != true && message.content.isNotEmpty()) {
-					sendAsWebhook(bot, dmChannelId,message.author?.tag ?: "Inconnu", message.author?.avatar?.cdnUrl?.toUrl(), "DM") {
+					sendAsWebhook(
+						bot,
+						dmChannelId,
+						message.author?.tag ?: "Inconnu",
+						message.author?.avatar?.cdnUrl?.toUrl(),
+						"DM"
+					) {
 						content = message.content
 						if (message.referencedMessage != null) embed {
 							title = Common.Transmission.Reference.title.translateWithContext()

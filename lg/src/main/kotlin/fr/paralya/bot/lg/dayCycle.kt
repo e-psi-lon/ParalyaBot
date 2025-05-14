@@ -73,7 +73,12 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				val maxVotedPlayers = voteCount.filter { it.key == maxVote }.keys
 				when {
 					maxVotedPlayers.size > 1 && !force -> {
-						sendAsWebhook(this@LG.bot, botCache.getChannelId("LOUPS_VOTE")!!, "ParalyaLG", getAsset("lg", this@LG.prefix)) {
+						sendAsWebhook(
+							this@LG.bot,
+							botCache.getChannelId("LOUPS_VOTE")!!,
+							"ParalyaLG",
+							getAsset("lg", this@LG.prefix)
+						) {
 							content = Lg.DayCycle.Response.Other.equality.translateWithContext(
 								maxVotedPlayers.joinToString(", ") { "<@${it.value}>" }
 							)
@@ -87,15 +92,20 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 						respond { content = Lg.DayCycle.Response.Other.secondVote.translateWithContext() }
 						return@adminOnly
 					}
+
 					maxVotedPlayers.size == 1 && kill -> {
 						val playerToKill = maxVotedPlayers.first()
 						guild!!.getMember(playerToKill).apply {
-							addRole(config.deadRole.snowflake, Lg.System.Permissions.PlayerKilled.reason.translateWithContext())
+							addRole(
+								config.deadRole.snowflake,
+								Lg.System.Permissions.PlayerKilled.reason.translateWithContext()
+							)
 							removeRole(aliveRole, Lg.System.Permissions.PlayerKilled.reason.translateWithContext())
 						}
 
 						respond {
-							content = Lg.DayCycle.Response.Success.killed.translateWithContext(guild!!.getMember(playerToKill).effectiveName)
+							content =
+								Lg.DayCycle.Response.Success.killed.translateWithContext(guild!!.getMember(playerToKill).effectiveName)
 						}
 					}
 				}
@@ -165,6 +175,7 @@ private abstract class BaseDayCycleArguments : Arguments() {
 		description = Lg.DayCycle.Argument.Kill.description
 		defaultValue = true
 	}
+
 	abstract fun getForceDescription(): Key
 }
 
@@ -175,6 +186,7 @@ private abstract class BaseDayCycleArguments : Arguments() {
 private class DayArguments : BaseDayCycleArguments() {
 	override fun getForceDescription() = Lg.Day.Argument.Force.description
 }
+
 /**
  * Arguments for the night command.
  * This class extends the [BaseDayCycleArguments] and provides a specific force description for the night command.

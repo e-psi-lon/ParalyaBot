@@ -69,10 +69,12 @@ suspend fun sendAsWebhook(
 	message: suspend WebhookMessageCreateBuilder.() -> Unit
 ): Message? {
 	val webhook = getWebhook(channel, bot, webhookName ?: name, avatar)
-	return webhook.token?.let { webhook.execute(it) {
-		username = name
-		message()
-	} }
+	return webhook.token?.let {
+		webhook.execute(it) {
+			username = name
+			message()
+		}
+	}
 }
 
 /**
@@ -94,11 +96,13 @@ suspend fun sendAsWebhook(
 	message: suspend WebhookMessageCreateBuilder.() -> Unit
 ): Message? {
 	val webhook = getWebhook(channel, bot, webhookName ?: name)
-	return webhook.token?.let { webhook.execute(it) {
-		avatarUrl = avatar
-		username = name
-		message()
-	} }
+	return webhook.token?.let {
+		webhook.execute(it) {
+			avatarUrl = avatar
+			username = name
+			message()
+		}
+	}
 }
 
 /**
@@ -190,5 +194,6 @@ fun DiscordUser?.asUser(kord: Kord) = this?.let { User(UserData.from(it), kord) 
 
 /** Extension properties to convert various number types to a [Snowflake] */
 val Number.snowflake get() = Snowflake(this.toLong())
+
 /** @see [Number.snowflake] */
 val ULong.snowflake get() = Snowflake(this)

@@ -9,7 +9,7 @@ import org.koin.core.component.inject
  * The main plugin class for the Werewolf (Loup-Garou) game.
  *
  * This class is responsible for setting up the configuration [LgConfig] and initializing the [LG] extension.
- * It is currently not used, because the plugin loader from KordEx is still in development.
+ * It is currently not used because the plugin loader from KordEx is still in development.
  *
  */
 class LgBotPlugin : KordExPlugin() {

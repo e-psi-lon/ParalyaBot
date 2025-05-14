@@ -92,7 +92,8 @@ class LG : Extension() {
 				name = Lg.Interview.Command.name
 				description = Lg.Interview.Command.description
 				action {
-					val interviewChannel = botCache.getChannelId("INTERVIEW")?.let { guild?.getChannel(it) } as TopGuildChannel?
+					val interviewChannel =
+						botCache.getChannelId("INTERVIEW")?.let { guild?.getChannel(it) } as TopGuildChannel?
 					if (interviewChannel == null) {
 						respond { content = Messages.Error.channelNotFound.translateWithContext("interview") }
 						return@action

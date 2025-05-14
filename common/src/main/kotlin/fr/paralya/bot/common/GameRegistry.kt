@@ -14,7 +14,7 @@ import fr.paralya.bot.common.i18n.Translations
  *
  * @property gameModes A mutable map that stores game modes with their associated keys.
  */
-class GameRegistry: KordExKoinComponent {
+class GameRegistry : KordExKoinComponent {
 	private val gameModes = mutableMapOf<Key, String>()
 
 	/**

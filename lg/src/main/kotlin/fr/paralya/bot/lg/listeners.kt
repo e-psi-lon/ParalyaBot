@@ -58,7 +58,7 @@ suspend fun LG.registerListeners() {
 			} else if (
 				message.channelId == botCache.getChannelId("LOUPS_CHAT") && !message.author.isAdmin(botConfig) &&
 				message.author?.isBot == false && message.author?.isSelf == false
-				) {
+			) {
 				val cached = botCache.getLastWerewolfMessageSender().value
 				logger.debug { "Message sender is ${message.author?.id?.value} and cache is $cached" }
 				if (message.author?.id != botCache.getLastWerewolfMessageSender()) {
@@ -68,7 +68,13 @@ suspend fun LG.registerListeners() {
 				val wolfName = if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme"
 				val wolfAvatar = if (botCache.getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1"
 				logger.debug { "Avatar is $wolfAvatar and name is $wolfName" }
-				sendAsWebhook(bot, botCache.getChannelId("PETITE_FILLE")!!, wolfName , getAsset(wolfAvatar, this@LG.prefix), "PF") {
+				sendAsWebhook(
+					bot,
+					botCache.getChannelId("PETITE_FILLE")!!,
+					wolfName,
+					getAsset(wolfAvatar, this@LG.prefix),
+					"PF"
+				) {
 					content = message.content
 
 					if (message.referencedMessage != null) embed {
@@ -103,10 +109,10 @@ suspend fun LG.registerListeners() {
 							}
 						}
 					}
-				} catch (e:Exception) {
+				} catch (e: Exception) {
 					val wolfName = if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme"
 					val wolfAvatar = if (botCache.getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1"
-					sendAsWebhook(bot, botCache.getChannelId("PETITE_FILLE")!!, wolfName , wolfAvatar, "PF") {
+					sendAsWebhook(bot, botCache.getChannelId("PETITE_FILLE")!!, wolfName, wolfAvatar, "PF") {
 						content = newMessage.content
 						embed {
 							title = Common.Transmission.Reference.title.translateWithContext()
@@ -124,7 +130,8 @@ suspend fun LG.registerListeners() {
 
 	event<MessageDeleteEvent> {
 		action {
-			val oldMessage = event.message?.let { getCorrespondingMessage(MessageChannelBehavior(dmChannelId, kord), it) }
+			val oldMessage =
+				event.message?.let { getCorrespondingMessage(MessageChannelBehavior(dmChannelId, kord), it) }
 			if (oldMessage != null && event.message?.channelId == botCache.getChannelId("PETITE_FILLE")) {
 				val webhook = getWebhook(botCache.getChannelId("PETITE_FILLE")!!, bot, "PF")
 				try {
@@ -142,7 +149,7 @@ suspend fun LG.registerListeners() {
 		}
 	}
 	event<ReactionRemoveEvent> {
-		action {  }
+		action { }
 	}
 
 	event<ReadyEvent> {
@@ -184,7 +191,7 @@ suspend fun LG.registerListeners() {
  *
  * @param categoryId The ID of the category to collect channels from.
  * @param guild The guild to collect channels from.
- * @return A map of channel names to their IDs.
+ * @return A map of channel names with their IDs.
  */
 private suspend fun collectChannelsFromCategory(categoryId: Snowflake, guild: GuildBehavior): Map<String, Snowflake> {
 	return guild.channels
