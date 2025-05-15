@@ -1,6 +1,6 @@
 package fr.paralya.bot.lg
 
-import dev.kord.core.behavior.execute
+import dev.kord.core.entity.User
 import dev.kord.core.entity.effectiveName
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.PublicSlashCommand
@@ -9,8 +9,10 @@ import dev.kordex.core.commands.application.slash.group
 import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.forms.ModalForm
-import fr.paralya.bot.common.getWebhook
+import dev.kordex.core.types.TranslatableContext
+import fr.paralya.bot.common.sendAsWebhook
 import fr.paralya.bot.common.snowflake
+import fr.paralya.bot.common.translateWithContext
 import fr.paralya.bot.lg.data.getChannelId
 import fr.paralya.bot.lg.data.getCurrentVote
 import fr.paralya.bot.lg.data.vote
@@ -36,40 +38,34 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 				val reason = arguments.reason
 				if (channel.id == botCache.getChannelId("CORBEAU")) {
 					if (botCache.getCurrentVote(LGState.DAY)?.corbeau != 0.snowflake) {
-						respond { content = "Vous avez déjà voté en tant que corbeau !" }
+						respond { content = Lg.Vote.Response.Error.Corbeau.alreadyVoted.translateWithContext() }
 					}
 					botCache.voteCorbeau(target.id)
-					respond { content = "Vous avez voté contre ${target.effectiveName}" }
+					respond { content = Lg.Vote.Response.Success.Corbeau.vote.translateWithContext(target.effectiveName) }
 				} else if (channel.id != botCache.getChannelId("VOTES"))
-					respond { content = "Vous ne pouvez pas voter ici !" }
+					respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
 				else if (botCache.getCurrentVote(LGState.DAY)?.choices?.isNotEmpty() == true && botCache.getCurrentVote(
 						LGState.DAY
 					)?.choices?.contains(target.id) != true
 				)
-					respond { content = "Ce joueur n'est pas dans les choix disponibles !" }
+					respond { content = Lg.Vote.Response.Error.notInChoices.translateWithContext() }
 				else if (botCache.getCurrentVote(LGState.DAY) == null)
-					respond { content = "Aucun vote n'est actuellement en cours !" }
+					respond { content = Lg.Vote.Response.Error.noCurrentVote.translateWithContext() }
 				else {
 					val alreadyVoted =
 						this@LG.botCache.getCurrentVote(LGState.DAY)?.votes?.containsKey(target.id) == true
 					this@LG.botCache.vote(user.id, target)
 					respond {
-						content = "Vous avez voté contre ${target.effectiveName} !"
+						content = Lg.Vote.Response.Success.vote.translateWithContext(target.effectiveName)
 					}
-					val webhook = botCache.getChannelId("VOTES")?.let { it1 ->
-						getWebhook(
-							it1,
-							this@LG.bot,
-							"votes"
-						)
-					}
-					webhook?.execute(webhook.token!!) {
-						content = if (alreadyVoted)
-							"J'ai changé mon vote, je vote maintenant contre ${target.effectiveName}${if (reason != null) " car $reason" else ""}."
-						else
-							"Je vote contre ${target.effectiveName}${if (reason != null) " car $reason" else ""}."
-						username = member?.asMember()?.effectiveName ?: "Inconnu"
-						avatarUrl = member?.asMember()?.avatar?.cdnUrl?.toUrl()
+					sendAsWebhook(
+						this@LG.bot,
+						botCache.getChannelId("VOTES")!!,
+						member?.asMember()?.effectiveName ?: "Inconnu",
+						member?.asMember()?.avatar?.cdnUrl?.toUrl(),
+						"votes"
+					) {
+						content = getVotePublicResponse(target, reason, alreadyVoted)
 					}
 				}
 			}
@@ -82,41 +78,57 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 				val target = arguments.target
 				val reason = arguments.reason
 				if (channel.id != botCache.getChannelId("LOUPS_VOTE"))
-					respond { content = "Vous ne pouvez pas voter ici !" }
+					respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
 				else if (botCache.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && botCache.getCurrentVote(
 						LGState.NIGHT
 					)?.choices?.contains(target.id) != true
 				)
-					respond { content = "Ce joueur n'est pas dans les choix disponibles !" }
+					respond { content = Lg.Vote.Response.Error.notInChoices.translateWithContext() }
 				else if (botCache.getCurrentVote(LGState.NIGHT) == null)
-					respond { content = "Aucun vote n'est actuellement en cours !" }
+					respond { content = Lg.Vote.Response.Error.noCurrentVote.translateWithContext() }
 				else {
 					val alreadyVoted =
 						botCache.getCurrentVote(LGState.NIGHT)?.votes?.containsKey(target.id) == true
 					botCache.vote(user.id, target)
 					respond {
-						content = "Vous avez voté contre ${target.effectiveName} !"
+						content = Lg.Vote.Response.Success.vote.translateWithContext(target.effectiveName)
 					}
-					val webhook = botCache.getChannelId("LOUP_VOTE")?.let { it1 ->
-						getWebhook(
-							it1,
-							this@LG.bot,
-							"votes"
-						)
-					}
-					webhook?.execute(webhook.token!!) {
-						content = if (alreadyVoted)
-							"J'ai changé mon vote, je vote maintenant contre ${target.effectiveName}${if (reason != null) " car $reason" else ""}."
-						else
-							"Je vote contre ${target.effectiveName}${if (reason != null) " car $reason" else ""}."
-						username = member?.asMember()?.effectiveName ?: "Inconnu"
-						avatarUrl = member?.asMember()?.avatar?.cdnUrl?.toUrl()
+					sendAsWebhook(
+						this@LG.bot,
+						botCache.getChannelId("LOUPS_VOTE")!!,
+						member?.asMember()?.effectiveName ?: "Inconnu",
+						member?.asMember()?.avatar?.cdnUrl?.toUrl(),
+						"votes"
+					) {
+						content = getVotePublicResponse(target, reason, alreadyVoted)
 					}
 				}
 			}
 		}
 	}
 }
+
+
+/**
+ * Gets the public response message for a vote.
+ *
+ * @param target The user being voted for.
+ * @param reason An optional reason for the vote.
+ * @param alreadyVoted Indicates if the user has already voted.
+ * @return The translated message for the vote response.
+ */
+suspend fun TranslatableContext.getVotePublicResponse(
+	target: User,
+	reason: String? = null,
+	alreadyVoted: Boolean = false,
+) = if (alreadyVoted && reason != null)
+Lg.Vote.Response.Success.Public.changeReason.translateWithContext(target.effectiveName, reason)
+else if (alreadyVoted)
+Lg.Vote.Response.Success.Public.change.translateWithContext(target.effectiveName)
+else if (reason != null)
+Lg.Vote.Response.Success.Public.voteReason.translateWithContext(target.effectiveName, reason)
+else
+Lg.Vote.Response.Success.Public.vote.translateWithContext(target.effectiveName)
 
 /**
  * Arguments for the vote command.
