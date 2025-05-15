@@ -14,7 +14,7 @@ import fr.paralya.bot.common.i18n.Translations.Modal
  * @property title The title of the modal form.
  * @property message The message field of the modal form.
  */
-class Message : ModalForm() {
+open class Message : ModalForm() {
 	override var title: Key = Modal.Message.title
 
 	val message = paragraphText {
