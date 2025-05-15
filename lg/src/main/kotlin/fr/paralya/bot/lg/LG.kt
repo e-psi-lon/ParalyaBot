@@ -6,19 +6,14 @@ import dev.kord.core.entity.PermissionOverwrite
 import dev.kord.core.entity.channel.TopGuildChannel
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
-import dev.kordex.core.commands.converters.impl.role
-import dev.kordex.core.commands.converters.impl.user
+import dev.kordex.core.commands.converters.impl.*
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.publicSlashCommand
 import dev.kordex.core.utils.dm
 import dev.kordex.core.utils.hasRole
-import fr.paralya.bot.common.GameRegistry
-import fr.paralya.bot.common.Message
+import fr.paralya.bot.common.*
 import fr.paralya.bot.common.i18n.Translations.Messages
-import fr.paralya.bot.common.translateWithContext
-import fr.paralya.bot.lg.data.GameData
-import fr.paralya.bot.lg.data.VoteData
-import fr.paralya.bot.lg.data.getChannelId
+import fr.paralya.bot.lg.data.*
 import fr.paralya.bot.lg.i18n.Translations
 import fr.paralya.bot.lg.i18n.Translations.Lg
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -105,6 +100,25 @@ class LG : Extension() {
 					)
 				}
 			}
+
+			ephemeralSubCommand(::EndDayArguments) {
+				name = Lg.EndDay.Command.name
+				description = Lg.EndDay.Command.description
+				adminOnly {
+					val hour = arguments.hour
+					val day = arguments.day ?: botCache.getGameData().dayCount
+					val config by inject<LgConfig>()
+
+					sendAsWebhook(bot, botCache.getChannelId("ANNONCES_VILLAGE")!!, "ParalyaLG", getAsset("lg", prefix)) {
+						content = """
+							━━━━━━━━━━━━━━━━━━━━━
+							⏲ | Fin du Jour $day à $hour
+							<@${config.aliveRole}>
+							━━━━━━━━━━━━━━━━━━━━━
+						""".trimIndent()
+					}
+				}
+			}
 		}
 
 		registerListeners()
@@ -131,6 +145,18 @@ class LG : Extension() {
 		val user by user {
 			name = Lg.Interview.Argument.User.name
 			description = Lg.Interview.Argument.User.description
+		}
+	}
+
+	inner class EndDayArguments: Arguments() {
+		val hour by string {
+			name = Lg.EndDay.Argument.Hour.name
+			description = Lg.EndDay.Argument.Hour.description
+		 }
+
+		val day by optionalInt {
+			name = Lg.EndDay.Argument.Day.name
+			description = Lg.EndDay.Argument.Day.description
 		}
 	}
 }
