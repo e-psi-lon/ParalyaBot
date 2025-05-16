@@ -1,10 +1,12 @@
 package fr.paralya.bot.lg
 
-import dev.kord.common.entity.*
+import dev.kord.common.entity.Permission
+import dev.kord.common.entity.Permissions
+import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.edit
-import dev.kord.core.entity.*
+import dev.kord.core.entity.PermissionOverwrite
 import dev.kord.core.entity.channel.TopGuildChannel
 import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.event.message.*
@@ -14,7 +16,9 @@ import dev.kordex.core.utils.getCategory
 import fr.paralya.bot.common.*
 import fr.paralya.bot.common.i18n.Translations.Common
 import fr.paralya.bot.lg.data.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.toList
 import org.koin.core.component.inject
 
 
@@ -57,7 +61,9 @@ suspend fun LG.registerListeners() {
 					)
 				)
 			} else if (
-				message.channelId == botCache.getChannelId(LgChannelType.LOUPS_CHAT) && !message.author.isAdmin(botConfig) &&
+				message.channelId == botCache.getChannelId(LgChannelType.LOUPS_CHAT) && !message.author.isAdmin(
+					botConfig
+				) &&
 				message.author?.isBot == false && message.author?.isSelf == false
 			) {
 				val cached = botCache.getLastWerewolfMessageSender().value
@@ -113,7 +119,13 @@ suspend fun LG.registerListeners() {
 				} catch (e: Exception) {
 					val wolfName = if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme"
 					val wolfAvatar = if (botCache.getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1"
-					sendAsWebhook(bot, botCache.getChannelId(LgChannelType.PETITE_FILLE)!!, wolfName, wolfAvatar, "PF") {
+					sendAsWebhook(
+						bot,
+						botCache.getChannelId(LgChannelType.PETITE_FILLE)!!,
+						wolfName,
+						wolfAvatar,
+						"PF"
+					) {
 						content = newMessage.content
 						embed {
 							title = Common.Transmission.Reference.title.translateWithContext()

@@ -8,8 +8,10 @@ import dev.kord.core.behavior.RoleBehavior
 import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.execute
 import dev.kord.core.cache.data.UserData
-import dev.kord.core.entity.*
+import dev.kord.core.entity.Member
 import dev.kord.core.entity.Message
+import dev.kord.core.entity.User
+import dev.kord.core.entity.Webhook
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.rest.Image
 import dev.kord.rest.builder.message.create.WebhookMessageCreateBuilder
@@ -202,9 +204,6 @@ suspend fun getCorrespondingMessage(channel: MessageChannelBehavior, message: Me
 
 /**
  * Converts a [DiscordUser] to a [User] using the provided [Kord] instance.
- *
- * @param kord The [Kord] instance used to create the [User].
- * @return The converted [User], or null if the [DiscordUser] is null.
  */
 fun DiscordUser?.asUser(kord: Kord) = this?.let { User(UserData.from(it), kord) }
 

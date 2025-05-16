@@ -1,7 +1,10 @@
 package fr.paralya.bot.lg.data
 
-import dev.kord.cache.api.*
-import dev.kord.cache.api.data.*
+import dev.kord.cache.api.DataCache
+import dev.kord.cache.api.data.description
+import dev.kord.cache.api.put
+import dev.kord.cache.api.query
+import dev.kord.cache.api.remove
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.channel.TextChannel
 import dev.kordex.core.commands.application.ApplicationCommandContext
@@ -127,6 +130,7 @@ suspend fun DataCache.getChannelId(type: String) = getGameData().channels[type]
 context(ApplicationCommandContext)
 suspend fun DataCache.getChannel(type: LgChannelType) =
 	getChannelId(type)?.let { this@ApplicationCommandContext.guild!!.getChannel(it) as TextChannel }
+
 /**
  * Adds an interview channel to the game data.
  * @param interviewId The [Snowflake] ID of the interview channel.

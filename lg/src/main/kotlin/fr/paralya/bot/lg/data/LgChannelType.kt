@@ -9,10 +9,12 @@ enum class LgChannelType {
 	SUJETS,
 	VILLAGE,
 	VOTES,
+
 	// Special roles channels
 	CORBEAU,
 	INTERVIEW,
 	PETITE_FILLE,
+
 	// Werewolf channels
 	LOUPS_CHAT,
 	LOUPS_VOTE

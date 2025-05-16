@@ -6,7 +6,10 @@ import dev.kord.core.entity.PermissionOverwrite
 import dev.kord.core.entity.channel.TopGuildChannel
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
-import dev.kordex.core.commands.converters.impl.*
+import dev.kordex.core.commands.converters.impl.optionalInt
+import dev.kordex.core.commands.converters.impl.role
+import dev.kordex.core.commands.converters.impl.string
+import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.publicSlashCommand
 import dev.kordex.core.utils.dm
@@ -105,7 +108,12 @@ class LG : Extension() {
 					val day = arguments.day ?: botCache.getGameData().dayCount
 					val config by inject<LgConfig>()
 
-					sendAsWebhook(bot, botCache.getChannelId(LgChannelType.ANNONCES_VILLAGE)!!, "ParalyaLG", getAsset("lg", prefix)) {
+					sendAsWebhook(
+						bot,
+						botCache.getChannelId(LgChannelType.ANNONCES_VILLAGE)!!,
+						"ParalyaLG",
+						getAsset("lg", prefix)
+					) {
 						content = """
 							━━━━━━━━━━━━━━━━━━━━━
 							⏲ | Fin du Jour $day à $hour
@@ -144,11 +152,11 @@ class LG : Extension() {
 		}
 	}
 
-	inner class EndDayArguments: Arguments() {
+	inner class EndDayArguments : Arguments() {
 		val hour by string {
 			name = Lg.EndDay.Argument.Hour.name
 			description = Lg.EndDay.Argument.Hour.description
-		 }
+		}
 
 		val day by optionalInt {
 			name = Lg.EndDay.Argument.Day.name

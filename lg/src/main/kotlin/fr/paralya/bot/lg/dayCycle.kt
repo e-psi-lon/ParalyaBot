@@ -9,6 +9,8 @@ import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.i18n.types.Key
 import dev.kordex.core.utils.getTopChannel
 import fr.paralya.bot.common.*
+import fr.paralya.bot.lg.LGState.DAY
+import fr.paralya.bot.lg.LGState.NIGHT
 import fr.paralya.bot.lg.data.*
 import fr.paralya.bot.lg.i18n.Translations.Lg
 import kotlinx.coroutines.flow.toList
@@ -158,6 +160,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 						}
 						Lg.DayCycle.Response.Other.secondVote.translateWithContext()
 					}
+
 					is VoteResult.Killed -> {
 						guild!!.getMember(result.player).swapRoles(
 							config.deadRole.snowflake,
@@ -182,7 +185,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					?.getTopChannel()
 					?.run {
 						removeRolePermissions(aliveRole, Permission.ViewChannel, Permission.SendMessages)
-						sendAsWebhook(this@LG.bot,this.id, "ParalyaLG", getAsset("lg", this@LG.prefix)) {
+						sendAsWebhook(this@LG.bot, this.id, "ParalyaLG", getAsset("lg", this@LG.prefix)) {
 							content = Lg.System.separator.translateWithContext()
 						}
 					}
@@ -202,7 +205,12 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 						}
 					}
 				}
-			if (oldVillageVote?.corbeau != 0.snowflake) sendAsWebhook(this@LG.bot, botCache.getChannelId(LgChannelType.VOTES)!!, "Corbeau", getAsset("\"\uD83D\uDC26\u200D⬛ Corbeau\"", this@LG.prefix)) {
+			if (oldVillageVote?.corbeau != 0.snowflake) sendAsWebhook(
+				this@LG.bot,
+				botCache.getChannelId(LgChannelType.VOTES)!!,
+				"Corbeau",
+				getAsset("\"\uD83D\uDC26\u200D⬛ Corbeau\"", this@LG.prefix)
+			) {
 				content = Lg.Night.Response.Other.corbeau.translateWithContext(oldVillageVote?.corbeau?.value ?: 0)
 			}
 			respond { content = Lg.Night.Response.success.translateWithContext() }

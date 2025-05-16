@@ -41,7 +41,9 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 						respond { content = Lg.Vote.Response.Error.Corbeau.alreadyVoted.translateWithContext() }
 					}
 					voteManager.voteCorbeau(target.id)
-					respond { content = Lg.Vote.Response.Success.Corbeau.vote.translateWithContext(target.effectiveName) }
+					respond {
+						content = Lg.Vote.Response.Success.Corbeau.vote.translateWithContext(target.effectiveName)
+					}
 				} else if (channel.id != botCache.getChannelId(LgChannelType.VOTES))
 					respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
 				else if (voteManager.getCurrentVote(LGState.DAY)?.choices?.isNotEmpty() == true && voteManager.getCurrentVote(
@@ -123,13 +125,13 @@ suspend fun TranslatableContext.getVotePublicResponse(
 	reason: String? = null,
 	alreadyVoted: Boolean = false,
 ) = if (alreadyVoted && reason != null)
-Lg.Vote.Response.Success.Public.changeReason.translateWithContext(target.effectiveName, reason)
+	Lg.Vote.Response.Success.Public.changeReason.translateWithContext(target.effectiveName, reason)
 else if (alreadyVoted)
-Lg.Vote.Response.Success.Public.change.translateWithContext(target.effectiveName)
+	Lg.Vote.Response.Success.Public.change.translateWithContext(target.effectiveName)
 else if (reason != null)
-Lg.Vote.Response.Success.Public.voteReason.translateWithContext(target.effectiveName, reason)
+	Lg.Vote.Response.Success.Public.voteReason.translateWithContext(target.effectiveName, reason)
 else
-Lg.Vote.Response.Success.Public.vote.translateWithContext(target.effectiveName)
+	Lg.Vote.Response.Success.Public.vote.translateWithContext(target.effectiveName)
 
 /**
  * Arguments for the vote command.

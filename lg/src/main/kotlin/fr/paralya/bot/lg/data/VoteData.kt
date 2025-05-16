@@ -1,7 +1,9 @@
 package fr.paralya.bot.lg.data
 
-import dev.kord.cache.api.*
+import dev.kord.cache.api.DataCache
 import dev.kord.cache.api.data.description
+import dev.kord.cache.api.put
+import dev.kord.cache.api.query
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.cache.idEq
 import dev.kord.core.entity.User
