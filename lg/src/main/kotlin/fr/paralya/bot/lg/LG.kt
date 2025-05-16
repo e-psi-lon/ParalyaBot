@@ -89,12 +89,7 @@ class LG : Extension() {
 				description = Lg.Interview.Command.description
 				action {
 					val interviewChannel =
-						botCache.getChannelId("INTERVIEW")?.let { guild?.getChannel(it) } as TopGuildChannel?
-					if (interviewChannel == null) {
-						respond { content = Messages.Error.channelNotFound.translateWithContext("interview") }
-						return@action
-					}
-
+						guild?.getChannel(botCache.getChannelId(LgChannelType.INTERVIEW)!!) as TopGuildChannel
 					val user = arguments.user
 					interviewChannel.addOverwrite(
 						PermissionOverwrite.forMember(user.id, Permissions(Permission.SendMessages))
@@ -110,7 +105,7 @@ class LG : Extension() {
 					val day = arguments.day ?: botCache.getGameData().dayCount
 					val config by inject<LgConfig>()
 
-					sendAsWebhook(bot, botCache.getChannelId("ANNONCES_VILLAGE")!!, "ParalyaLG", getAsset("lg", prefix)) {
+					sendAsWebhook(bot, botCache.getChannelId(LgChannelType.ANNONCES_VILLAGE)!!, "ParalyaLG", getAsset("lg", prefix)) {
 						content = """
 							━━━━━━━━━━━━━━━━━━━━━
 							⏲ | Fin du Jour $day à $hour

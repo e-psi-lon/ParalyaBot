@@ -1,7 +1,6 @@
 package fr.paralya.bot.lg
 
 import dev.kord.common.entity.Permission
-import dev.kord.common.entity.Snowflake
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.PublicSlashCommand
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
@@ -9,11 +8,9 @@ import dev.kordex.core.commands.converters.impl.defaultingBoolean
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.i18n.types.Key
 import dev.kordex.core.utils.getTopChannel
-import dev.kordex.core.utils.hasRole
 import fr.paralya.bot.common.*
 import fr.paralya.bot.lg.data.*
 import fr.paralya.bot.lg.i18n.Translations.Lg
-import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.toList
 import org.koin.core.component.inject
 
@@ -67,7 +64,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					is VoteResult.Tie -> {
 						sendAsWebhook(
 							this@LG.bot,
-							botCache.getChannelId("LOUPS_VOTE")!!,
+							botCache.getChannelId(LgChannelType.LOUPS_VOTE)!!,
 							"ParalyaLG",
 							getAsset("lg", this@LG.prefix)
 						) {
@@ -101,21 +98,21 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				botCache.updateVote(this)
 			}
 			botCache.nextDay()
-			listOf("VILLAGE", "VOTES", "SUJET").forEach { channelName ->
+			listOf(LgChannelType.VILLAGE, LgChannelType.VOTES, LgChannelType.SUJETS).forEach { channelName ->
 				botCache.getChannel(channelName)
 					?.getTopChannel()
 					?.addRolePermissions(aliveRole, Permission.ViewChannel, Permission.SendMessages)
 			}
 			// For each thread in the SUJET channel, unlock it
-			botCache.getChannel("SUJET")?.activeThreads?.changeLockAll(false)
-			botCache.getChannel("LOUPS_CHAT")?.getMembersWithAccess()
+			botCache.getChannel(LgChannelType.SUJETS)?.activeThreads?.changeLockAll(false)
+			botCache.getChannel(LgChannelType.LOUPS_CHAT)?.getMembersWithAccess()
 				?.filterByRole(aliveRole)
 				?.toList()?.forEach { member ->
 					val reason = Lg.System.Permissions.Day.reason.translateWithContext()
-					listOf("LOUPS_VOTE", "LOUP_CHAT").forEach { channelName ->
+					listOf(LgChannelType.LOUPS_VOTE, LgChannelType.LOUPS_CHAT).forEach { channelName ->
 						botCache.getChannel(channelName)?.getTopChannel()?.apply {
 							addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
-							addMemberPermission(member.id, Permission.SendMessages, reason = reason)
+							removeRolePermissions(member.id, Permission.SendMessages, reason = reason)
 						}
 					}
 				}
@@ -147,7 +144,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					is VoteResult.Tie -> {
 						sendAsWebhook(
 							this@LG.bot,
-							botCache.getChannelId("VILLAGE_VOTE")!!,
+							botCache.getChannelId(LgChannelType.VOTES)!!,
 							"ParalyaLG",
 							getAsset("lg", this@LG.prefix),
 						) {
@@ -180,7 +177,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				botCache.updateVote(this)
 			}
 			botCache.nextNight()
-			listOf("VILLAGE", "VOTES", "SUJET").forEach { channelName ->
+			listOf(LgChannelType.VILLAGE, LgChannelType.VOTES, LgChannelType.SUJETS).forEach { channelName ->
 				botCache.getChannel(channelName)
 					?.getTopChannel()
 					?.run {
@@ -192,20 +189,20 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 
 			}
 			// For each thread in the SUJET channel, lock it
-			botCache.getChannel("SUJET")?.activeThreads?.changeLockAll(true)
-			botCache.getChannel("LOUPS_CHAT")?.getMembersWithAccess()
+			botCache.getChannel(LgChannelType.SUJETS)?.activeThreads?.changeLockAll(true)
+			botCache.getChannel(LgChannelType.LOUPS_CHAT)?.getMembersWithAccess()
 				?.filterByRole(aliveRole)
 				?.toList()?.forEach { member ->
 					val reason = Lg.System.Permissions.Night.reason.translateWithContext()
 
-					listOf("LOUPS_VOTE", "LOUP_CHAT").forEach { channelName ->
+					listOf(LgChannelType.LOUPS_VOTE, LgChannelType.LOUPS_VOTE).forEach { channelName ->
 						botCache.getChannel(channelName)?.getTopChannel()?.apply {
-							removeMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
-							removeMemberPermission(member.id, Permission.SendMessages, reason = reason)
+							addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
+							addMemberPermissions(member.id, Permission.SendMessages, reason = reason)
 						}
 					}
 				}
-			if (oldVillageVote?.corbeau != 0.snowflake) sendAsWebhook(this@LG.bot, botCache.getChannelId("VOTES")!!, "Corbeau", getAsset("\"\uD83D\uDC26\u200D⬛ Corbeau\"", this@LG.prefix)) {
+			if (oldVillageVote?.corbeau != 0.snowflake) sendAsWebhook(this@LG.bot, botCache.getChannelId(LgChannelType.VOTES)!!, "Corbeau", getAsset("\"\uD83D\uDC26\u200D⬛ Corbeau\"", this@LG.prefix)) {
 				content = Lg.Night.Response.Other.corbeau.translateWithContext(oldVillageVote?.corbeau?.value ?: 0)
 			}
 			respond { content = Lg.Night.Response.success.translateWithContext() }

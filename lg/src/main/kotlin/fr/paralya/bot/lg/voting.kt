@@ -13,6 +13,7 @@ import dev.kordex.core.types.TranslatableContext
 import fr.paralya.bot.common.sendAsWebhook
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.common.translateWithContext
+import fr.paralya.bot.lg.data.LgChannelType
 import fr.paralya.bot.lg.data.getChannelId
 import fr.paralya.bot.lg.data.getCurrentVote
 import fr.paralya.bot.lg.i18n.Translations.Lg
@@ -35,13 +36,13 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			action {
 				val target = arguments.target
 				val reason = arguments.reason
-				if (channel.id == botCache.getChannelId("CORBEAU")) {
+				if (channel.id == botCache.getChannelId(LgChannelType.CORBEAU)) {
 					if (voteManager.getCurrentVote(LGState.DAY)?.corbeau != 0.snowflake) {
 						respond { content = Lg.Vote.Response.Error.Corbeau.alreadyVoted.translateWithContext() }
 					}
 					voteManager.voteCorbeau(target.id)
 					respond { content = Lg.Vote.Response.Success.Corbeau.vote.translateWithContext(target.effectiveName) }
-				} else if (channel.id != botCache.getChannelId("VOTES"))
+				} else if (channel.id != botCache.getChannelId(LgChannelType.VOTES))
 					respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
 				else if (voteManager.getCurrentVote(LGState.DAY)?.choices?.isNotEmpty() == true && voteManager.getCurrentVote(
 						LGState.DAY
@@ -59,7 +60,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 					}
 					sendAsWebhook(
 						this@LG.bot,
-						botCache.getChannelId("VOTES")!!,
+						botCache.getChannelId(LgChannelType.VOTES)!!,
 						member?.asMember()?.effectiveName ?: "Inconnu",
 						member?.asMember()?.avatar?.cdnUrl?.toUrl(),
 						"votes"
@@ -77,7 +78,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			action {
 				val target = arguments.target
 				val reason = arguments.reason
-				if (channel.id != botCache.getChannelId("LOUPS_VOTE"))
+				if (channel.id != botCache.getChannelId(LgChannelType.LOUPS_VOTE))
 					respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
 				else if (voteManager.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && botCache.getCurrentVote(
 						LGState.NIGHT
@@ -95,7 +96,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 					}
 					sendAsWebhook(
 						this@LG.bot,
-						botCache.getChannelId("LOUPS_VOTE")!!,
+						botCache.getChannelId(LgChannelType.LOUPS_VOTE)!!,
 						member?.asMember()?.effectiveName ?: "Inconnu",
 						member?.asMember()?.avatar?.cdnUrl?.toUrl(),
 						"votes"

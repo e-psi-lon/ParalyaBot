@@ -115,21 +115,18 @@ suspend fun DataCache.registerChannel(type: String, channelId: Snowflake) =
 	updateGameData { it.registerChannel(type, channelId) }
 
 /**
- * Gets the channel ID for a specific channel type.
- * @param type The type of channel to retrieve.
- * @return The [Snowflake] ID of the channel, or null if not found.
+ * Gets the channel id based on its [type] which is his role in the game.
  */
+suspend fun DataCache.getChannelId(type: LgChannelType) = getGameData().channels[type.name]
 suspend fun DataCache.getChannelId(type: String) = getGameData().channels[type]
 
 /**
- * Gets the [TextChannel] for a specific channel type within an application command context.
- * @param type The type of channel to retrieve.
- * @return The [TextChannel] instance, or null if not found.
+ * Gets the [TextChannel] for a specific channel [type] within an application command context
+ * allowing to access to the channel itself.
  */
 context(ApplicationCommandContext)
-suspend fun DataCache.getChannel(type: String) =
+suspend fun DataCache.getChannel(type: LgChannelType) =
 	getChannelId(type)?.let { this@ApplicationCommandContext.guild!!.getChannel(it) as TextChannel }
-
 /**
  * Adds an interview channel to the game data.
  * @param interviewId The [Snowflake] ID of the interview channel.

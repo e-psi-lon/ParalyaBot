@@ -19,17 +19,18 @@ import org.koin.core.component.inject
 
 
 private val requiredRoleChannels = listOf(
-	"LOUPS_CHAT",
-	"LOUPS_VOTE",
-	"CORBEAU",
-	"PETITE_FILLE"
+	LgChannelType.LOUPS_CHAT,
+	LgChannelType.LOUPS_VOTE,
+	LgChannelType.CORBEAU,
+	LgChannelType.PETITE_FILLE,
 )
 
 private val requiredMainChannels = listOf(
-	"VOTES",
-	"INTERVIEW",
-	"SUJETS",
-	"VILLAGE"
+	LgChannelType.ANNONCES_VILLAGE,
+	LgChannelType.VOTES,
+	LgChannelType.INTERVIEW,
+	LgChannelType.SUJETS,
+	LgChannelType.VILLAGE,
 )
 
 /**
@@ -47,7 +48,7 @@ suspend fun LG.registerListeners() {
 		action {
 			val message = event.message
 
-			if (message.channelId == botCache.getChannelId("INTERVIEW") && message.author?.id in botCache.getInterviews()) {
+			if (message.channelId == botCache.getChannelId(LgChannelType.INTERVIEW) && message.author?.id in botCache.getInterviews()) {
 				botCache.removeInterview(message.author!!.id)
 				(message.channel as TopGuildChannel).addOverwrite(
 					PermissionOverwrite.forMember(
@@ -56,7 +57,7 @@ suspend fun LG.registerListeners() {
 					)
 				)
 			} else if (
-				message.channelId == botCache.getChannelId("LOUPS_CHAT") && !message.author.isAdmin(botConfig) &&
+				message.channelId == botCache.getChannelId(LgChannelType.LOUPS_CHAT) && !message.author.isAdmin(botConfig) &&
 				message.author?.isBot == false && message.author?.isSelf == false
 			) {
 				val cached = botCache.getLastWerewolfMessageSender().value
@@ -70,7 +71,7 @@ suspend fun LG.registerListeners() {
 				logger.debug { "Avatar is $wolfAvatar and name is $wolfName" }
 				sendAsWebhook(
 					bot,
-					botCache.getChannelId("PETITE_FILLE")!!,
+					botCache.getChannelId(LgChannelType.PETITE_FILLE)!!,
 					wolfName,
 					getAsset(wolfAvatar, this@LG.prefix),
 					"PF"
@@ -82,7 +83,7 @@ suspend fun LG.registerListeners() {
 						description = message.referencedMessage!!.content
 					}
 				}
-			} else if (message.channelId == botCache.getChannelId("SUJET")) {
+			} else if (message.channelId == botCache.getChannelId(LgChannelType.SUJETS)) {
 				return@action
 			}
 		}
@@ -92,7 +93,7 @@ suspend fun LG.registerListeners() {
 	event<MessageUpdateEvent> {
 		action {
 			val oldMessage = event.old?.let { getCorrespondingMessage(MessageChannelBehavior(dmChannelId, kord), it) }
-			val webhook = getWebhook(botCache.getChannelId("PETITE_FILLE")!!, bot, "PF")
+			val webhook = getWebhook(botCache.getChannelId(LgChannelType.PETITE_FILLE)!!, bot, "PF")
 			val newMessage = event.message.asMessage()
 			if (oldMessage != null) {
 				try {
@@ -112,7 +113,7 @@ suspend fun LG.registerListeners() {
 				} catch (e: Exception) {
 					val wolfName = if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme"
 					val wolfAvatar = if (botCache.getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1"
-					sendAsWebhook(bot, botCache.getChannelId("PETITE_FILLE")!!, wolfName, wolfAvatar, "PF") {
+					sendAsWebhook(bot, botCache.getChannelId(LgChannelType.PETITE_FILLE)!!, wolfName, wolfAvatar, "PF") {
 						content = newMessage.content
 						embed {
 							title = Common.Transmission.Reference.title.translateWithContext()
@@ -132,8 +133,8 @@ suspend fun LG.registerListeners() {
 		action {
 			val oldMessage =
 				event.message?.let { getCorrespondingMessage(MessageChannelBehavior(dmChannelId, kord), it) }
-			if (oldMessage != null && event.message?.channelId == botCache.getChannelId("PETITE_FILLE")) {
-				val webhook = getWebhook(botCache.getChannelId("PETITE_FILLE")!!, bot, "PF")
+			if (oldMessage != null && event.message?.channelId == botCache.getChannelId(LgChannelType.PETITE_FILLE)) {
+				val webhook = getWebhook(botCache.getChannelId(LgChannelType.PETITE_FILLE)!!, bot, "PF")
 				try {
 					webhook.token?.let { webhook.deleteMessage(it, oldMessage.id) }
 				} catch (e: Exception) {
@@ -166,12 +167,12 @@ suspend fun LG.registerListeners() {
 
 			// If the required channels are not found, throw an exception
 			requiredRoleChannels.forEach { channelName ->
-				if (rolesChannels[channelName] == null) {
+				if (rolesChannels[channelName.name] == null) {
 					throw IllegalStateException("Channel $channelName not found in the roles category")
 				}
 			}
 			requiredMainChannels.forEach { channelName ->
-				if (mainChannels[channelName] == null) {
+				if (mainChannels[channelName.name] == null) {
 					throw IllegalStateException("Channel $channelName not found in the main category")
 				}
 			}
