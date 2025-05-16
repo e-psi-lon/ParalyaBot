@@ -15,8 +15,6 @@ import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.common.translateWithContext
 import fr.paralya.bot.lg.data.getChannelId
 import fr.paralya.bot.lg.data.getCurrentVote
-import fr.paralya.bot.lg.data.vote
-import fr.paralya.bot.lg.data.voteCorbeau
 import fr.paralya.bot.lg.i18n.Translations.Lg
 
 /**
@@ -33,28 +31,29 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			name = Lg.Vote.Village.Command.name
 			description = Lg.Vote.Village.Command.description
 			val botCache = this@LG.botCache
+			val voteManager = this@LG.voteManager
 			action {
 				val target = arguments.target
 				val reason = arguments.reason
 				if (channel.id == botCache.getChannelId("CORBEAU")) {
-					if (botCache.getCurrentVote(LGState.DAY)?.corbeau != 0.snowflake) {
+					if (voteManager.getCurrentVote(LGState.DAY)?.corbeau != 0.snowflake) {
 						respond { content = Lg.Vote.Response.Error.Corbeau.alreadyVoted.translateWithContext() }
 					}
-					botCache.voteCorbeau(target.id)
+					voteManager.voteCorbeau(target.id)
 					respond { content = Lg.Vote.Response.Success.Corbeau.vote.translateWithContext(target.effectiveName) }
 				} else if (channel.id != botCache.getChannelId("VOTES"))
 					respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
-				else if (botCache.getCurrentVote(LGState.DAY)?.choices?.isNotEmpty() == true && botCache.getCurrentVote(
+				else if (voteManager.getCurrentVote(LGState.DAY)?.choices?.isNotEmpty() == true && voteManager.getCurrentVote(
 						LGState.DAY
 					)?.choices?.contains(target.id) != true
 				)
 					respond { content = Lg.Vote.Response.Error.notInChoices.translateWithContext() }
-				else if (botCache.getCurrentVote(LGState.DAY) == null)
+				else if (voteManager.getCurrentVote(LGState.DAY) == null)
 					respond { content = Lg.Vote.Response.Error.noCurrentVote.translateWithContext() }
 				else {
 					val alreadyVoted =
-						this@LG.botCache.getCurrentVote(LGState.DAY)?.votes?.containsKey(target.id) == true
-					this@LG.botCache.vote(user.id, target)
+						voteManager.getCurrentVote(LGState.DAY)?.votes?.containsKey(target.id) == true
+					voteManager.vote(user.id, target)
 					respond {
 						content = Lg.Vote.Response.Success.vote.translateWithContext(target.effectiveName)
 					}
@@ -74,22 +73,23 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			name = Lg.Vote.Werewolf.Command.name
 			description = Lg.Vote.Werewolf.Command.description
 			val botCache = this@LG.botCache
+			val voteManager = this@LG.voteManager
 			action {
 				val target = arguments.target
 				val reason = arguments.reason
 				if (channel.id != botCache.getChannelId("LOUPS_VOTE"))
 					respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
-				else if (botCache.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && botCache.getCurrentVote(
+				else if (voteManager.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && botCache.getCurrentVote(
 						LGState.NIGHT
 					)?.choices?.contains(target.id) != true
 				)
 					respond { content = Lg.Vote.Response.Error.notInChoices.translateWithContext() }
-				else if (botCache.getCurrentVote(LGState.NIGHT) == null)
+				else if (voteManager.getCurrentVote(LGState.NIGHT) == null)
 					respond { content = Lg.Vote.Response.Error.noCurrentVote.translateWithContext() }
 				else {
 					val alreadyVoted =
-						botCache.getCurrentVote(LGState.NIGHT)?.votes?.containsKey(target.id) == true
-					botCache.vote(user.id, target)
+						voteManager.getCurrentVote(LGState.NIGHT)?.votes?.containsKey(target.id) == true
+					voteManager.vote(user.id, target)
 					respond {
 						content = Lg.Vote.Response.Success.vote.translateWithContext(target.effectiveName)
 					}

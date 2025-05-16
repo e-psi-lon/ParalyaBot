@@ -1,6 +1,7 @@
 package fr.paralya.bot.lg
 
 import dev.kord.common.entity.Permission
+import dev.kord.common.entity.Snowflake
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.PublicSlashCommand
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
@@ -49,30 +50,21 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			val kill = arguments.kill
 			val botCache = this@LG.botCache
 			val gameData = botCache.getGameData()
+			val voteManager = this@LG.voteManager
 
 			if (gameData.state == LGState.DAY) {
 				respond { content = Lg.Day.Response.Error.alreadyDay.translateWithContext() }
 				return@adminOnly
 			}
-			val newVote = botCache.getCurrentVote(LGState.DAY)
-				?: VoteData.createVillageVote(System.currentTimeMillis().snowflake).setCurrent(true)
-			botCache.updateVote(newVote)
-
-			val oldWerewolfVote = botCache.getCurrentVote(LGState.NIGHT)?.apply {
-				setCurrent(false)
-				botCache.updateVote(this)
-			}
-			val newVoteWerewolf = botCache.getCurrentVote(LGState.NIGHT)
-				?: VoteData.createWerewolfVote(System.currentTimeMillis().snowflake).setCurrent(true)
-			botCache.updateVote(newVoteWerewolf)
-			val config = getKoin().get<LgConfig>()
+			voteManager.createVillageVote()
+			val oldWerewolfVote = voteManager.finishCurrentVote(LGState.NIGHT)
+			val newVoteWerewolf = voteManager.createWerewolfVote()
+			val config by inject<LgConfig>()
 			val aliveRole = config.aliveRole.snowflake
 			if (oldWerewolfVote?.votes?.isNotEmpty() == true) {
-				val voteCount = oldWerewolfVote.votes.values.groupingBy { it }.eachCount()
-				val maxVote = voteCount.maxByOrNull { it.value }?.key
-				val maxVotedPlayers = voteCount.filter { it.key == maxVote }.keys
-				when {
-					maxVotedPlayers.size > 1 && !force -> {
+				when (val result = voteManager.calculateVoteResult(oldWerewolfVote, kill, force)) {
+					is VoteResult.NoVotes -> return@adminOnly
+					is VoteResult.Tie -> {
 						sendAsWebhook(
 							this@LG.bot,
 							botCache.getChannelId("LOUPS_VOTE")!!,
@@ -80,29 +72,26 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 							getAsset("lg", this@LG.prefix)
 						) {
 							content = Lg.DayCycle.Response.Other.equality.translateWithContext(
-								maxVotedPlayers.joinToString(", ") { "<@${it.value}>" }
+								result.players.joinToString(", ") { "<@${it.value}>" }
 							)
 						}
-
 						newVoteWerewolf.apply {
-							setChoices(maxVotedPlayers.toList())
+							setChoices(result.toList())
 							botCache.updateVote(this)
 						}
-
 						respond { content = Lg.DayCycle.Response.Other.secondVote.translateWithContext() }
 						return@adminOnly
 					}
 
-					maxVotedPlayers.size == 1 && kill -> {
-						val playerToKill = maxVotedPlayers.first()
-						guild!!.getMember(playerToKill).swapRoles(
+					is VoteResult.Killed -> {
+						guild!!.getMember(result.player).swapRoles(
 							config.deadRole.snowflake,
 							aliveRole,
 							Lg.System.Permissions.PlayerKilled.reason.translateWithContext()
 						)
 						respond {
 							content =
-								Lg.DayCycle.Response.Success.killed.translateWithContext(guild!!.getMember(playerToKill).effectiveName)
+								Lg.DayCycle.Response.Success.killed.translateWithContext(guild!!.getMember(result.player).effectiveName)
 						}
 					}
 				}
@@ -120,21 +109,16 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			// For each thread in the SUJET channel, unlock it
 			botCache.getChannel("SUJET")?.activeThreads?.changeLockAll(false)
 			botCache.getChannel("LOUPS_CHAT")?.getMembersWithAccess()
-				?.filter { it.hasRole(guild!!.getRole(aliveRole)) }
+				?.filterByRole(aliveRole)
 				?.toList()?.forEach { member ->
 					val reason = Lg.System.Permissions.Day.reason.translateWithContext()
-
-					botCache.getChannel("LOUPS_VOTE")?.apply {
-						addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
-						removeMemberPermission(member.id, Permission.SendMessages, reason = reason)
-					}
-
-					botCache.getChannel("LOUP_CHAT")?.apply {
-						addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
-						removeMemberPermission(member.id, Permission.SendMessages, reason = reason)
+					listOf("LOUPS_VOTE", "LOUP_CHAT").forEach { channelName ->
+						botCache.getChannel(channelName)?.getTopChannel()?.apply {
+							addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
+							addMemberPermission(member.id, Permission.SendMessages, reason = reason)
+						}
 					}
 				}
-
 			respond { content = Lg.Day.Response.success.translateWithContext() }
 		}
 	}
@@ -147,29 +131,20 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			val kill = arguments.kill
 			val botCache = this@LG.botCache
 			val gameData = botCache.getGameData()
-
+			val voteManager = this@LG.voteManager
 			if (gameData.state == LGState.NIGHT) {
 				respond { content = Lg.Night.Response.Error.alreadyNight.translateWithContext() }
 				return@adminOnly
 			}
-			val newVote = botCache.getCurrentVote(LGState.NIGHT)
-				?: VoteData.createWerewolfVote(System.currentTimeMillis().snowflake).setCurrent(true)
-			botCache.updateVote(newVote)
-			val oldVillageVote = botCache.getCurrentVote(LGState.DAY)?.apply {
-				setCurrent(false)
-				botCache.updateVote(this)
-			}
-			val newVoteVillage = botCache.getCurrentVote(LGState.DAY)
-				?: VoteData.createVillageVote(System.currentTimeMillis().snowflake).setCurrent(true)
-			botCache.updateVote(newVoteVillage)
+			voteManager.createWerewolfVote()
+			val oldVillageVote = voteManager.finishCurrentVote(LGState.DAY)
+			val newVoteVillage = voteManager.createVillageVote()
 			val config by inject<LgConfig>()
 			val aliveRole = config.aliveRole.snowflake
 			if (oldVillageVote?.votes?.isNotEmpty() == true) {
-				val voteCount = oldVillageVote.votes.values.groupingBy { it }.eachCount()
-				val maxVote = voteCount.maxByOrNull { it.value }?.key
-				val maxVotedPlayers = voteCount.filter { it.key == maxVote }.keys
-				when {
-					maxVotedPlayers.size > 1 && !force -> {
+				val response = when (val result = voteManager.calculateVoteResult(oldVillageVote, kill, force)) {
+					is VoteResult.NoVotes -> return@adminOnly
+					is VoteResult.Tie -> {
 						sendAsWebhook(
 							this@LG.bot,
 							botCache.getChannelId("VILLAGE_VOTE")!!,
@@ -177,30 +152,28 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 							getAsset("lg", this@LG.prefix),
 						) {
 							content = Lg.DayCycle.Response.Other.equality.translateWithContext(
-								maxVotedPlayers.joinToString(", ") { "<@${it.value}>" }
+								result.players.joinToString(", ") { "<@${it.value}>" }
 							)
 						}
 						newVoteVillage.apply {
-							setChoices(maxVotedPlayers.toList())
+							setChoices(result.players.toList())
 							botCache.updateVote(this)
 						}
-						respond { content = Lg.DayCycle.Response.Other.secondVote.translateWithContext() }
-						return@adminOnly
+						Lg.DayCycle.Response.Other.secondVote.translateWithContext()
 					}
-					maxVotedPlayers.size == 1 && kill -> {
-						val playerToKill = maxVotedPlayers.first()
-						guild!!.getMember(playerToKill).swapRoles(
+					is VoteResult.Killed -> {
+						guild!!.getMember(result.player).swapRoles(
 							config.deadRole.snowflake,
 							aliveRole,
 							Lg.System.Permissions.PlayerKilled.reason.translateWithContext()
 						)
-						respond {
-							content =
-								Lg.DayCycle.Response.Success.killed.translateWithContext(guild!!.getMember(playerToKill).effectiveName)
-						}
-						return@adminOnly
+						Lg.DayCycle.Response.Success.killed.translateWithContext(
+							guild!!.getMember(result.player).effectiveName
+						)
 					}
 				}
+				respond { content = response }
+				return@adminOnly
 			}
 			newVoteVillage.apply {
 				setChoices(emptyList())
@@ -221,18 +194,15 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			// For each thread in the SUJET channel, lock it
 			botCache.getChannel("SUJET")?.activeThreads?.changeLockAll(true)
 			botCache.getChannel("LOUPS_CHAT")?.getMembersWithAccess()
-				?.filter { it.hasRole(guild!!.getRole(aliveRole)) }
+				?.filterByRole(aliveRole)
 				?.toList()?.forEach { member ->
 					val reason = Lg.System.Permissions.Night.reason.translateWithContext()
 
-					botCache.getChannel("LOUPS_VOTE")?.apply {
-						addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
-						addMemberPermission(member.id, Permission.SendMessages, reason = reason)
-					}
-
-					botCache.getChannel("LOUP_CHAT")?.apply {
-						addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
-						addMemberPermission(member.id, Permission.SendMessages, reason = reason)
+					listOf("LOUPS_VOTE", "LOUP_CHAT").forEach { channelName ->
+						botCache.getChannel(channelName)?.getTopChannel()?.apply {
+							removeMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
+							removeMemberPermission(member.id, Permission.SendMessages, reason = reason)
+						}
 					}
 				}
 			if (oldVillageVote?.corbeau != 0.snowflake) sendAsWebhook(this@LG.bot, botCache.getChannelId("VOTES")!!, "Corbeau", getAsset("\"\uD83D\uDC26\u200D⬛ Corbeau\"", this@LG.prefix)) {

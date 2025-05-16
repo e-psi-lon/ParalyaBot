@@ -4,13 +4,12 @@ import dev.kord.common.entity.DiscordUser
 import dev.kord.common.entity.Permission
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
+import dev.kord.core.behavior.RoleBehavior
 import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.execute
 import dev.kord.core.cache.data.UserData
-import dev.kord.core.entity.Member
+import dev.kord.core.entity.*
 import dev.kord.core.entity.Message
-import dev.kord.core.entity.User
-import dev.kord.core.entity.Webhook
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.rest.Image
 import dev.kord.rest.builder.message.create.WebhookMessageCreateBuilder
@@ -18,6 +17,8 @@ import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.i18n.types.Key
 import dev.kordex.core.i18n.withContext
 import dev.kordex.core.types.TranslatableContext
+import dev.kordex.core.utils.any
+import dev.kordex.core.utils.hasRole
 import dev.kordex.core.utils.permissionsForMember
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -142,6 +143,21 @@ suspend fun TextChannel.getMembersWithAccess(): Flow<Member> {
 		this.permissionsForMember(member).contains(Permission.ViewChannel)
 	}
 }
+
+/**
+ * Filter a [Flow] of member objects to only include those who have a specific role.
+ *
+ * @param roleId The ID of the role to filter by.
+ * @return A flow of [Member] objects who have the specified role.
+ */
+suspend fun Flow<Member>.filterByRole(roleId: Snowflake): Flow<Member> {
+	return filter { member -> member.roles.any { it.id == roleId } }
+}
+
+fun Flow<Member>.filterByRole(role: RoleBehavior): Flow<Member> {
+	return filter { it.hasRole(role) }
+}
+
 
 /**
  * Checks if two messages are similar based on their content and attachments.
