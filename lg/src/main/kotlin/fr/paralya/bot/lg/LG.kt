@@ -121,6 +121,12 @@ class LG : Extension() {
 							━━━━━━━━━━━━━━━━━━━━━
 						""".trimIndent()
 					}
+					respond {
+						content = Lg.EndDay.Response.success.translateWithContext(
+							day,
+							hour
+						)
+					}
 				}
 			}
 		}
