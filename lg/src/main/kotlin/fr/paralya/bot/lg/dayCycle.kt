@@ -51,12 +51,12 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			val gameData = botCache.getGameData()
 			val voteManager = this@LG.voteManager
 
-			if (gameData.state == LGState.DAY) {
+			if (gameData.state == DAY) {
 				respond { content = Lg.Day.Response.Error.alreadyDay.translateWithContext() }
 				return@adminOnly
 			}
 			voteManager.createVillageVote()
-			val oldWerewolfVote = voteManager.finishCurrentVote(LGState.NIGHT)
+			val oldWerewolfVote = voteManager.finishCurrentVote(NIGHT)
 			val newVoteWerewolf = voteManager.createWerewolfVote()
 			val config by inject<LgConfig>()
 			val aliveRole = config.aliveRole.snowflake
@@ -131,12 +131,12 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			val botCache = this@LG.botCache
 			val gameData = botCache.getGameData()
 			val voteManager = this@LG.voteManager
-			if (gameData.state == LGState.NIGHT) {
+			if (gameData.state == NIGHT) {
 				respond { content = Lg.Night.Response.Error.alreadyNight.translateWithContext() }
 				return@adminOnly
 			}
 			voteManager.createWerewolfVote()
-			val oldVillageVote = voteManager.finishCurrentVote(LGState.DAY)
+			val oldVillageVote = voteManager.finishCurrentVote(DAY)
 			val newVoteVillage = voteManager.createVillageVote()
 			val config by inject<LgConfig>()
 			val aliveRole = config.aliveRole.snowflake
