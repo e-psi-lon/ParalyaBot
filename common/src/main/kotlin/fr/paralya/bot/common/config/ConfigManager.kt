@@ -146,13 +146,11 @@ class ConfigManager : KordExKoinComponent {
 				// Check if config has this path
 				if (config.hasPath(fullPath)) {
 					// To set the property, we need to first get its value
+					val value = loadConfigValue(config, fullPath)
+					val convertedValue = convertValue(value.toString(), prop.returnType.classifier as KClass<*>, propTypeArgs)
 					setProperty(configObject,
 						propName,
-						convertValue(
-							loadConfigValue(config, fullPath).toString(),
-							prop.returnType.classifier as KClass<*>,
-							propTypeArgs
-						)
+						convertedValue
 					)
 				} else {
 					// Fallback to environment variables
@@ -206,19 +204,18 @@ class ConfigManager : KordExKoinComponent {
 		}
 		return when (type) {
 			String::class -> value
-			Int::class -> value.toInt()
-			Long::class -> value.toLong()
-			ULong::class -> value.toLong().toULong()
+			Int::class, UInt::class -> value.toInt()
+			Long::class, ULong::class -> value.toLong() // ULong doesn't work well with Java reflection,
+			// we use Long instead allowing conversion as a workaround
 			Boolean::class -> value.toBoolean()
 			Float::class -> value.toFloat()
 			Double::class -> value.toDouble()
-			Short::class -> value.toShort()
-			Byte::class -> value.toByte()
+			Short::class, UShort::class -> value.toShort()
+			Byte::class, UByte::class -> value.toByte()
 			Char::class -> if (value.length == 1) value[0] else throw IllegalArgumentException("Cannot convert '$value' to Char")
 			List::class -> {
-				value.split(",").map {
+				value.trim('[', ']').split(",").map {
 					if (parameters.isNotEmpty()) {
-						// Get nested parameters if any
 						val nestedParams = if (parameters[0] == List::class || parameters[0] == Map::class) {
 							parameters[0].typeParameters.map { it1 -> it1 as KClass<*> }
 						} else emptyList()
