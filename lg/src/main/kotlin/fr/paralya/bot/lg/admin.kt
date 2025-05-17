@@ -32,23 +32,17 @@ fun <C : SlashCommandContext<*, A, M>, A : Arguments, M : ModalForm> SlashComman
 		if (configManager.botConfig.admins.contains(this.member?.id?.value)) {
 			action(modal)
 		} else {
+			val text = Translations.Lg.System.Permissions.notAdmin.translateWithContext()
 			when (this) {
-				is PublicSlashCommandContext<*, *> -> respond {
-					content = "Vous n'avez pas les permissions nécessaires pour effectuer cette commande."
-				}
-
-				is EphemeralSlashCommandContext<*, *> -> respond {
-					content = "Vous n'avez pas les permissions nécessaires pour effectuer cette commande."
-				}
+				is PublicSlashCommandContext<*, *> -> respond { content = text }
+				is EphemeralSlashCommandContext<*, *> -> respond { content = text }
 			}
 		}
 	}
 }
 
 /**
- * Extension function to check if a user is an admin.
- *
- * @param config The [BotConfig] instance containing the list of admin IDs.
+ * Extension function to check if a user is an admin based on the given [config]
  * @return true if the user is an admin, false otherwise.
  */
 fun User?.isAdmin(config: BotConfig): Boolean {
@@ -56,9 +50,7 @@ fun User?.isAdmin(config: BotConfig): Boolean {
 }
 
 /**
- * Extension function to check if a member is an admin.
- *
- * @param config The [BotConfig] instance containing the list of admin IDs.
+ * Extension function to check if a member is an admin based on the given [config]
  * @return true if the member is an admin, false otherwise.
  */
 fun Member?.isAdmin(config: BotConfig): Boolean {
