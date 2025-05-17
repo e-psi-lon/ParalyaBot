@@ -111,11 +111,27 @@ class ConfigManager : KordExKoinComponent {
 			try {
 				val propName = prop.name
 				val fullPath = "$path.$propName"
+				val propTypeArgs = prop.returnType.arguments.map { it.type!!.classifier as KClass<*> }
 
 				// Check if config has this path
 				if (config.hasPath(fullPath)) {
 					// To set the property, we need to first get its value
-					setProperty(configObject, propName, loadConfigValue(config, fullPath))
+					setProperty(configObject,
+						propName,
+						loadConfigValue(config, fullPath).run {
+							// If the property is a list, we need to convert it to the correct type
+							if (propTypeArgs.isNotEmpty()) {
+								when (this) {
+									is List<*> -> this.map { convertEnvValue(it.toString(), propTypeArgs[0]) }
+									is Map<*, *> -> this.mapValues { (key, value) ->
+										convertEnvValue(key.toString(), propTypeArgs[0])
+										convertEnvValue(value.toString(), propTypeArgs[1])
+									}
+									else -> throw IllegalArgumentException("Unsupported type with arguments: ${this?.javaClass} with args $propTypeArgs")
+								}
+							} else this
+						}
+					)
 				} else {
 					// Fallback to environment variables
 					val envVar = fullPath.replace('.', '_').uppercase()
@@ -140,7 +156,7 @@ class ConfigManager : KordExKoinComponent {
 	 * @param propName The name of the property to set.
 	 * @param value The value to set the property to.
 	 */
-	private fun setProperty(obj: Any, propName: String, value: Any) {
+	private fun setProperty(obj: Any, propName: String, value: Any?) {
 		val property = obj::class.java.getDeclaredField(propName)
 		property.isAccessible = true
 		property.set(obj, value)
@@ -159,7 +175,7 @@ class ConfigManager : KordExKoinComponent {
 			String::class -> value
 			Int::class -> value.toInt()
 			Long::class -> value.toLong()
-			ULong::class -> value.toULong()
+			ULong::class -> value.toLong().toULong()
 			Boolean::class -> value.toBoolean()
 			List::class -> value.split(",")
 			else -> throw IllegalArgumentException("Unsupported type: $type")
@@ -174,15 +190,15 @@ class ConfigManager : KordExKoinComponent {
 	 * @param path The path in the config file where the value is located.
 	 * @return The loaded value.
 	 */
-	private fun loadConfigValue(config: Config, path: String): Any {
+	private fun loadConfigValue(config: Config, path: String): Any? {
 		val value = config.getValue(path)
 		return when (value.valueType()) {
-			ConfigValueType.LIST -> config.getList(path)
+			ConfigValueType.LIST -> config.getList(path).unwrapped()
 			ConfigValueType.BOOLEAN -> config.getBoolean(path)
 			ConfigValueType.NUMBER -> config.getNumber(path)
 			ConfigValueType.STRING -> config.getString(path)
-			ConfigValueType.OBJECT -> config.getObject(path)
-			ConfigValueType.NULL -> config.getObject(path)
+			ConfigValueType.OBJECT -> config.getObject(path).unwrapped()
+			ConfigValueType.NULL -> if (config.getIsNull(path)) null else throw IllegalArgumentException("How a value supposed to be null is not null? What the hell did you do?")
 			null -> throw IllegalArgumentException("Unsupported type for config value")
 		}
 	}
