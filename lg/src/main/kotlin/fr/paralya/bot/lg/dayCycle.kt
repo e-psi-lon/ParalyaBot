@@ -68,7 +68,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 							this@LG.bot,
 							botCache.getChannelId(LgChannelType.LOUPS_VOTE)!!,
 							"ParalyaLG",
-							getAsset("lg", this@LG.prefix)
+							getAsset("paralya_lg", this@LG.prefix)
 						) {
 							content = Lg.DayCycle.Response.Other.equality.translateWithContext(
 								result.players.joinToString(", ") { "<@${it.value}>" }
@@ -148,7 +148,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 							this@LG.bot,
 							botCache.getChannelId(LgChannelType.VOTES)!!,
 							"ParalyaLG",
-							getAsset("lg", this@LG.prefix),
+							getAsset("paralya_lg", this@LG.prefix),
 						) {
 							content = Lg.DayCycle.Response.Other.equality.translateWithContext(
 								result.players.joinToString(", ") { "<@${it.value}>" }
@@ -185,7 +185,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					?.getTopChannel()
 					?.run {
 						removeRolePermissions(aliveRole, Permission.ViewChannel, Permission.SendMessages)
-						sendAsWebhook(this@LG.bot, this.id, "ParalyaLG", getAsset("lg", this@LG.prefix)) {
+						sendAsWebhook(this@LG.bot, this.id, "ParalyaLG", getAsset("paralya_lg", this@LG.prefix)) {
 							content = Lg.System.separator.translateWithContext()
 						}
 					}

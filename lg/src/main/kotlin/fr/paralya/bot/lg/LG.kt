@@ -112,7 +112,7 @@ class LG : Extension() {
 						bot,
 						botCache.getChannelId(LgChannelType.ANNONCES_VILLAGE)!!,
 						"ParalyaLG",
-						getAsset("lg", prefix)
+						getAsset("paralya_lg", prefix)
 					) {
 						content = """
 							━━━━━━━━━━━━━━━━━━━━━
