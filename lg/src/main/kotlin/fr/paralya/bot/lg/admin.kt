@@ -8,8 +8,10 @@ import dev.kordex.core.commands.application.slash.PublicSlashCommandContext
 import dev.kordex.core.commands.application.slash.SlashCommand
 import dev.kordex.core.commands.application.slash.SlashCommandContext
 import dev.kordex.core.components.forms.ModalForm
-import fr.paralya.bot.common.BotConfig
-import fr.paralya.bot.common.ConfigManager
+import fr.paralya.bot.common.config.BotConfig
+import fr.paralya.bot.common.config.ConfigManager
+import fr.paralya.bot.common.translateWithContext
+import fr.paralya.bot.lg.i18n.Translations
 import org.koin.core.component.inject
 
 /**

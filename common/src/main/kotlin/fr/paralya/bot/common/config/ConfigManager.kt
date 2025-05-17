@@ -1,4 +1,4 @@
-package fr.paralya.bot.common
+package fr.paralya.bot.common.config
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
@@ -6,6 +6,7 @@ import com.typesafe.config.ConfigValueType
 import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.utils.envOrNull
 import dev.kordex.core.utils.loadModule
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.component.inject
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.singleOf
@@ -29,12 +30,38 @@ import kotlin.system.exitProcess
 class ConfigManager : KordExKoinComponent {
 	private lateinit var config: Config
 	private val configFile = File("config.conf")
+	private val logger = KotlinLogging.logger("ConfigManager")
+	private val registeredConfigs = mutableListOf<String>()
+
 
 	// Core bot configuration, directly integrated into the ConfigManager
 	val botConfig = BotConfig()
 
 	init {
 		loadConfig()
+	}
+
+	fun reloadConfig() {
+		try {
+			config = ConfigFactory.parseFile(configFile)
+			loadConfigSection(botConfig, "bot")
+			// Then reload all registered configs
+			val toRemove = mutableListOf<String>()
+			registeredConfigs.forEach { name ->
+				val config = try {
+				 	getKoin().get<Any>(named(name))
+				}
+				catch (e: Exception) {
+					logger.warn(e) { "Failed to get config for $name. Its related plugin might has been removed" }
+					return@forEach
+				}
+				loadConfigSection(config, "games.${name.removeSuffix("Config").lowercase()}")
+			}
+			registeredConfigs.removeAll(toRemove)
+		} catch (e: Exception) {
+			logger.error(e) { "Failed to reload config file" }
+			exitProcess(1)
+		}
 	}
 
 	/**
@@ -51,7 +78,7 @@ class ConfigManager : KordExKoinComponent {
 			config = ConfigFactory.parseFile(configFile)
 			loadConfigSection(botConfig, "bot")
 		} catch (e: Exception) {
-			println("Error loading configuration: ${e.message}")
+			logger.error(e) { "Failed to load config file" }
 			exitProcess(1)
 		}
 	}
@@ -63,18 +90,19 @@ class ConfigManager : KordExKoinComponent {
 	private fun createDefaultConfig() {
 		configFile.writeText(
 			"""
-            bot {
-                token = ""
-                admins = []
-            }
-
-            # Game-specific configurations will be added here
-            games {
-            }
-        """.trimIndent()
+            |bot {
+            |    token = ""
+            |    admins = []
+			|    dmLogChannelId = 0
+			|    paralyaId = 0
+            |}
+			|
+            |# Game-specific configurations will be added here
+            |games {
+            |}
+        """.trimMargin()
 		)
-
-		println("Default config created at ${configFile.absolutePath}. Please fill in required values.")
+		logger.warn { "Default config created at ${configFile.absolutePath}. Please fill in required values." }
 		exitProcess(1)
 	}
 
@@ -94,7 +122,8 @@ class ConfigManager : KordExKoinComponent {
 			}
 		}
 		val config by inject<T>()
-		loadConfigSection(config, "games.${name.removeSuffix("Config").lowercase()}")
+
+		loadConfigSection(config, "games.${name.removeSuffix("Config").lowercase()}", name)
 	}
 
 	/**
@@ -104,8 +133,9 @@ class ConfigManager : KordExKoinComponent {
 	 * @param configObject The object to load the configuration into.
 	 * @param path The path in the config file where the configuration is located.
 	 */
-	fun <T : Any> loadConfigSection(configObject: T, path: String) {
+	fun <T : Any> loadConfigSection(configObject: T, path: String, name: String? = null) {
 		val cls = configObject::class
+		name?.let { registeredConfigs.add(it) }
 
 		cls.memberProperties.forEach { prop ->
 			try {
@@ -118,19 +148,11 @@ class ConfigManager : KordExKoinComponent {
 					// To set the property, we need to first get its value
 					setProperty(configObject,
 						propName,
-						loadConfigValue(config, fullPath).run {
-							// If the property is a list, we need to convert it to the correct type
-							if (propTypeArgs.isNotEmpty()) {
-								when (this) {
-									is List<*> -> this.map { convertEnvValue(it.toString(), propTypeArgs[0]) }
-									is Map<*, *> -> this.mapValues { (key, value) ->
-										convertEnvValue(key.toString(), propTypeArgs[0])
-										convertEnvValue(value.toString(), propTypeArgs[1])
-									}
-									else -> throw IllegalArgumentException("Unsupported type with arguments: ${this?.javaClass} with args $propTypeArgs")
-								}
-							} else this
-						}
+						convertValue(
+							loadConfigValue(config, fullPath).toString(),
+							prop.returnType.classifier as KClass<*>,
+							propTypeArgs
+						)
 					)
 				} else {
 					// Fallback to environment variables
@@ -138,12 +160,12 @@ class ConfigManager : KordExKoinComponent {
 					val envValue = envOrNull(envVar)
 
 					if (envValue != null) {
-						val convertedValue = convertEnvValue(envValue, prop.returnType.classifier as KClass<*>)
+						val convertedValue = convertValue(envValue, prop.returnType.classifier as KClass<*>, propTypeArgs)
 						setProperty(configObject, propName, convertedValue)
 					}
 				}
 			} catch (e: Exception) {
-				println("Error loading property ${prop.name}: ${e.message}")
+				logger.error(e) { "Error loading property ${prop.name}" }
 			}
 		}
 	}
@@ -163,21 +185,69 @@ class ConfigManager : KordExKoinComponent {
 	}
 
 	/**
-	 * Converts an environment variable value to the appropriate type.
-	 * This method is used to convert string values from environment variables to their respective types.
+	 * Converts a variable value to the appropriate type.
+	 * This method is used to convert string values from variables to their respective types.
 	 *
-	 * @param value The string value from the environment variable.
+	 * @param value The string value of a variable.
 	 * @param type The type to convert the value to.
+	 * @param parameters The list of parameters for generic types.
 	 * @return The converted value.
 	 */
-	private fun convertEnvValue(value: String, type: KClass<*>): Any {
+	private fun convertValue(value: String, type: KClass<*>, parameters: List<KClass<*>> = emptyList()): Any? {
+		// Handle null values
+		if (value.isBlank() || value.equals("null", ignoreCase = true)) {
+			// For collection types, return empty collections rather than null
+			return when (type) {
+				List::class -> emptyList<Any>()
+				Map::class -> emptyMap<Any, Any>()
+				Set::class -> emptySet<Any>()
+				else -> null
+			}
+		}
 		return when (type) {
 			String::class -> value
 			Int::class -> value.toInt()
 			Long::class -> value.toLong()
 			ULong::class -> value.toLong().toULong()
 			Boolean::class -> value.toBoolean()
-			List::class -> value.split(",")
+			Float::class -> value.toFloat()
+			Double::class -> value.toDouble()
+			Short::class -> value.toShort()
+			Byte::class -> value.toByte()
+			Char::class -> if (value.length == 1) value[0] else throw IllegalArgumentException("Cannot convert '$value' to Char")
+			List::class -> {
+				value.split(",").map {
+					if (parameters.isNotEmpty()) {
+						// Get nested parameters if any
+						val nestedParams = if (parameters[0] == List::class || parameters[0] == Map::class) {
+							parameters[0].typeParameters.map { it1 -> it1 as KClass<*> }
+						} else emptyList()
+						convertValue(it.trim(), parameters[0], nestedParams)
+					} else it.trim()
+				}
+			}
+			Map::class -> {
+				value.split(",").associate {
+					val parts = it.split(":", limit = 2)
+					if (parts.size != 2) throw IllegalArgumentException("Invalid map entry format: $it")
+
+					val (key, mapVal) = parts
+
+					if (parameters.size >= 2) {
+						// Get nested parameters for key and value if any
+						val keyNestedParams = if (parameters[0] == List::class || parameters[0] == Map::class) {
+							parameters[0].typeParameters.map { it1 -> it1 as KClass<*> }
+						} else emptyList()
+
+						val valueNestedParams = if (parameters[1] == List::class || parameters[1] == Map::class) {
+							parameters[1].typeParameters.map { it1 -> it1 as KClass<*> }
+						} else emptyList()
+
+						convertValue(key.trim(), parameters[0], keyNestedParams) to
+								convertValue(mapVal.trim(), parameters[1], valueNestedParams)
+					} else key.trim() to mapVal.trim()
+				}
+			}
 			else -> throw IllegalArgumentException("Unsupported type: $type")
 		}
 	}

@@ -1,7 +1,7 @@
 package fr.paralya.bot.lg
 
 import dev.kordex.core.plugins.KordExPlugin
-import fr.paralya.bot.common.ConfigManager
+import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.lg.data.LgConfig
 import org.koin.core.component.inject
 

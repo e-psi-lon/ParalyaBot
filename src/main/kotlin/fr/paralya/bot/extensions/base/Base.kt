@@ -12,6 +12,7 @@ import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.extensions.event
 import fr.paralya.bot.common.*
+import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.i18n.Translations.Common
 import fr.paralya.bot.i18n.Translations
 import io.github.oshai.kotlinlogging.KotlinLogging

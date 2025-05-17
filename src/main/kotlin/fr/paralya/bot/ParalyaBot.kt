@@ -8,7 +8,7 @@ import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.i18n.SupportedLocales
 import dev.kordex.core.utils.getKoin
 import dev.kordex.core.utils.loadModule
-import fr.paralya.bot.common.ConfigManager
+import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.GameRegistry
 import fr.paralya.bot.common.gameMode
 import fr.paralya.bot.extensions.base.Base
