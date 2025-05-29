@@ -1,5 +1,4 @@
 plugins {
-	alias(libs.plugins.kotlin.jvm)
 	alias(libs.plugins.kordex.gradle)
 }
 
@@ -26,8 +25,6 @@ repositories {
 }
 
 dependencies {
-	testImplementation(kotlin("test"))
-	implementation(projects.common)
 }
 
 tasks.test {

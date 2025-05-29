@@ -17,7 +17,7 @@ repositories {
 kordEx {
 	module("web-backend")
 	bot {
-		dataCollection(DataCollection.Minimal)
+		dataCollection(DataCollection.None)
 		mainClass = "fr.paralya.bot.ParalyaBotKt"
 	}
 	i18n {
@@ -25,6 +25,24 @@ kordEx {
 		translationBundle = "paralyabot"
 	}
 }
+
+val libraries = libs
+val typesafeProjects = projects
+subprojects {
+	apply(plugin = "kotlinx-serialization")
+	apply(plugin = "kotlin")
+
+	dependencies {
+		testImplementation(kotlin("test"))
+		testImplementation(libraries.koin.test)  // For tests that involve Koin
+		testImplementation(libraries.mockk)  // Allow mocking in tests
+		if (name != "common") {
+			implementation(typesafeProjects.common) // The common subproject serve as a base for all other subprojects
+		}
+		implementation(libraries.konform) // For config validation
+	}
+}
+
 
 dependencies {
 	testImplementation(kotlin("test"))
