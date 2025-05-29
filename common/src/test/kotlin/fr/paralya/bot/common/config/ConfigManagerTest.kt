@@ -1,5 +1,7 @@
 package fr.paralya.bot.common.config
 
+import io.konform.validation.Validation
+import io.konform.validation.ValidationResult
 import io.mockk.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -46,20 +48,24 @@ class ConfigManagerTest : KoinTest {
 		try {
 			ConfigManager()
 			fail("Should have exited the process")
-		} catch (_: RuntimeException) {}
+		} catch (_: RuntimeException) {
+		}
 
-		verify { anyConstructed<File>().writeText(match { content ->
-			content.contains("bot {") &&
-					content.contains("token = \"\"") &&
-					content.contains("admins = []") &&
-					content.contains("games {")
-		})}
+		verify {
+			anyConstructed<File>().writeText(match { content ->
+				content.contains("bot {") &&
+						content.contains("token = \"\"") &&
+						content.contains("admins = []") &&
+						content.contains("games {")
+			})
+		}
 	}
 
 	@Test
 	fun `loadConfig loads existing configuration correctly`() {
 		// Create a test config file
-		configFile.writeText("""
+		configFile.writeText(
+			"""
             |bot {
             |    token = "test-token"
             |    admins = [123456789, 987654321]
@@ -67,7 +73,8 @@ class ConfigManagerTest : KoinTest {
             |    paralyaId = 77777re7777
             |}
             |games {}
-        """.trimMargin())
+        """.trimMargin()
+		)
 
 		mockkConstructor(File::class)
 		every { anyConstructed<File>().exists() } returns true
@@ -84,7 +91,8 @@ class ConfigManagerTest : KoinTest {
 	@Test
 	fun `reloadConfig refreshes configuration from disk`() {
 		// Create initial config
-		configFile.writeText("""
+		configFile.writeText(
+			"""
             |bot {
             |    token = "initial-token"
             |    admins = [123456789]
@@ -92,7 +100,8 @@ class ConfigManagerTest : KoinTest {
             |    paralyaId = 222222222
             |}
             |games {}
-        """.trimMargin())
+        """.trimMargin()
+		)
 
 		// mockkConstructor(File::class)
 		// every { anyConstructed<File>().exists() } returns true
@@ -102,7 +111,8 @@ class ConfigManagerTest : KoinTest {
 		// assertEquals("initial-token", configManager.botConfig.token)
 
 		// Update config file
-		configFile.writeText("""
+		configFile.writeText(
+			"""
             |bot {
             |    token = "updated-token"
             |    admins = [123456789, 987654321]
@@ -110,7 +120,8 @@ class ConfigManagerTest : KoinTest {
             |    paralyaId = 444444444
             |}
             |games {}
-        """.trimMargin())
+        """.trimMargin()
+		)
 
 		// Reload config
 		// configManager.reloadConfig()
@@ -126,7 +137,8 @@ class ConfigManagerTest : KoinTest {
 	fun `registerConfig correctly registers and loads game config`() {
 		// Create a test config file with game section
 		println("Test called")
-		configFile.writeText("""
+		configFile.writeText(
+			"""
             |bot {
             |    token = "test-token"
             |    admins = [123456789]
@@ -140,7 +152,8 @@ class ConfigManagerTest : KoinTest {
             |        name = "Test Game"
             |    }
             |}
-        """.trimMargin())
+        """.trimMargin()
+		)
 		println("Config file written")
 		println("with ${configFile.readText()}")
 		val configPath = configFile.absolutePath
@@ -165,7 +178,10 @@ class ConfigManagerTest : KoinTest {
 			var enabled: Boolean = false,
 			var score: Int = 0,
 			var name: String = ""
-		)
+		) : ValidatedConfig {
+			override fun validate(): ValidationResult<TestGameConfig> =
+				Validation<TestGameConfig> {}(this)
+		}
 
 		val configManager = ConfigManager()
 		println("Did it passed after the creation?")
@@ -198,7 +214,8 @@ class ConfigManagerTest : KoinTest {
 		assertEquals(3.14, convertValueMethod.invoke(configManager, "3.14", Double::class, emptyList<Any>()))
 
 		@Suppress("UNCHECKED_CAST")
-		val listResult = convertValueMethod.invoke(configManager, "[1,2,3]", List::class, listOf(Int::class)) as List<Int>
+		val listResult =
+			convertValueMethod.invoke(configManager, "[1,2,3]", List::class, listOf(Int::class)) as List<Int>
 		assertEquals(listOf(1, 2, 3), listResult)
 
 		@Suppress("UNCHECKED_CAST")
@@ -211,13 +228,15 @@ class ConfigManagerTest : KoinTest {
 	@Test
 	fun `fallback to environment variables when config property is missing`() {
 		// Create config without all properties
-		configFile.writeText("""
+		configFile.writeText(
+			"""
             |bot {
             |    token = "test-token"
             |    dmLogChannelId = 111111111
             |}
             |games {}
-        """.trimMargin())
+        """.trimMargin()
+		)
 
 		mockkConstructor(File::class)
 		every { anyConstructed<File>().exists() } returns true

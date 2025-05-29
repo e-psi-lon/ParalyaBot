@@ -25,8 +25,9 @@ interface ValidatedConfig {
  * For more information, see the [Discord Snowflake](h²ttps://discord.com/developers/docs/reference#snowflakes)
  * documentation.
  */
-fun ValidationBuilder<ULong>.appearsToBeSnowflake(displayName: String) = constrain("$displayName must be a valid Discord snowflake and it appears not to be") {
-	it > (1UL shl 21) && it < ULong.MAX_VALUE
-	&& ((it shr 22) + DISCORD_EPOCH) <= (System.currentTimeMillis() + 60_000).toULong()
+fun ValidationBuilder<ULong>.appearsToBeSnowflake(displayName: String) =
+	constrain("$displayName must be a valid Discord snowflake and it appears not to be") {
+		it > (1UL shl 21) && it < ULong.MAX_VALUE
+				&& ((it shr 22) + DISCORD_EPOCH) <= (System.currentTimeMillis() + 60_000).toULong()
 
-}
+	}

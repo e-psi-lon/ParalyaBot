@@ -17,7 +17,6 @@ repositories {
 }
 
 
-
 val byteBuddyAgent: Configuration by configurations.creating
 
 dependencies {

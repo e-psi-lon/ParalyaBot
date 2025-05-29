@@ -6,9 +6,9 @@ import dev.kordex.core.i18n.types.Key
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import org.koin.test.KoinTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.koin.test.KoinTest
 
 
 class GameRegistryTest : KoinTest {
@@ -37,9 +37,17 @@ class GameRegistryTest : KoinTest {
 		val result = gameRegistry.getGameModes()
 		assertEquals(2, result.size, "Expected size to be 2 got ${result.size} instead")
 		assertEquals(key, result.keys.first(), "Expected key to be $key got ${result.keys.first()} instead")
-		assertEquals(gameMode, result.values.first(), "Expected game mode to be $gameMode got ${result.values.first()} instead")
+		assertEquals(
+			gameMode,
+			result.values.first(),
+			"Expected game mode to be $gameMode got ${result.values.first()} instead"
+		)
 		assertEquals(key2, result.keys.last(), "Expected key to be $key2 got ${result.keys.last()} instead")
-		assertEquals(gameMode2, result.values.last(), "Expected game mode to be $gameMode2 got ${result.values.last()} instead")
+		assertEquals(
+			gameMode2,
+			result.values.last(),
+			"Expected game mode to be $gameMode2 got ${result.values.last()} instead"
+		)
 	}
 
 
@@ -129,7 +137,11 @@ class GameRegistryTest : KoinTest {
 		presenceBuilder.gameMode(GameRegistry.NONE)
 
 		assertEquals(PresenceStatus.Idle, capturedStatus, "Status should be Idle for NONE game mode")
-		assertEquals("Paralya sans animation en cours...", capturedWatchingName, "Should set watching message for NONE game mode")
+		assertEquals(
+			"Paralya sans animation en cours...",
+			capturedWatchingName,
+			"Should set watching message for NONE game mode"
+		)
 	}
 
 	@Test
@@ -157,6 +169,10 @@ class GameRegistryTest : KoinTest {
 		presenceBuilder.gameMode(key to gameMode)
 
 		assertEquals(PresenceStatus.Online, capturedStatus, "Status should be Online for regular game mode")
-		assertEquals("une partie de ${key.translate()}", capturedPlayingName, "Should set playing message with translated game name")
+		assertEquals(
+			"une partie de ${key.translate()}",
+			capturedPlayingName,
+			"Should set playing message with translated game name"
+		)
 	}
 }

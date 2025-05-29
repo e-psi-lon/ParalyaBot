@@ -10,13 +10,9 @@ import io.konform.validation.ValidationResult
 import io.konform.validation.constraints.minItems
 import io.konform.validation.constraints.minLength
 import io.konform.validation.onEach
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
+import kotlinx.serialization.*
 import kotlinx.serialization.hocon.Hocon
 import kotlinx.serialization.hocon.decodeFromConfig
-import kotlinx.serialization.serializer
 import org.koin.core.module.dsl.withOptions
 import org.koin.core.qualifier.named
 import java.io.File
@@ -59,9 +55,8 @@ class ConfigManager : KordExKoinComponent {
 			val toRemove = mutableListOf<String>()
 			registeredConfigs.forEach { name ->
 				val config = try {
-				 	getKoin().get<ValidatedConfig>(named(name))
-				}
-				catch (e: Exception) {
+					getKoin().get<ValidatedConfig>(named(name))
+				} catch (e: Exception) {
 					logger.warn(e) { "Failed to get config for $name. Its related plugin might has been removed" }
 					return@forEach
 				}
@@ -139,7 +134,11 @@ class ConfigManager : KordExKoinComponent {
 		val configObject = try {
 			Hocon.decodeFromConfig<T>(getSubConfig("games.${name.removeSuffix("Config").lowercase()}"))
 		} catch (e: IllegalArgumentException) {
-			logger.error(e) { "Failed to find the configuration for name $name at path games.${name.removeSuffix("Config").lowercase()}. Please ensure it exists in the config file." }
+			logger.error(e) {
+				"Failed to find the configuration for name $name at path games.${
+					name.removeSuffix("Config").lowercase()
+				}. Please ensure it exists in the config file."
+			}
 			exitProcess(1)
 		}
 		validateConfig(configObject)
@@ -160,8 +159,10 @@ class ConfigManager : KordExKoinComponent {
 		if (result.isValid) {
 			logger.info { "Configuration for ${config::class.simpleName} is valid." }
 		} else {
-			logger.error { "Configuration for ${config::class.simpleName} is invalid due to the following errors:" +
-					" ${result.errors.joinToString("\n")}" }
+			logger.error {
+				"Configuration for ${config::class.simpleName} is invalid due to the following errors:" +
+						" ${result.errors.joinToString("\n")}"
+			}
 			exitProcess(1)
 		}
 	}
@@ -181,7 +182,7 @@ data class BotConfig(
 	var admins: List<ULong> = emptyList(),
 	var dmLogChannelId: ULong = ULong.MIN_VALUE,
 	var paralyaId: ULong = ULong.MIN_VALUE
-): ValidatedConfig {
+) : ValidatedConfig {
 	@Transient
 	private val validator = Validation {
 		BotConfig::token {
