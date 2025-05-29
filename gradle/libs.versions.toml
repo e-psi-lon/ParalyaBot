@@ -7,6 +7,7 @@ typesafe-config = "1.4.3"
 koin-test = "4.0.4"
 mockk = "1.14.2"
 kotlinx-serialization-hocon = "1.8.1"
+konform = "0.11.1"
 
 [libraries]
 logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
@@ -14,6 +15,7 @@ typesafe-config = { group = "com.typesafe", name = "config", version.ref = "type
 koin-test = { group = "io.insert-koin", name = "koin-test", version.ref = "koin-test" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 kotlinx-serialization-hocon = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-hocon", version.ref = "kotlinx-serialization-hocon" }
+konform = { group = "io.konform", name = "konform-jvm", version.ref = "konform" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

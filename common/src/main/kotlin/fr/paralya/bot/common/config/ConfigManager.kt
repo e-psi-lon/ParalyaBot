@@ -5,6 +5,10 @@ import com.typesafe.config.ConfigFactory
 import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.utils.loadModule
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.konform.validation.Validation
+import io.konform.validation.ValidationResult
+import io.konform.validation.constraints.minLength
+import io.konform.validation.onEach
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.Serializable
@@ -163,4 +167,28 @@ data class BotConfig(
 	var admins: List<ULong> = emptyList(),
 	var dmLogChannelId: ULong = ULong.MIN_VALUE,
 	var paralyaId: ULong = ULong.MIN_VALUE
-)
+): ValidatedConfig {
+	@Transient
+	private val validator = Validation {
+		BotConfig::token {
+			minLength(1) hint "Token must NOT be empty. Please provide it, it is a base requirement for the bot to work."
+		}
+		BotConfig::admins {
+			constrain("Admins list must NOT be empty") { it.isNotEmpty() }
+			onEach {
+				defined("Admin ID") // Just to be sure that a real ID is provided
+			}
+		}
+		BotConfig::dmLogChannelId {
+			defined("DM log channel ID")
+		}
+		BotConfig::paralyaId {
+			defined("Paralya guild ID")
+		}
+
+	}
+
+	override fun validate(): ValidationResult<BotConfig> {
+		return validator(this)
+	}
+}
