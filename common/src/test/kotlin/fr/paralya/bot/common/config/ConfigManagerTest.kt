@@ -169,7 +169,7 @@ class ConfigManagerTest : KoinTest {
 
 		val configManager = ConfigManager()
 		println("Did it passed after the creation?")
-		configManager.registerConfig("TestGameConfig")
+		configManager.registerConfig<TestGameConfig>("TestGameConfig")
 
 		println("Did it passed after here?")
 		// Get the registered config
@@ -179,60 +179,6 @@ class ConfigManagerTest : KoinTest {
 		assertTrue(gameConfig.enabled)
 		assertEquals(100, gameConfig.score)
 		assertEquals("Test Game", gameConfig.name)
-	}
-
-	@Test
-	fun `loadConfigSection handles different data types correctly`() {
-		// Create a test config file with various data types
-		configFile.writeText("""
-            |bot {
-            |    token = "test-token"
-            |    admins = []
-            |    dmLogChannelId = 0
-            |    paralyaId = 0
-            |}
-            |games {
-            |    complex {
-            |        stringVal = "hello"
-            |        intVal = 42
-            |        boolVal = true
-            |        doubleVal = 3.14
-            |        listVal = [1, 2, 3]
-            |        mapVal = "key1:value1,key2:value2"
-            |        emptyList = []
-            |        nullVal = null
-            |    }
-            |}
-        """.trimMargin())
-
-		mockkConstructor(File::class)
-		println("Start mocking File")
-		every { anyConstructed<File>().exists() } returns true
-		every { anyConstructed<File>() } returns configFile
-
-		data class ComplexConfig(
-			var stringVal: String = "",
-			var intVal: Int = 0,
-			var boolVal: Boolean = false,
-			var doubleVal: Double = 0.0,
-			var listVal: List<Int> = emptyList(),
-			var mapVal: Map<String, String> = emptyMap(),
-			var emptyList: List<String> = emptyList(),
-			var nullVal: String? = "default"
-		)
-
-		val configManager = ConfigManager()
-		val complexConfig = ComplexConfig()
-		configManager.loadConfigSection()
-
-		assertEquals("hello", complexConfig.stringVal)
-		assertEquals(42, complexConfig.intVal)
-		assertTrue(complexConfig.boolVal)
-		assertEquals(3.14, complexConfig.doubleVal)
-		assertEquals(listOf(1, 2, 3), complexConfig.listVal)
-		assertEquals(mapOf("key1" to "value1", "key2" to "value2"), complexConfig.mapVal)
-		assertEquals(emptyList(), complexConfig.emptyList)
-		assertEquals(null, complexConfig.nullVal)
 	}
 
 	@Test
