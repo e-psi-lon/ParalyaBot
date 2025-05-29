@@ -54,6 +54,8 @@ class GameRegistry : KordExKoinComponent {
 	 * @param value The name of the game mode to unload.
 	 */
 	fun unloadGameMode(value: String) {
+		if (value == "none") return
+		if (!gameModes.containsValue(value)) return
 		gameModes.remove(gameModes.filterValues { it == value }.keys.first())
 	}
 
