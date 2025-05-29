@@ -38,6 +38,6 @@ class LgBotPlugin : KordExPlugin() {
 	 */
 	private fun registerLgConfig() {
 		val configManager by inject<ConfigManager>()
-		configManager.registerConfig(::LgConfig, "lgConfig")
+		configManager.registerConfig<LgConfig>("lgConfig")
 	}
 }

@@ -16,15 +16,21 @@ repositories {
 	mavenCentral()
 }
 
+
+
+val byteBuddyAgent: Configuration by configurations.creating
+
 dependencies {
 	testImplementation(kotlin("test"))
 	implementation(libs.logback)
 	implementation(libs.typesafe.config)
-	implementation(libs.kotlin.reflection)
+	implementation(libs.kotlinx.serialization.hocon)
+	byteBuddyAgent("net.bytebuddy:byte-buddy-agent:1.17.5")
 }
 
 tasks.test {
 	useJUnitPlatform()
+	jvmArgs("-javaagent:${byteBuddyAgent.asPath}")
 }
 kotlin {
 	jvmToolchain(21)

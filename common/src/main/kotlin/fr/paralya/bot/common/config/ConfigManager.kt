@@ -2,19 +2,19 @@ package fr.paralya.bot.common.config
 
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigFactory
-import com.typesafe.config.ConfigValueType
 import dev.kordex.core.koin.KordExKoinComponent
-import dev.kordex.core.utils.envOrNull
 import dev.kordex.core.utils.loadModule
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.koin.core.component.inject
-import org.koin.core.module.dsl.createdAtStart
-import org.koin.core.module.dsl.singleOf
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
+import kotlinx.serialization.hocon.Hocon
+import kotlinx.serialization.hocon.decodeFromConfig
+import kotlinx.serialization.serializer
 import org.koin.core.module.dsl.withOptions
 import org.koin.core.qualifier.named
 import java.io.File
-import kotlin.reflect.KClass
-import kotlin.reflect.full.memberProperties
 import kotlin.system.exitProcess
 
 /**
@@ -27,24 +27,25 @@ import kotlin.system.exitProcess
  * @property botConfig The core bot configuration.
  * @constructor Creates a new [ConfigManager] instance and automatically populates the base configuration.
  */
+@OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
 class ConfigManager : KordExKoinComponent {
 	private lateinit var config: Config
-	private val configFile = File("config.conf")
-	private val logger = KotlinLogging.logger("ConfigManager")
+	private val configFile = File(System.getenv()["PARALYA_BOT_CONFIG_FILE"] ?: "config.conf")
+	val logger = KotlinLogging.logger("ConfigManager")
 	private val registeredConfigs = mutableListOf<String>()
 
 
 	// Core bot configuration, directly integrated into the ConfigManager
-	val botConfig = BotConfig()
+	var botConfig: BotConfig
 
 	init {
 		loadConfig()
+		botConfig = Hocon.decodeFromConfig(getSubConfig("bot"))
 	}
 
 	fun reloadConfig() {
 		try {
-			config = ConfigFactory.parseFile(configFile)
-			loadConfigSection(botConfig, "bot")
+			loadFile()
 			// Then reload all registered configs
 			val toRemove = mutableListOf<String>()
 			registeredConfigs.forEach { name ->
@@ -55,11 +56,22 @@ class ConfigManager : KordExKoinComponent {
 					logger.warn(e) { "Failed to get config for $name. Its related plugin might has been removed" }
 					return@forEach
 				}
-				loadConfigSection(config, "games.${name.removeSuffix("Config").lowercase()}")
+				val configClass = config::class
+				val configPath = "games.${name.removeSuffix("Config").lowercase()}"
+				if (!this.config.hasPath(configPath)) {
+					logger.warn { "No configuration found for $name at path $configPath. Removing it from registered configs." }
+					toRemove.add(name)
+					return@forEach
+				}
+				loadModule(true) {
+					single {
+						Hocon.decodeFromConfig(configClass.serializer(), getSubConfig(configPath))
+					} withOptions { named(name) }
+				}
 			}
 			registeredConfigs.removeAll(toRemove)
 		} catch (e: Exception) {
-			logger.error(e) { "Failed to reload config file" }
+			logger.error(e) { "Failed to reload the configuration" }
 			exitProcess(1)
 		}
 	}
@@ -70,13 +82,16 @@ class ConfigManager : KordExKoinComponent {
 	 * It also loads the core bot configuration and any game-specific configurations.
 	 */
 	private fun loadConfig() {
-		if (!configFile.exists()) {
+		loadFile()
+		botConfig = Hocon.decodeFromConfig(getSubConfig("bot"))
+	}
+
+	private fun loadFile() {
+		if (!configFile.exists())
 			createDefaultConfig()
-		}
 
 		try {
 			config = ConfigFactory.parseFile(configFile)
-			loadConfigSection(botConfig, "bot")
 		} catch (e: Exception) {
 			logger.error(e) { "Failed to load config file" }
 			exitProcess(1)
@@ -111,163 +126,26 @@ class ConfigManager : KordExKoinComponent {
 	 * This method allows for dynamic registration of configurations for different games.
 	 * It uses Koin to manage the lifecycle of the configuration object and is completely type-safe.
 	 *
-	 * @param configBuilder A lambda function that builds the configuration object.
 	 * @param name The name of the configuration, used as a key in the config file.
 	 */
-	inline fun <reified T : Any> registerConfig(crossinline configBuilder: () -> T, name: String) {
-		loadModule {
-			singleOf(configBuilder) withOptions {
-				named(name)
-				createdAtStart()
-			}
+	inline fun <reified T : Any> registerConfig(name: String) {
+		logger.debug { "Registering config for $name at path games.${name.removeSuffix("Config")} with datatype ${T::class.simpleName}" }
+		val configObject = try {
+			Hocon.decodeFromConfig<T>(getSubConfig("games.${name.removeSuffix("Config").lowercase()}"))
+		} catch (e: IllegalArgumentException) {
+			logger.error(e) { "Failed to find the configuration for name $name at path games.${name.removeSuffix("Config").lowercase()}. Please ensure it exists in the config file." }
+			exitProcess(1)
 		}
-		val config by inject<T>()
-
-		loadConfigSection(config, "games.${name.removeSuffix("Config").lowercase()}", name)
+		loadModule(true) {
+			single<T> { configObject } withOptions { named(name) }
+		}
+		logger.debug { "Config for $name registered successfully" }
 	}
 
-	/**
-	 * Loads a configuration section into the provided object.
-	 * This method uses reflection to set properties on the object based on the loaded configuration.
-	 *
-	 * @param configObject The object to load the configuration into.
-	 * @param path The path in the config file where the configuration is located.
-	 */
-	fun <T : Any> loadConfigSection(configObject: T, path: String, name: String? = null) {
-		val cls = configObject::class
-		name?.let { registeredConfigs.add(it) }
-
-		cls.memberProperties.forEach { prop ->
-			try {
-				val propName = prop.name
-				val fullPath = "$path.$propName"
-				val propTypeArgs = prop.returnType.arguments.map { it.type!!.classifier as KClass<*> }
-
-				// Check if config has this path
-				if (config.hasPath(fullPath)) {
-					// To set the property, we need to first get its value
-					val value = loadConfigValue(config, fullPath)
-					val convertedValue = convertValue(value.toString(), prop.returnType.classifier as KClass<*>, propTypeArgs)
-					setProperty(configObject,
-						propName,
-						convertedValue
-					)
-				} else {
-					// Fallback to environment variables
-					val envVar = fullPath.replace('.', '_').uppercase()
-					val envValue = envOrNull(envVar)
-
-					if (envValue != null) {
-						val convertedValue = convertValue(envValue, prop.returnType.classifier as KClass<*>, propTypeArgs)
-						setProperty(configObject, propName, convertedValue)
-					}
-				}
-			} catch (e: Exception) {
-				logger.error(e) { "Error loading property ${prop.name}" }
-			}
-		}
-	}
-
-	/**
-	 * Sets a property on the given object using reflection.
-	 * This method is used to set properties dynamically based on the loaded configuration.
-	 *
-	 * @param obj The object whose property is to be set.
-	 * @param propName The name of the property to set.
-	 * @param value The value to set the property to.
-	 */
-	private fun setProperty(obj: Any, propName: String, value: Any?) {
-		val property = obj::class.java.getDeclaredField(propName)
-		property.isAccessible = true
-		property.set(obj, value)
-	}
-
-	/**
-	 * Converts a variable value to the appropriate type.
-	 * This method is used to convert string values from variables to their respective types.
-	 *
-	 * @param value The string value of a variable.
-	 * @param type The type to convert the value to.
-	 * @param parameters The list of parameters for generic types.
-	 * @return The converted value.
-	 */
-	private fun convertValue(value: String, type: KClass<*>, parameters: List<KClass<*>> = emptyList()): Any? {
-		// Handle null values
-		if (value.isBlank() || value.equals("null", ignoreCase = true)) {
-			// For collection types, return empty collections rather than null
-			return when (type) {
-				List::class -> emptyList<Any>()
-				Map::class -> emptyMap<Any, Any>()
-				Set::class -> emptySet<Any>()
-				else -> null
-			}
-		}
-		return when (type) {
-			String::class -> value
-			Int::class, UInt::class -> value.toInt()
-			Long::class, ULong::class -> value.toLong() // ULong doesn't work well with Java reflection,
-			// we use Long instead allowing conversion as a workaround
-			Boolean::class -> value.toBoolean()
-			Float::class -> value.toFloat()
-			Double::class -> value.toDouble()
-			Short::class, UShort::class -> value.toShort()
-			Byte::class, UByte::class -> value.toByte()
-			Char::class -> if (value.length == 1) value[0] else throw IllegalArgumentException("Cannot convert '$value' to Char")
-			List::class -> {
-				value.trim('[', ']').split(",").map {
-					if (parameters.isNotEmpty()) {
-						val nestedParams = if (parameters[0] == List::class || parameters[0] == Map::class) {
-							parameters[0].typeParameters.map { it1 -> it1 as KClass<*> }
-						} else emptyList()
-						convertValue(it.trim(), parameters[0], nestedParams)
-					} else it.trim()
-				}
-			}
-			Map::class -> {
-				value.split(",").associate {
-					val parts = it.split(":", limit = 2)
-					if (parts.size != 2) throw IllegalArgumentException("Invalid map entry format: $it")
-
-					val (key, mapVal) = parts
-
-					if (parameters.size >= 2) {
-						// Get nested parameters for key and value if any
-						val keyNestedParams = if (parameters[0] == List::class || parameters[0] == Map::class) {
-							parameters[0].typeParameters.map { it1 -> it1 as KClass<*> }
-						} else emptyList()
-
-						val valueNestedParams = if (parameters[1] == List::class || parameters[1] == Map::class) {
-							parameters[1].typeParameters.map { it1 -> it1 as KClass<*> }
-						} else emptyList()
-
-						convertValue(key.trim(), parameters[0], keyNestedParams) to
-								convertValue(mapVal.trim(), parameters[1], valueNestedParams)
-					} else key.trim() to mapVal.trim()
-				}
-			}
-			else -> throw IllegalArgumentException("Unsupported type: $type")
-		}
-	}
-
-	/**
-	 * Loads a configuration value from the config file.
-	 * This method handles different types of values (list, boolean, number, string, object).
-	 *
-	 * @param config The config object.
-	 * @param path The path in the config file where the value is located.
-	 * @return The loaded value.
-	 */
-	private fun loadConfigValue(config: Config, path: String): Any? {
-		val value = config.getValue(path)
-		return when (value.valueType()) {
-			ConfigValueType.LIST -> config.getList(path).unwrapped()
-			ConfigValueType.BOOLEAN -> config.getBoolean(path)
-			ConfigValueType.NUMBER -> config.getNumber(path)
-			ConfigValueType.STRING -> config.getString(path)
-			ConfigValueType.OBJECT -> config.getObject(path).unwrapped()
-			ConfigValueType.NULL -> if (config.getIsNull(path)) null else throw IllegalArgumentException("How a value supposed to be null is not null? What the hell did you do?")
-			null -> throw IllegalArgumentException("Unsupported type for config value")
-		}
+	fun getSubConfig(path: String): Config {
+		if (!config.hasPath(path))
+			throw IllegalArgumentException("No configuration found for path: $path")
+		return config.getConfig(path)
 	}
 }
 
@@ -279,6 +157,7 @@ class ConfigManager : KordExKoinComponent {
  * @property dmLogChannelId A channel ID to copy direct messages to.
  * @property paralyaId The ID of the Paralya guild. (can be changed for testing purposes)
  */
+@Serializable
 data class BotConfig(
 	var token: String = "",
 	var admins: List<ULong> = emptyList(),
