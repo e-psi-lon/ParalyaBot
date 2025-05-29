@@ -1,7 +1,7 @@
 package fr.paralya.bot.lg.data
 
 import fr.paralya.bot.common.config.ValidatedConfig
-import fr.paralya.bot.common.config.defined
+import fr.paralya.bot.common.config.appearsToBeSnowflake
 import io.konform.validation.Validation
 import io.konform.validation.ValidationResult
 import kotlinx.serialization.Serializable
@@ -21,20 +21,20 @@ data class LgConfig(
 	var mainCategory: ULong = 0u,
 	var aliveRole: ULong = 0u,
 	var deadRole: ULong = 0u
-): ValidatedConfig {
+) : ValidatedConfig {
 	@Transient
 	private val validator = Validation {
 		LgConfig::rolesCategory {
-			defined("Roles category ID")
+			appearsToBeSnowflake("Roles category ID")
 		}
 		LgConfig::mainCategory {
-			defined("Main category ID")
+			appearsToBeSnowflake("Main category ID")
 		}
 		LgConfig::aliveRole {
-			defined("Alive role ID")
+			appearsToBeSnowflake("Alive role ID")
 		}
 		LgConfig::deadRole {
-			defined("Dead role ID")
+			appearsToBeSnowflake("Dead role ID")
 		}
 	}
 

@@ -7,6 +7,7 @@ import dev.kordex.core.utils.loadModule
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.konform.validation.Validation
 import io.konform.validation.ValidationResult
+import io.konform.validation.constraints.minItems
 import io.konform.validation.constraints.minLength
 import io.konform.validation.onEach
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -43,18 +44,22 @@ class ConfigManager : KordExKoinComponent {
 	var botConfig: BotConfig
 
 	init {
-		loadConfig()
+		loadFile()
 		botConfig = Hocon.decodeFromConfig(getSubConfig("bot"))
 	}
 
 	fun reloadConfig() {
 		try {
 			loadFile()
+			val tempConfig = Hocon.decodeFromConfig<BotConfig>(getSubConfig("bot"))
+			// Validate the new bot config
+			validateConfig(tempConfig)
+			botConfig = tempConfig
 			// Then reload all registered configs
 			val toRemove = mutableListOf<String>()
 			registeredConfigs.forEach { name ->
 				val config = try {
-				 	getKoin().get<Any>(named(name))
+				 	getKoin().get<ValidatedConfig>(named(name))
 				}
 				catch (e: Exception) {
 					logger.warn(e) { "Failed to get config for $name. Its related plugin might has been removed" }
@@ -69,7 +74,9 @@ class ConfigManager : KordExKoinComponent {
 				}
 				loadModule(true) {
 					single {
-						Hocon.decodeFromConfig(configClass.serializer(), getSubConfig(configPath))
+						Hocon.decodeFromConfig(configClass.serializer(), getSubConfig(configPath)).also {
+							validateConfig(it)
+						}
 					} withOptions { named(name) }
 				}
 			}
@@ -81,15 +88,10 @@ class ConfigManager : KordExKoinComponent {
 	}
 
 	/**
-	 * Loads the configuration from the config file.
-	 * If the config file does not exist, it creates a default one.
-	 * It also loads the core bot configuration and any game-specific configurations.
+	 * Loads the configuration file into a [Config] object.
+	 * If the file does not exist, it creates a default configuration file.
+	 * It also handles any exceptions that may occur during the loading process.
 	 */
-	private fun loadConfig() {
-		loadFile()
-		botConfig = Hocon.decodeFromConfig(getSubConfig("bot"))
-	}
-
 	private fun loadFile() {
 		if (!configFile.exists())
 			createDefaultConfig()
@@ -132,7 +134,7 @@ class ConfigManager : KordExKoinComponent {
 	 *
 	 * @param name The name of the configuration, used as a key in the config file.
 	 */
-	inline fun <reified T : Any> registerConfig(name: String) {
+	inline fun <reified T : ValidatedConfig> registerConfig(name: String) {
 		logger.debug { "Registering config for $name at path games.${name.removeSuffix("Config")} with datatype ${T::class.simpleName}" }
 		val configObject = try {
 			Hocon.decodeFromConfig<T>(getSubConfig("games.${name.removeSuffix("Config").lowercase()}"))
@@ -140,6 +142,7 @@ class ConfigManager : KordExKoinComponent {
 			logger.error(e) { "Failed to find the configuration for name $name at path games.${name.removeSuffix("Config").lowercase()}. Please ensure it exists in the config file." }
 			exitProcess(1)
 		}
+		validateConfig(configObject)
 		loadModule(true) {
 			single<T> { configObject } withOptions { named(name) }
 		}
@@ -150,6 +153,17 @@ class ConfigManager : KordExKoinComponent {
 		if (!config.hasPath(path))
 			throw IllegalArgumentException("No configuration found for path: $path")
 		return config.getConfig(path)
+	}
+
+	fun validateConfig(config: ValidatedConfig) {
+		val result = config.validate()
+		if (result.isValid) {
+			logger.info { "Configuration for ${config::class.simpleName} is valid." }
+		} else {
+			logger.error { "Configuration for ${config::class.simpleName} is invalid due to the following errors:" +
+					" ${result.errors.joinToString("\n")}" }
+			exitProcess(1)
+		}
 	}
 }
 
@@ -174,18 +188,17 @@ data class BotConfig(
 			minLength(1) hint "Token must NOT be empty. Please provide it, it is a base requirement for the bot to work."
 		}
 		BotConfig::admins {
-			constrain("Admins list must NOT be empty") { it.isNotEmpty() }
+			minItems(1) hint "Admins list must have at least one item"
 			onEach {
-				defined("Admin ID") // Just to be sure that a real ID is provided
+				appearsToBeSnowflake("Admin ID") // Just to be sure that a real ID is provided
 			}
 		}
 		BotConfig::dmLogChannelId {
-			defined("DM log channel ID")
+			appearsToBeSnowflake("DM log channel ID")
 		}
 		BotConfig::paralyaId {
-			defined("Paralya guild ID")
+			appearsToBeSnowflake("Paralya guild ID")
 		}
-
 	}
 
 	override fun validate(): ValidationResult<BotConfig> {
