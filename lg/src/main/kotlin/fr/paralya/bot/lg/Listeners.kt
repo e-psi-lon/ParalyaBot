@@ -99,7 +99,7 @@ suspend fun LG.registerListeners() {
 
 	event<MessageUpdateEvent> {
 		action {
-			val oldMessage = event.old?.let { getCorrespondingMessage(MessageChannelBehavior(dmChannelId, kord), it) }
+			val oldMessage = event.old?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
 			val webhook = getWebhook(botCache.getChannelId(LgChannelType.PETITE_FILLE)!!, bot, "PF")
 			val newMessage = event.message.asMessage()
 			if (oldMessage != null) {
@@ -145,7 +145,7 @@ suspend fun LG.registerListeners() {
 	event<MessageDeleteEvent> {
 		action {
 			val oldMessage =
-				event.message?.let { getCorrespondingMessage(MessageChannelBehavior(dmChannelId, kord), it) }
+				event.message?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
 			if (oldMessage != null && event.message?.channelId == botCache.getChannelId(LgChannelType.PETITE_FILLE)) {
 				val webhook = getWebhook(botCache.getChannelId(LgChannelType.PETITE_FILLE)!!, bot, "PF")
 				try {

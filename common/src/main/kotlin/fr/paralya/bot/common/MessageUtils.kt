@@ -5,14 +5,16 @@ import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.channel.createMessage
 import dev.kord.core.entity.Message
 import dev.kord.rest.builder.message.create.UserMessageCreateBuilder
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import dev.kord.rest.request.RestRequestException
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+
+
+private val logger = KotlinLogging.logger("MessageUtils")
 
 /**
  * Sends a temporary message to a channel and deletes it after a specified delay.
@@ -23,9 +25,15 @@ import kotlin.time.Duration.Companion.seconds
  */
 suspend fun MessageChannelBehavior.sendTemporaryMessage(delay: Duration = 10.seconds, messageBuilder: UserMessageCreateBuilder.() -> Unit): Message {
 	return createMessage(messageBuilder).also {
-		CoroutineScope(Dispatchers.Default).launch {
+		it.kord.launch(
+			context = Dispatchers.IO + CoroutineName("TemporaryMessageDeletion-${it.id}"),
+		) {
 			delay(delay)
-			it.delete()
+			try {
+				it.delete()
+			} catch (e: RestRequestException) {
+				logger.error(e) { "Failed to delete temporary message" }
+			}
 		}
 	}
 }
@@ -63,24 +71,25 @@ fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
 /**
  * Retrieves the corresponding message in the channel based on the timestamp of the provided message.
  *
- * @param channel The channel where the messages are located.
  * @param message The message to find the corresponding message for.
  * @return The corresponding message if found, or null if not found.
  */
-suspend fun getCorrespondingMessage(channel: MessageChannelBehavior, message: Message): Message? {
+suspend fun MessageChannelBehavior.getCorrespondingMessage(message: Message): Message? {
 	val date = message.timestamp
 
-	channel.getMessagesBefore(Snowflake.max, 20)
+	val beforeMessage = getMessagesBefore(Snowflake.max, 20)
 		.filter { it.timestamp >= date }
 		.toList()
 		.sortedBy { it.timestamp }
-		.forEach { if (areMessagesSimilar(message, it)) return it }
+		.firstOrNull { areMessagesSimilar(message, it) }
 
-	channel.getMessagesAfter(Snowflake.min, 20)
+	if (beforeMessage != null) return beforeMessage
+	return getMessagesAfter(Snowflake.min, 20)
 		.filter { it.timestamp <= date }
 		.toList()
 		.sortedByDescending { it.timestamp }
-		.forEach { if (areMessagesSimilar(message, it)) return it }
-
-	return null
+		.firstOrNull { areMessagesSimilar(message, it) } ?: run {
+			logger.warn { "No corresponding similar message found for message ${message.id} when searching in channel $id" }
+			null
+		}
 }

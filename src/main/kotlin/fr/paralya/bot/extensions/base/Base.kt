@@ -65,7 +65,7 @@ class Base : Extension() {
 			action {
 				if (event.old?.getGuildOrNull() == null && event.old?.author?.isSelf != true) {
 					val oldMessage =
-						event.old?.let { getCorrespondingMessage(MessageChannelBehavior(dmChannelId, kord), it) }
+						event.old?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
 
 					if (oldMessage != null) {
 						sendAsWebhook(
@@ -90,7 +90,7 @@ class Base : Extension() {
 			action {
 				if (event.getGuildOrNull() == null && event.message?.author?.isSelf != true) {
 					val oldMessage =
-						event.message?.let { getCorrespondingMessage(MessageChannelBehavior(dmChannelId, kord), it) }
+						event.message?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
 
 					if (oldMessage != null && event.message != null) {
 						val webhook = getWebhook(dmChannelId, bot, "DM")
