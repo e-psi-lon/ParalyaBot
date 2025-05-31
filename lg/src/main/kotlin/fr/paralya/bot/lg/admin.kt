@@ -11,7 +11,6 @@ import dev.kordex.core.components.forms.ModalForm
 import fr.paralya.bot.common.config.BotConfig
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.translateWithContext
-import fr.paralya.bot.lg.i18n.Translations
 import org.koin.core.component.inject
 
 /**
@@ -32,7 +31,7 @@ fun <C : SlashCommandContext<*, A, M>, A : Arguments, M : ModalForm> SlashComman
 		if (configManager.botConfig.admins.contains(this.member?.id?.value)) {
 			action(modal)
 		} else {
-			val text = Translations.Lg.System.Permissions.notAdmin.translateWithContext()
+			val text = I18n.Lg.System.Permissions.notAdmin.translateWithContext()
 			when (this) {
 				is PublicSlashCommandContext<*, *> -> respond { content = text }
 				is EphemeralSlashCommandContext<*, *> -> respond { content = text }

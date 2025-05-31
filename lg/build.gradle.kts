@@ -15,8 +15,10 @@ kordEx {
 	}
 
 	i18n {
-		classPackage = "fr.paralya.bot.lg.i18n"
+		classPackage = "fr.paralya.bot.lg"
+		className = "I18n"
 		translationBundle = "paralyabot-lg"
+		publicVisibility = false
 	}
 }
 

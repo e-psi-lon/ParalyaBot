@@ -13,8 +13,8 @@ import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.extensions.event
 import fr.paralya.bot.common.*
 import fr.paralya.bot.common.config.ConfigManager
-import fr.paralya.bot.common.i18n.Translations.Common
-import fr.paralya.bot.i18n.Translations
+import fr.paralya.bot.common.I18n.Common
+import fr.paralya.bot.I18n
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.component.inject
 
@@ -101,29 +101,29 @@ class Base : Extension() {
 		}
 
 		ephemeralSlashCommand(::StartGameArguments) {
-			name = Translations.StartGame.Command.name
-			description = Translations.StartGame.Command.description
+			name = I18n.StartGame.Command.name
+			description = I18n.StartGame.Command.description
 			action {
 				val gameRegistry = getKoin().get<GameRegistry>()
 				this@Base.kord.editPresence {
 					gameMode(gameRegistry.getGameMode(arguments.game))
 				}
 				respond {
-					content = Translations.StartGame.Response.success.translateWithContext(arguments.game)
+					content = I18n.StartGame.Response.success.translateWithContext(arguments.game)
 				}
 			}
 		}
 
 		ephemeralSlashCommand {
-			name = Translations.StopGame.Command.name
-			description = Translations.StopGame.Command.description
+			name = I18n.StopGame.Command.name
+			description = I18n.StopGame.Command.description
 			action {
 				val bKord = this@Base.kord
 				bKord.editPresence {
 					gameMode(GameRegistry.NONE)
 				}
 				respond {
-					content = Translations.StopGame.Response.success.translateWithContext()
+					content = I18n.StopGame.Response.success.translateWithContext()
 				}
 			}
 		}
@@ -138,8 +138,8 @@ class Base : Extension() {
 	 */
 	inner class StartGameArguments : Arguments() {
 		val game by stringChoice {
-			name = Translations.StartGame.Argument.Game.name
-			description = Translations.StartGame.Argument.Game.description
+			name = I18n.StartGame.Argument.Game.name
+			description = I18n.StartGame.Argument.Game.description
 			choices = getKoin().get<GameRegistry>().getGameModes()
 		}
 	}

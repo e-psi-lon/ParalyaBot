@@ -16,7 +16,7 @@ import fr.paralya.bot.common.translateWithContext
 import fr.paralya.bot.lg.data.LgChannelType
 import fr.paralya.bot.lg.data.getChannelId
 import fr.paralya.bot.lg.data.getCurrentVote
-import fr.paralya.bot.lg.i18n.Translations.Lg
+import fr.paralya.bot.lg.I18n.Lg
 
 /**
  * Registers the commands for voting in the game.

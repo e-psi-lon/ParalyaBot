@@ -4,7 +4,7 @@ import dev.kord.common.entity.PresenceStatus
 import dev.kord.gateway.builder.PresenceBuilder
 import dev.kordex.core.i18n.types.Key
 import dev.kordex.core.koin.KordExKoinComponent
-import fr.paralya.bot.common.i18n.Translations
+import fr.paralya.bot.common.I18n
 
 
 /**
@@ -60,7 +60,7 @@ class GameRegistry : KordExKoinComponent {
 	}
 
 	companion object {
-		val NONE = Translations.GameMode.none to "none"
+		val NONE = I18n.GameMode.none to "none"
 	}
 }
 

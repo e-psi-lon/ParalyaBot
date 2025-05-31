@@ -15,7 +15,7 @@ import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
 import fr.paralya.bot.common.*
 import fr.paralya.bot.common.config.ConfigManager
-import fr.paralya.bot.common.i18n.Translations.Common
+import fr.paralya.bot.common.I18n.Common
 import fr.paralya.bot.lg.data.*
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map

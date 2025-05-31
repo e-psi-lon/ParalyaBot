@@ -4,7 +4,8 @@ plugins {
 
 kordEx {
 	i18n {
-		classPackage = "fr.paralya.bot.common.i18n"
+		classPackage = "fr.paralya.bot.common"
+		className = "I18n"
 		translationBundle = "paralyabot-common"
 	}
 }

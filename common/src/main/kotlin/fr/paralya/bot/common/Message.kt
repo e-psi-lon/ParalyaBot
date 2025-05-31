@@ -2,7 +2,7 @@ package fr.paralya.bot.common
 
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.i18n.types.Key
-import fr.paralya.bot.common.i18n.Translations.Modal
+import fr.paralya.bot.common.I18n.Modal
 
 
 /**
