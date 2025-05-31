@@ -5,7 +5,6 @@ import dev.kord.common.entity.Permission
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
 import dev.kord.core.behavior.RoleBehavior
-import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.execute
 import dev.kord.core.cache.data.UserData
 import dev.kord.core.entity.Member
@@ -25,7 +24,6 @@ import dev.kordex.core.utils.permissionsForMember
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 
 /**
@@ -160,47 +158,6 @@ fun Flow<Member>.filterByRole(role: RoleBehavior): Flow<Member> {
 	return filter { it.hasRole(role) }
 }
 
-
-/**
- * Checks if two messages are similar based on their content and attachments.
- *
- * @param msg1 The first message to compare.
- * @param msg2 The second message to compare.
- * @return `true` if the messages are similar, `false` otherwise.
- */
-fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
-	if (msg1.content != msg2.content) return false
-
-	val attachments1 = msg1.attachments.map { Triple(it.filename, it.size, it.isSpoiler) }.sortedBy { it.first }
-	val attachments2 = msg2.attachments.map { Triple(it.filename, it.size, it.isSpoiler) }.sortedBy { it.first }
-
-	return attachments1 == attachments2
-}
-
-/**
- * Retrieves the corresponding message in the channel based on the timestamp of the provided message.
- *
- * @param channel The channel where the messages are located.
- * @param message The message to find the corresponding message for.
- * @return The corresponding message if found, or null if not found.
- */
-suspend fun getCorrespondingMessage(channel: MessageChannelBehavior, message: Message): Message? {
-	val date = message.timestamp
-
-	channel.getMessagesBefore(Snowflake.max, 20)
-		.filter { it.timestamp >= date }
-		.toList()
-		.sortedBy { it.timestamp }
-		.forEach { if (areMessagesSimilar(message, it)) return it }
-
-	channel.getMessagesAfter(Snowflake.min, 20)
-		.filter { it.timestamp <= date }
-		.toList()
-		.sortedByDescending { it.timestamp }
-		.forEach { if (areMessagesSimilar(message, it)) return it }
-
-	return null
-}
 
 /**
  * Converts a [DiscordUser] to a [User] using the provided [Kord] instance.

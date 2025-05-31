@@ -41,6 +41,8 @@ suspend fun main(args: Array<String>) {
  * @return An instance of [ExtensibleBot], ready to be started.
  */
 suspend fun buildBot(args: Array<String>): ExtensibleBot {
+	// We need to define a first instance of ConfigManager to access the bot token.
+	// Then the bot will be configured, and the ConfigManager will be replaced by the one defined in the Koin module
 	val firstConfigManager = ConfigManager()
 	val token = firstConfigManager.botConfig.token
 	val bot = ExtensibleBot(token) {
@@ -49,12 +51,13 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 		logger.info { "Starting bot in ${if (devMode) "development" else "production"} mode" }
 		extensions {
 			add(::Base)
-			add(::LG)
+			add(::LG) // Loaded manually until plugin system implementation is complete
 			help {
 				enableBundledExtension = false
 			}
 		}
 
+		// Some privileged intents are required for the bot to function properly
 		@OptIn(PrivilegedIntent::class)
 		intents {
 			+Intent.GuildMembers
@@ -62,6 +65,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 			+Intent.DirectMessages
 		}
 
+		// Configure internationalization with French as the default language
 		i18n {
 			defaultLocale = SupportedLocales.FRENCH
 			applicationCommandLocale(SupportedLocales.FRENCH)
@@ -72,6 +76,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 		presence { gameMode(GameRegistry.NONE) }
 
 		errorResponse { message, type ->
+			// TODO: The message should be translated based on the current locale instead of being hardcoded in French
 			embed {
 				title = "Erreur"
 				description = "Une erreur est survenue: ${message.translate()}, de type: $type"
@@ -92,6 +97,8 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 					}
 				}
 
+				// Register game-specific configs manually until the plugin system is implemented
+				// In the future, plugins will register their own config
 				val configManager = getKoin().get<ConfigManager>(named("configManager"))
 				configManager.registerConfig<LgConfig>("lgConfig")
 			}
