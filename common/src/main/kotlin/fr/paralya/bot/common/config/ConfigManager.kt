@@ -186,10 +186,10 @@ data class BotConfig(
 	@Transient
 	private val validator = Validation {
 		BotConfig::token {
-			minLength(1) hint "Token must NOT be empty. Please provide it, it is a base requirement for the bot to work."
+			defined() hint "Token must NOT be empty. Please provide it, it is a base requirement for the bot to work."
 		}
 		BotConfig::admins {
-			minItems(1) hint "Admins list must have at least one item"
+			defined() hint "Admins list must have at least one item"
 			onEach {
 				appearsToBeSnowflake("Admin ID") // Just to be sure that a real ID is provided
 			}

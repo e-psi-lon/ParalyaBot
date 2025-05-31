@@ -29,5 +29,19 @@ fun ValidationBuilder<ULong>.appearsToBeSnowflake(displayName: String) =
 	constrain("$displayName must be a valid Discord snowflake and it appears not to be") {
 		it > (1UL shl 21) && it < ULong.MAX_VALUE
 				&& ((it shr 22) + DISCORD_EPOCH) <= (System.currentTimeMillis() + 60_000).toULong()
-
 	}
+
+fun <T> ValidationBuilder<T>.defined(displayName: String? = null) = constrain(displayName?.let { "$it must be defined and it appears not to be" } ?: "") {
+	when (it) {
+		is String -> it.isNotBlank()
+		is Collection<*> -> it.isNotEmpty()
+		is Map<*, *> -> it.isNotEmpty()
+		is Number -> it.toDouble() != 0.0
+		is ULong -> it != 0UL
+		is UInt -> it != 0U
+		// Boolean values (true or false) are considered defined
+		// Use `Boolean? = null` in config classes to represent undefined Boolean values
+		null -> false
+		else -> true
+	}
+}
