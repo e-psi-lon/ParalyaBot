@@ -35,13 +35,9 @@ subprojects {
 	apply(plugin = "kotlin")
 
 	dependencies {
-		testImplementation(kotlin("test"))
-		testImplementation(libraries.koin.test)  // For tests that involve Koin
-		testImplementation(libraries.mockk)  // Allow mocking in tests
 		if (name != "common") {
 			implementation(typesafeProjects.common) // The common subproject serve as a base for all other subprojects
 		}
-		implementation(libraries.konform) // For config validation
 	}
 }
 

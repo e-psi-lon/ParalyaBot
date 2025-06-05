@@ -21,10 +21,13 @@ repositories {
 val byteBuddyAgent: Configuration by configurations.creating
 
 dependencies {
-	testImplementation(kotlin("test"))
+	testApi(kotlin("test"))
+	testApi(libs.koin.test)  // For tests that involve Koin
+	testApi(libs.mockk)  // Allow mocking in tests
 	implementation(libs.logback)
 	implementation(libs.typesafe.config)
 	implementation(libs.kotlinx.serialization.hocon)
+	api(libs.konform)
 	byteBuddyAgent("net.bytebuddy:byte-buddy-agent:1.17.5")
 }
 
