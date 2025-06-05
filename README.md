@@ -63,10 +63,8 @@ paralya-bot/
 
 ### For Users
 
-1. Download the latest release from the [Releases](https://github.com/paralya/paralyabot/releases) page
-2. Create a `config.conf` file in the same directory as the JAR (see Configuration section)
-3. Create a `games` directory in the same directory as the JAR for plugins
-4. Run the bot using `java -jar paralya-bot-x.x.x.jar`
+- If you are an admin of the Paralya Discord server, you can directly ask me on Discord to get a pre-built JAR file.
+- If you want to self-host for your own server, please follow the Developers instruction below to set up the bot. You'll need to edit some values and to have some basic knowledge of Kotlin and Gradle as well as a Discord bot 
 
 ### For Developers
 
@@ -75,7 +73,7 @@ paralya-bot/
    git clone https://github.com/paralya/paralyabot.git
    cd paralyabot
    ```
-2. Create a `config.conf` file in the project root (see Configuration section)
+2. Create a `config.conf` file in the project root (see the Configuration section)
 3. Build and run as described in the Building section
 
 ## Setup and Configuration
