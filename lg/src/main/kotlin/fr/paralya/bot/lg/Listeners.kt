@@ -1,10 +1,12 @@
 package fr.paralya.bot.lg
 
+import dev.kord.cache.api.DataCache
 import dev.kord.common.entity.Permission
 import dev.kord.common.entity.Permissions
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.behavior.channel.MessageChannelBehavior
+import dev.kord.core.behavior.channel.TopGuildChannelBehavior
 import dev.kord.core.behavior.edit
 import dev.kord.core.entity.PermissionOverwrite
 import dev.kord.core.entity.channel.TopGuildChannel
@@ -38,6 +40,7 @@ private val requiredMainChannels = listOf(
 	LgChannelType.VILLAGE,
 )
 
+private const val WEBHOOK_NAME = "PF"
 /**
  * Registers all event listeners for the Werewolf (Loup-Garou) game.
  *
@@ -55,12 +58,8 @@ suspend fun LG.registerListeners() {
 
 			if (message.channelId == botCache.getChannelId(LgChannelType.INTERVIEW) && message.author?.id in botCache.getInterviews()) {
 				botCache.removeInterview(message.author!!.id)
-				(message.channel as TopGuildChannel).addOverwrite(
-					PermissionOverwrite.forMember(
-						message.author!!.id,
-						denied = Permissions(Permission.SendMessages)
-					)
-				)
+				(message.channel as TopGuildChannelBehavior)
+					.removeMemberPermission(message.author!!.id, Permission.SendMessages)
 			} else if (
 				message.channelId == botCache.getChannelId(LgChannelType.LOUPS_CHAT) && !message.author.isAdmin(
 					botConfig
@@ -73,15 +72,14 @@ suspend fun LG.registerListeners() {
 					botCache.setLastWerewolfMessageSender(message.author!!.id)
 					botCache.updateProfilePicture()
 				}
-				val wolfName = if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme"
-				val wolfAvatar = if (botCache.getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1"
+				val (wolfName, wolfAvatar) = botCache.getBotAnonymousIdentity()
 				logger.debug { "Avatar is $wolfAvatar and name is $wolfName" }
 				sendAsWebhook(
 					bot,
 					botCache.getChannelId(LgChannelType.PETITE_FILLE)!!,
 					wolfName,
 					getAsset(wolfAvatar, this@LG.prefix),
-					"PF"
+					WEBHOOK_NAME
 				) {
 					content = message.content
 
@@ -100,7 +98,7 @@ suspend fun LG.registerListeners() {
 	event<MessageUpdateEvent> {
 		action {
 			val oldMessage = event.old?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
-			val webhook = getWebhook(botCache.getChannelId(LgChannelType.PETITE_FILLE)!!, bot, "PF")
+			val webhook = getWebhook(botCache.getChannelId(LgChannelType.PETITE_FILLE)!!, bot, WEBHOOK_NAME)
 			val newMessage = event.message.asMessage()
 			if (oldMessage != null) {
 				try {
@@ -118,17 +116,16 @@ suspend fun LG.registerListeners() {
 						}
 					}
 				} catch (e: Exception) {
-					val wolfName = if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme"
-					val wolfAvatar = if (botCache.getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1"
+					val (wolfName, wolfAvatar) = botCache.getBotAnonymousIdentity()
 					sendAsWebhook(
 						bot,
 						botCache.getChannelId(LgChannelType.PETITE_FILLE)!!,
 						wolfName,
 						wolfAvatar,
-						"PF"
+						WEBHOOK_NAME
 					) {
 						content = newMessage.content
-						embed {
+						if (newMessage.referencedMessage != null) embed {
 							title = Common.Transmission.Reference.title.translateWithContext()
 							description = newMessage.referencedMessage!!.content
 						}
@@ -147,7 +144,7 @@ suspend fun LG.registerListeners() {
 			val oldMessage =
 				event.message?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
 			if (oldMessage != null && event.message?.channelId == botCache.getChannelId(LgChannelType.PETITE_FILLE)) {
-				val webhook = getWebhook(botCache.getChannelId(LgChannelType.PETITE_FILLE)!!, bot, "PF")
+				val webhook = getWebhook(botCache.getChannelId(LgChannelType.PETITE_FILLE)!!, bot, WEBHOOK_NAME)
 				try {
 					webhook.token?.let { webhook.deleteMessage(it, oldMessage.id) }
 				} catch (e: Exception) {
@@ -159,11 +156,13 @@ suspend fun LG.registerListeners() {
 
 	event<ReactionAddEvent> {
 		action {
-
+			// TODO: Handle reaction add events for PF and other
 		}
 	}
 	event<ReactionRemoveEvent> {
-		action { }
+		action {
+			// TODO: Handle reaction remove events for PF and other
+		}
 	}
 
 	event<ReadyEvent> {
@@ -223,3 +222,14 @@ private suspend fun collectChannelsFromCategory(categoryId: Snowflake, guild: Gu
 		.toMap()
 		.filterKeys { it.isNotBlank() && it != "_".repeat(it.length) }
 }
+
+/**
+ * Gets the anonymous identity for the bot in the game.
+ *
+ * This function retrieves the bot's anonymous identity based on the profile picture (and technically name too) state.
+ * It returns a pair containing the bot's name and resource ID for the avatar.
+ *
+ * @return A pair containing the bot's name and resource ID for the avatar.
+ */
+private suspend fun DataCache.getBotAnonymousIdentity(): Pair<String, String> =
+	(if (getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme") to (if (getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1")
