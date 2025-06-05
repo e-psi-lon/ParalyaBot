@@ -1,6 +1,6 @@
 # ParalyaBot
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 [![JDK](https://img.shields.io/badge/JDK-21%2B-blue.svg)](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
 [![Discord](https://img.shields.io/badge/Discord-Paralya-7289DA.svg)](https://discord.gg/gQVxH7bGsP)
 
@@ -11,6 +11,16 @@ A Discord bot for the Paralya Discord server, built with Kotlin and KordEx.
 ParalyaBot is a modular Discord bot designed to facilitate community management and games for the Paralya community.
 The current implementation includes a Werewolf (Loup-Garou) game module directly integrated in the core bot.
 Once the plugin system is totally implemented, this game module, along with any potential other, will be moved to a dedicated plugin.
+
+## Support
+
+This bot is designed and supported only for use on the Paralya Discord server (ID: `883659215590277181`).
+To get support, you can:
+- Open an issue on the [GitHub repository](https://github.com/paralya/paralyabot/issues) (preferred method)
+- DM me on Discord (`e_psi_lon`) 
+- Send me a message through the [Paralya Discord server](https://discord.gg/gQVxH7bGsP) (only if none of the above methods work)
+
+You are free to self-host under the terms of the AGPL-3.0 license, but functionality and support may not be guaranteed outside that context.
 
 ## Project Structure
 
@@ -252,4 +262,4 @@ Contributions are welcome! Please follow these steps:
 
 ## License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0) — see the [LICENSE](LICENSE) file for details.

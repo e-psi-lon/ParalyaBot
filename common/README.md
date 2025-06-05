@@ -1,6 +1,6 @@
 # ParalyaBot - Common Module
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
 Core utilities and shared functionality for the ParalyaBot Discord bot.
 
