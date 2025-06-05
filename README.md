@@ -2,9 +2,9 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![JDK](https://img.shields.io/badge/JDK-21%2B-blue.svg)](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
-[![Discord](https://img.shields.io/badge/Discord-Paralya-7289DA.svg)](https://discord.gg/paralya)
+[![Discord](https://img.shields.io/badge/Discord-Paralya-7289DA.svg)](https://discord.gg/gQVxH7bGsP)
 
-A Discord bot for the Paralya community, built with Kotlin and KordEx.
+A Discord bot for the Paralya Discord server, built with Kotlin and KordEx.
 
 ## Overview
 
