@@ -122,10 +122,10 @@ Build the deployable JAR:
 ./gradlew shadowJar
 ```
 
-Export the Werewolf game plugin:
+Export a plugin as a ready-to-use ZIP file for your `games` directory:
 
 ```bash
-./gradlew :lg:exportToGames
+./gradlew :plugin-name:distZip
 ```
 
 ## Running
@@ -133,7 +133,7 @@ Export the Werewolf game plugin:
 Run the bot using:
 
 ```bash
-java -jar build/libs/paralya-bot-1.0-SNAPSHOT.jar
+java -jar build/libs/paralya-bot-$version.jar
 ```
 
 For development, you can also run directly from Gradle:
@@ -158,89 +158,10 @@ See the LG module [README](lg/README.md) for more details on the Werewolf game i
 
 ## Development
 
-### Game Plugin Development Guide
+### Adding New Games
 
-To create a new game module, follow these steps:
-
-1. Create a new module directory and configure `build.gradle.kts`:
-
-```kotlin
-plugins {
-    kotlin("jvm") version "2.1.21"
-    kotlin("plugin.serialization") version "2.1.21"
-    id("dev.kordex.gradle.kordex")
-}
-
-group = "fr.paralya.bot"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
-
-dependencies {
-    implementation("fr.paralya.bot:common:1.0-SNAPSHOT") // Replace with your common module version (this module isn't yet published)
-    // Add other dependencies as needed
-}
-
-kordex {
-    plugins {
-        id = "my-plugin-id" // Replace with your plugin ID
-        version = getVersion()
-        description = "My great plugin description" // Replace with your plugin description
-        pluginClass = "fr.paralya.bot.my-game.MyGamePlugin" // Replace with your plugin class
-    }
-   
-    i18n {
-        classPackage = "fr.paralya.bot.my-game" // Replace with your plugin package
-        className = "I18n"
-        translationBundle = "paralyabot-my-game" // Replace with your translation bundle name
-        publicVisibility = false
-    }
-}
-```
-
-2. Create the main plugin class:
-
-```kotlin
-package fr.paralya.bot.myplugin
-
-import dev.kordex.core.plugins.KordExPlugin
-
-class MyGamePlugin : KordExPlugin() {
-    override suspend fun setup() {
-		// Register commands
-		// Event listeners
-		// And more
-	}
-}
-```
-
-3. Create a configuration class if needed and ensure it implements `ValidatedConfig`:
-
-```kotlin
-@Serializable
-data class MyGameConfig(
-    var enabled: Boolean = true,
-    var channelId: ULong = 0UL
-) : ValidatedConfig {
-    @Transient
-    private val validator = Validation {
-        MyGameConfig::channelId { appearsToBeSnowflake("Channel ID") }
-    }
-
-    override fun validate(): ValidationResult<MyGameConfig> {
-        return validator(this)
-    }
-}
-```
-
-4. Set up internationalization by creating translation files in `src/main/resources/translations/`
-
-5. Build and export your plugin in a built ZIP file to place in your local `games` directory:
-```bash
-./gradlew :yourgame:distZip
-```
+The complete instructions for adding a new game module is available in the [common module README](common/README.md).
+You'll find a step-by-step guide on how to create a new game configuration and implement the game logic.
 
 ## Troubleshooting
 

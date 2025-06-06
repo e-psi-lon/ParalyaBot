@@ -203,6 +203,63 @@ games {
 
 ## Extension Development
 
+### Initial setup
+
+1. Create a new module directory and configure `build.gradle.kts`:
+
+```kotlin
+plugins {
+    kotlin("jvm") version KOTLIN_VERSION
+    kotlin("plugin.serialization") version KOTLIN_VERSION
+    id("dev.kordex.gradle.kordex")
+}
+
+group = "fr.paralya.bot"
+version = "1.0-SNAPSHOT" // Replace with your plugin version
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation(projects.common) // Reference to the Common module (if developing from this repo)
+    implementation("fr.paralya.bot:common:$version") // Replace with your common module version (this module isn't yet published)
+    // Add other dependencies as needed
+}
+
+kordex {
+    plugins {
+        id = "my-plugin-id" // Replace with your plugin ID
+        version = getVersion()
+        description = "My great plugin description" // Replace with your plugin description
+        pluginClass = "fr.paralya.bot.my-game.MyGamePlugin" // Replace with your plugin class
+    }
+   
+    i18n {
+        classPackage = "fr.paralya.bot.my-game" // Replace with your plugin package
+        className = "I18n"
+        translationBundle = "paralyabot-my-game" // Replace with your translation bundle name
+        publicVisibility = false
+    }
+}
+```
+
+2. Create the main plugin class:
+
+```kotlin
+package fr.paralya.bot.myplugin
+
+import dev.kordex.core.plugins.KordExPlugin
+
+class MyGamePlugin : KordExPlugin() {
+    override suspend fun setup() {
+		// Register commands
+		// Event listeners
+		// And more
+	}
+}
+```
+
 ### Adding New Configuration Types
 
 1. Create a data class implementing `ValidatedConfig`:
@@ -248,21 +305,30 @@ Add your utility functions to the appropriate class in a dedicated file:
 
 ```kotlin
 // In a file like DiscordExtensions.kt
-suspend fun TextChannel.lockForRole(roleId: ULong) {
-    this.editRolePermission(roleId.snowflake) {
+suspend fun TopGuildChannelBehavior.lockForRole(roleId: ULong) {
+    editRolePermission(roleId.snowflake) {
         denied = Permissions {
             +Permission.SendMessages
         }
     }
 }
 
-suspend fun TextChannel.unlockForRole(roleId: ULong) {
-    this.editRolePermission(roleId.snowflake) {
+suspend fun TopGuildChannelBehavior.unlockForRole(roleId: ULong) {
+    editRolePermission(roleId.snowflake) {
         allowed = Permissions {
             +Permission.SendMessages
         }
     }
 }
+```
+
+### Build and export
+
+To build and export your newly created plugin, KordEx provides a Gradle task that packages your module into a ZIP file.
+Run the following command in your terminal:
+
+```bash
+./gradlew :myplugin:distZip
 ```
 
 ## Troubleshooting
@@ -280,3 +346,7 @@ Contributions to improve the Common module are welcome! Please ensure:
 1. All new functionality has appropriate tests
 2. Code follows the project's style guidelines
 3. Documentation is updated to reflect changes
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). See the [LICENSE](../LICENSE) file for details.
