@@ -1,43 +1,60 @@
 package fr.paralya.bot
 
+import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.spi.IThrowableProxy
 import ch.qos.logback.core.LayoutBase
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.LinkedHashMap
 
 class LogFormater : LayoutWrappingEncoder<ILoggingEvent>() {
 	init {
 		layout = object : LayoutBase<ILoggingEvent>() {
-			private val format = "[%d{dd/MM/yyyy HH:mm:ss}] %highlight(%-5level) - %msg%ex\n"
+			private val format = "[%d{dd/MM/yyyy HH:mm:ss}] %highlight(%-5level) [%logger] - %msg%ex\n"
+			private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+			private val date = Date()
+			override fun doLayout(event: ILoggingEvent) = StringBuilder(format.length + 100).apply {
+				append("[")
+				append(dateFormat.format(Date(event.timeStamp)))
+				append("] ")
+				append(highlightLevel(event.level.toString()))
+				append(" [")
+				append(formatLoggerName(event))
+				append("] - ")
+				append(event.formattedMessage)
+				event.throwableProxy?.let { append(formatException(it)) }
+				append("\n")
+			}.toString()
 
-			override fun doLayout(event: ILoggingEvent): String {
-				return format
-					.replace("%highlight(%-5level)", highlightLevel(event.level.toString()))
-					.replace("%msg", event.formattedMessage)
-					.replace("%logger", event.loggerName)
-					.replace(
-						"%d{dd/MM/yyyy HH:mm:ss}",
-						SimpleDateFormat("dd/MM/yyyy HH:mm:ss").format(Date(event.timeStamp))
-					).replace("%ex", event.throwableProxy?.let { formatException(it) } ?: "")
+
+			private val loggerNameCache = object : LinkedHashMap<String, String>() {
+				override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean {
+					return size > 100 // Limit cache size to 1000 entries
+				}
+			}
+			private fun formatLoggerName(log: ILoggingEvent): String {
+				val loggerName = log.loggerName
+				if (log.level.isGreaterOrEqual(Level.ERROR)) return loggerName
+
+				return loggerNameCache.getOrPut(loggerName) {
+					if (loggerName.length < 20) return@getOrPut loggerName
+					val parts = loggerName.split(".")
+					if (parts.size <= 2) loggerName else parts.last()
+				}
 			}
 
-			/**
-			 * Highlights the log level with ANSI color codes.
-			 *
-			 * @param level The log level to highlight.
-			 * @return The highlighted log level.
-			 */
+			private val levelMap = mapOf(
+				"DEBUG" to "\u001B[34mDEBUG\u001B[0m",
+				"INFO" to "\u001B[32mINFO\u001B[0m",
+				"WARN" to "\u001B[33mWARN\u001B[0m",
+				"ERROR" to "\u001B[31mERROR\u001B[0m",
+				"CRITICAL" to "\u001B[41mCRITICAL\u001B[0m"
+			)
+
 			private fun highlightLevel(level: String): String {
-				return when (level) {
-					"DEBUG" -> "\u001B[34m$level\u001B[0m"  // Blue
-					"INFO" -> "\u001B[32m$level\u001B[0m"   // Green
-					"WARN" -> "\u001B[33m$level\u001B[0m"   // Yellow
-					"ERROR" -> "\u001B[31m$level\u001B[0m"  // Red
-					"CRITICAL" -> "\u001B[41m$level\u001B[0m" // Red background
-					else -> level
-				}
+				return levelMap[level] ?: level
 			}
 
 			/**
@@ -47,7 +64,7 @@ class LogFormater : LayoutWrappingEncoder<ILoggingEvent>() {
 			 * @return The formatted stack trace.
 			 */
 			private fun formatException(throwableProxy: IThrowableProxy): String {
-				val stackTrace = StringBuilder()
+				val stackTrace = StringBuilder(256)
 				stackTrace.append("\n\t").append(throwableProxy.className)
 				if (throwableProxy.message != null) {
 					stackTrace.append(": ").append(throwableProxy.message)

@@ -20,6 +20,9 @@ import org.koin.core.module.dsl.named
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.withOptions
 import org.koin.core.qualifier.named
+import ch.qos.logback.classic.Level
+import ch.qos.logback.classic.Logger
+import org.slf4j.LoggerFactory
 
 /**
  * Main entry point for the Paralya's Discord bot.
@@ -31,6 +34,11 @@ import org.koin.core.qualifier.named
 suspend fun main(args: Array<String>) {
 	val bot = buildBot(args)
 	bot.start()
+}
+
+private fun configureLogging(devMode: Boolean) {
+	val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
+	rootLogger.level = if (devMode) Level.DEBUG else Level.INFO
 }
 
 
@@ -48,6 +56,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 	val bot = ExtensibleBot(token) {
 		val logger = KotlinLogging.logger("ParalyaBot")
 		devMode = if (!devMode) args.contains("--dev") else true
+		configureLogging(devMode)
 		logger.info { "Starting bot in ${if (devMode) "development" else "production"} mode" }
 		extensions {
 			add(::Base)
