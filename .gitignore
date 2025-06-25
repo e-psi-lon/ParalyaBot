@@ -46,8 +46,10 @@ bin/
 
 ## Env & runtime files
 .env
+.venv
 data/**
 logs/**
 games/**
 config.conf
+monitor.*
 

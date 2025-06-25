@@ -27,6 +27,8 @@ repositories {
 }
 
 dependencies {
+	testImplementation(libs.mockk)
+	testImplementation(libs.koin.test)
 }
 
 tasks.test {

@@ -36,7 +36,8 @@ subprojects {
 
 	dependencies {
 		if (name != "common") {
-			implementation(typesafeProjects.common) // The common subproject serve as a base for all other subprojects
+			compileOnly(typesafeProjects.common) // The common subproject serve as a base for all other subprojects
+			testImplementation(typesafeProjects.common) // The common subproject also includes test dependencies
 		}
 	}
 }
