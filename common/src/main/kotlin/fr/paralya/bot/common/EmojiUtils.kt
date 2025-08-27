@@ -45,6 +45,7 @@ suspend fun Message.addReactions(emojis: List<String>) {
 suspend fun Message.addReactions(vararg emojis: String) {
 	addReactions(emojis.toList())
 }
+
 /**
  * Formats a ReactionEmoji for display in a message.
  *
