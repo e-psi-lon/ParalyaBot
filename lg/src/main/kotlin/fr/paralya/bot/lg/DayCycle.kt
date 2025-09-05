@@ -38,7 +38,7 @@ enum class LGState {
  *
  * @receiver The instance of the [LG] extension that will handle the commands.
  */
-context(LG)
+context(lg: LG)
 suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayCycleCommands() {
 	ephemeralSubCommand(::DayArguments) {
 		name = Lg.Day.Command.name
@@ -47,9 +47,9 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 		adminOnly {
 			val force = arguments.force
 			val kill = arguments.kill
-			val botCache = this@LG.botCache
+			val botCache = lg.botCache
 			val gameData = botCache.getGameData()
-			val voteManager = this@LG.voteManager
+			val voteManager = lg.voteManager
 
 			if (gameData.state == DAY) {
 				respond { content = Lg.Day.Response.Error.alreadyDay.translateWithContext() }
@@ -65,11 +65,10 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					is VoteResult.NoVotes -> return@adminOnly
 					is VoteResult.Tie -> {
 						sendAsWebhook(
-							this@LG.bot,
+							lg.bot,
 							botCache.getChannelId(LgChannelType.LOUPS_VOTE)!!,
 							"ParalyaLG",
-							getAsset("paralya_lg", this@LG.prefix)
-						) {
+							getAsset("paralya_lg", lg.prefix)	) {
 							content = Lg.DayCycle.Response.Other.equality.translateWithContext(
 								result.players.joinToString(", ") { "<@${it.value}>" }
 							)
@@ -128,9 +127,9 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 		adminOnly {
 			val force = arguments.force
 			val kill = arguments.kill
-			val botCache = this@LG.botCache
+			val botCache = lg.botCache
 			val gameData = botCache.getGameData()
-			val voteManager = this@LG.voteManager
+			val voteManager = lg.voteManager
 			if (gameData.state == NIGHT) {
 				respond { content = Lg.Night.Response.Error.alreadyNight.translateWithContext() }
 				return@adminOnly
@@ -145,10 +144,10 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					is VoteResult.NoVotes -> return@adminOnly
 					is VoteResult.Tie -> {
 						sendAsWebhook(
-							this@LG.bot,
+							lg.bot,
 							botCache.getChannelId(LgChannelType.VOTES)!!,
 							"ParalyaLG",
-							getAsset("paralya_lg", this@LG.prefix),
+							getAsset("paralya_lg", lg.prefix),
 						) {
 							content = Lg.DayCycle.Response.Other.equality.translateWithContext(
 								result.players.joinToString(", ") { "<@${it.value}>" }
@@ -185,7 +184,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					?.getTopChannel()
 					?.run {
 						removeRolePermissions(aliveRole, Permission.ViewChannel, Permission.SendMessages)
-						sendAsWebhook(this@LG.bot, this.id, "ParalyaLG", getAsset("paralya_lg", this@LG.prefix)) {
+						sendAsWebhook(lg.bot, this.id, "ParalyaLG", getAsset("paralya_lg", lg.prefix)) {
 							content = Lg.System.separator.translateWithContext()
 						}
 					}
@@ -206,10 +205,10 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					}
 				}
 			if (oldVillageVote?.corbeau != 0.snowflake) sendAsWebhook(
-				this@LG.bot,
+				lg.bot,
 				botCache.getChannelId(LgChannelType.VOTES)!!,
 				"Corbeau",
-				getAsset("\"\uD83D\uDC26\u200D⬛ Corbeau\"", this@LG.prefix)
+				getAsset("\"\uD83D\uDC26\u200D⬛ Corbeau\"", lg.prefix)
 			) {
 				content = Lg.Night.Response.Other.corbeau.translateWithContext(oldVillageVote?.corbeau?.value ?: 0)
 			}

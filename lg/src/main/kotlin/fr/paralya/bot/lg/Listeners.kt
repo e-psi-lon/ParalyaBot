@@ -2,14 +2,11 @@ package fr.paralya.bot.lg
 
 import dev.kord.cache.api.DataCache
 import dev.kord.common.entity.Permission
-import dev.kord.common.entity.Permissions
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.channel.TopGuildChannelBehavior
 import dev.kord.core.behavior.edit
-import dev.kord.core.entity.PermissionOverwrite
-import dev.kord.core.entity.channel.TopGuildChannel
 import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.event.message.*
 import dev.kord.rest.builder.message.embed
@@ -56,41 +53,46 @@ suspend fun LG.registerListeners() {
 		action {
 			val message = event.message
 
-			if (message.channelId == botCache.getChannelId(LgChannelType.INTERVIEW) && message.author?.id in botCache.getInterviews()) {
-				botCache.removeInterview(message.author!!.id)
-				(message.channel as TopGuildChannelBehavior)
-					.removeMemberPermission(message.author!!.id, Permission.SendMessages)
-			} else if (
-				message.channelId == botCache.getChannelId(LgChannelType.LOUPS_CHAT) && !message.author.isAdmin(
-					botConfig
-				) &&
-				message.author?.isBot == false && message.author?.isSelf == false
-			) {
-				val cached = botCache.getLastWerewolfMessageSender().value
-				logger.debug { "Message sender is ${message.author?.id?.value} and cache is $cached" }
-				if (message.author?.id != botCache.getLastWerewolfMessageSender()) {
-					botCache.setLastWerewolfMessageSender(message.author!!.id)
-					botCache.updateProfilePicture()
-				}
-				val (wolfName, wolfAvatar) = botCache.getBotAnonymousIdentity()
-				logger.debug { "Avatar is $wolfAvatar and name is $wolfName" }
-				sendAsWebhook(
-					bot,
-					botCache.getChannelId(LgChannelType.PETITE_FILLE)!!,
-					wolfName,
-					getAsset(wolfAvatar, this@LG.prefix),
-					WEBHOOK_NAME
-				) {
-					content = message.content
+            when (message.channelId) {
+                botCache.getChannelId(LgChannelType.INTERVIEW) if message.author?.id in botCache.getInterviews() -> {
+                    botCache.removeInterview(message.author!!.id)
+                    (message.channel as TopGuildChannelBehavior)
+                        .removeMemberPermission(message.author!!.id, Permission.SendMessages)
+                }
 
-					if (message.referencedMessage != null) embed {
-						title = Common.Transmission.Reference.title.translateWithContext()
-						description = message.referencedMessage!!.content
-					}
-				}
-			} else if (message.channelId == botCache.getChannelId(LgChannelType.SUJETS)) {
-				return@action
-			}
+                botCache.getChannelId(LgChannelType.LOUPS_CHAT) if !message.author.isAdmin(
+                    botConfig
+                ) &&
+                        message.author?.isBot == false && message.author?.isSelf == false
+                    -> {
+                    val cached = botCache.getLastWerewolfMessageSender().value
+                    logger.debug { "Message sender is ${message.author?.id?.value} and cache is $cached" }
+                    if (message.author?.id != botCache.getLastWerewolfMessageSender()) {
+                        botCache.setLastWerewolfMessageSender(message.author!!.id)
+                        botCache.updateProfilePicture()
+                    }
+                    val (wolfName, wolfAvatar) = botCache.getBotAnonymousIdentity()
+                    logger.debug { "Avatar is $wolfAvatar and name is $wolfName" }
+                    sendAsWebhook(
+                        bot,
+                        botCache.getChannelId(LgChannelType.PETITE_FILLE)!!,
+                        wolfName,
+                        getAsset(wolfAvatar, this@registerListeners.prefix),
+                        WEBHOOK_NAME
+                    ) {
+                        content = message.content
+
+                        if (message.referencedMessage != null) embed {
+                            title = Common.Transmission.Reference.title.translateWithContext()
+                            description = message.referencedMessage!!.content
+                        }
+                    }
+                }
+
+                botCache.getChannelId(LgChannelType.SUJETS) -> {
+                    return@action
+                }
+            }
 		}
 
 	}
@@ -115,7 +117,7 @@ suspend fun LG.registerListeners() {
 							}
 						}
 					}
-				} catch (e: Exception) {
+				} catch (_: Exception) {
 					val (wolfName, wolfAvatar) = botCache.getBotAnonymousIdentity()
 					sendAsWebhook(
 						bot,

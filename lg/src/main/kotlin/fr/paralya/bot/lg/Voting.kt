@@ -24,15 +24,15 @@ import fr.paralya.bot.lg.I18n.Lg
  *
  * @receiver The instance of the [LG] extension that will handle the commands.
  */
-context(LG)
+context(lg: LG)
 suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVotingCommands() {
 	group(Lg.Vote.Command.name) {
 		description = Lg.Vote.Command.description
 		ephemeralSubCommand(::VoteArguments) {
 			name = Lg.Vote.Village.Command.name
 			description = Lg.Vote.Village.Command.description
-			val botCache = this@LG.botCache
-			val voteManager = this@LG.voteManager
+			val botCache = lg.botCache
+			val voteManager = lg.voteManager
 			action {
 				val target = arguments.target
 				val reason = arguments.reason
@@ -61,7 +61,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 						content = Lg.Vote.Response.Success.vote.translateWithContext(target.effectiveName)
 					}
 					sendAsWebhook(
-						this@LG.bot,
+						lg.bot,
 						botCache.getChannelId(LgChannelType.VOTES)!!,
 						member?.asMember()?.effectiveName ?: "Inconnu",
 						member?.asMember()?.avatar?.cdnUrl?.toUrl(),
@@ -75,8 +75,8 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 		ephemeralSubCommand(::VoteArguments) {
 			name = Lg.Vote.Werewolf.Command.name
 			description = Lg.Vote.Werewolf.Command.description
-			val botCache = this@LG.botCache
-			val voteManager = this@LG.voteManager
+			val botCache = lg.botCache
+			val voteManager = lg.voteManager
 			action {
 				val target = arguments.target
 				val reason = arguments.reason
@@ -97,7 +97,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 						content = Lg.Vote.Response.Success.vote.translateWithContext(target.effectiveName)
 					}
 					sendAsWebhook(
-						this@LG.bot,
+						lg.bot,
 						botCache.getChannelId(LgChannelType.LOUPS_VOTE)!!,
 						member?.asMember()?.effectiveName ?: "Inconnu",
 						member?.asMember()?.avatar?.cdnUrl?.toUrl(),

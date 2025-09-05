@@ -112,14 +112,15 @@ suspend fun sendAsWebhook(
  * @param replacements Optional replacements to include in the translation.
  * @return The translated string.
  */
-context(TranslatableContext)
+context(ctx: TranslatableContext)
 suspend fun Key.translateWithContext(vararg replacements: Any?) =
-	withContext(this@TranslatableContext).translate(*replacements)
+	withContext(ctx).translate(*replacements)
 
 /**
  * Retrieves an image asset from the specified path.
  *
  * @param path The path to the asset file (in the `assets` resource directory).
+ * @param game An optional game to include in the asset path.
  * @return The image as an [Image] object.
  * @throws IllegalArgumentException if the resource is not found at the specified path.
  */
