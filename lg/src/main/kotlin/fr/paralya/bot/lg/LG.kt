@@ -4,9 +4,11 @@ import dev.kord.common.entity.Permission
 import dev.kord.common.entity.Permissions
 import dev.kord.core.entity.PermissionOverwrite
 import dev.kord.core.entity.channel.TopGuildChannel
+import dev.kord.core.entity.effectiveName
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.converters.impl.optionalInt
+import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.role
 import dev.kordex.core.commands.converters.impl.string
 import dev.kordex.core.commands.converters.impl.user
@@ -17,7 +19,6 @@ import dev.kordex.core.utils.hasRole
 import fr.paralya.bot.common.*
 import fr.paralya.bot.common.I18n.Messages
 import fr.paralya.bot.lg.data.*
-import fr.paralya.bot.lg.I18n
 import fr.paralya.bot.lg.I18n.Lg
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.component.inject
@@ -129,6 +130,27 @@ class LG : Extension() {
 					}
 				}
 			}
+
+            ephemeralSubCommand(::KillArguments) {
+                name = Lg.Kill.Command.name
+                description = Lg.Kill.Command.description
+
+                adminOnly {
+                    val target = arguments.target
+                    val reason = arguments.reason ?: Lg.Kill.Argument.Reason.default.translateWithContext()
+                    val config by inject<LgConfig>()
+
+                    guild!!.getMember(target.id).swapRoles(
+                        config.deadRole.snowflake,
+                        config.aliveRole.snowflake,
+                        reason
+                    )
+                    respond {
+                        content = Lg.Kill.Response.success.translateWithContext(target.effectiveName, reason)
+                    }
+                }
+            }
+
 		}
 
 		registerListeners()
@@ -169,4 +191,16 @@ class LG : Extension() {
 			description = Lg.EndDay.Argument.Day.description
 		}
 	}
+
+    inner class KillArguments : Arguments() {
+        val target by user {
+            name = Lg.Kill.Argument.Target.name
+            description = Lg.Kill.Argument.Target.description
+        }
+
+        val reason by optionalString {
+            name = Lg.Kill.Argument.Reason.name
+            description = Lg.Kill.Argument.Reason.description
+        }
+    }
 }
