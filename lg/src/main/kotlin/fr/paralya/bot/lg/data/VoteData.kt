@@ -63,6 +63,14 @@ data class VoteData(
 	fun vote(voterId: Snowflake, targetId: Snowflake) =
 		copy(votes = votes + (voterId to targetId))
 
+    /**
+     * Remove the vote of a voter.
+     *
+     * @param voterId The ID of the player removing their vote
+     * @return A new [VoteData] with the updated votes map
+     */
+    fun unvote(voterId: Snowflake) = copy(votes = votes - voterId)
+
 	/**
 	 * Records a special Corbeau (Raven) vote if this is a day vote.
 	 * The Corbeau role can place an additional vote on a player.
@@ -72,6 +80,14 @@ data class VoteData(
 	 */
 	fun voteCorbeau(targetId: Snowflake) =
 		if (type == LGState.DAY.name) copy(corbeau = targetId) else this
+
+
+    /**
+     * Remove the Corbeau vote.
+     *
+     * @return A new [VoteData] with the Corbeau vote removed
+     */
+    fun unvoteCorbeau() = copy(corbeau = 0.snowflake)
 
 	/**
 	 * Updates the list of valid voting choices/targets.
@@ -126,6 +142,12 @@ suspend fun DataCache.vote(voterId: Snowflake, target: User) =
 		true
 	} ?: false
 
+suspend fun DataCache.unvote(voterId: Snowflake) = getCurrentVote()?.let {
+    put(it.unvote(voterId))
+    true
+} ?: false
+
+
 /**
  * Updates the list of valid choices/targets for the current vote.
  *
@@ -149,3 +171,8 @@ suspend fun DataCache.voteCorbeau(targetId: Snowflake) =
 		put(it.voteCorbeau(targetId))
 		true
 	} ?: false
+
+suspend fun DataCache.unvoteCorbeau() = getCurrentVote(LGState.DAY)?.let {
+    put(it.unvoteCorbeau())
+    true
+} ?: false

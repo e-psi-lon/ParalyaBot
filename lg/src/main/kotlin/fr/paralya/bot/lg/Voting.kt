@@ -6,6 +6,7 @@ import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.PublicSlashCommand
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.application.slash.group
+import dev.kordex.core.commands.converters.impl.optionalInt
 import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.forms.ModalForm
@@ -17,6 +18,7 @@ import fr.paralya.bot.lg.data.LgChannelType
 import fr.paralya.bot.lg.data.getChannelId
 import fr.paralya.bot.lg.data.getCurrentVote
 import fr.paralya.bot.lg.I18n.Lg
+import fr.paralya.bot.lg.data.getGameData
 
 /**
  * Registers the commands for voting in the game.
@@ -108,6 +110,51 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 				}
 			}
 		}
+        ephemeralSubCommand(::UnvoteArguments) {
+            name = Lg.Unvote.Command.name
+            description = Lg.Unvote.Command.description
+
+            action {
+                val previousId = arguments.previousId?.snowflake
+                val channelId = channel.id
+                val voteManager = lg.voteManager
+                val votes = lg.botCache.getChannelId(LgChannelType.VOTES)!!
+                val voteLoups = lg.botCache.getChannelId(LgChannelType.LOUPS_VOTE)!!
+                val voteCorbeau = lg.botCache.getChannelId(LgChannelType.CORBEAU)!!
+                val voteChannels = listOf(votes, voteLoups, voteCorbeau)
+
+                if (channelId !in voteChannels) {
+                    respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
+                    return@action
+                } else {
+                    when (channelId) {
+                        votes, voteLoups -> {
+                            val state = if (channelId == votes) LGState.DAY else LGState.NIGHT
+                            val currentVote = voteManager.getCurrentVote(state)
+                            val isCorrectState = lg.botCache.getGameData().state == state
+                            if (currentVote == null || !currentVote.votes.containsKey(user.id) || !isCorrectState) {
+                                respond { content = Lg.Unvote.Response.Error.noVote.translateWithContext() }
+                                return@action
+                            }
+                            voteManager.unvote(user.id)
+                            respond { content = Lg.Unvote.Response.success.translateWithContext() }
+                        }
+                        voteCorbeau -> {
+                            val currentVote = voteManager.getCurrentVote(LGState.DAY)
+                            val isCorrectState = lg.botCache.getGameData().state == LGState.NIGHT
+                            if (currentVote == null || currentVote.corbeau == 0.snowflake || !isCorrectState) {
+                                respond { content = Lg.Unvote.Response.Error.noVote.translateWithContext() }
+                                return@action
+                            }
+                            voteManager.unvoteCorbeau()
+                            respond { content = Lg.Unvote.Response.success.translateWithContext() }
+                        }
+                    }
+                }
+                if (previousId != null)
+                    channel.getMessage(previousId).delete(Lg.System.MessageDelete.VoteMessage.reason.translateWithContext())
+            }
+        }
 	}
 }
 
@@ -149,4 +196,11 @@ private class VoteArguments : Arguments() {
 		name = Lg.Vote.Argument.Reason.name
 		description = Lg.Vote.Argument.Reason.description
 	}
+}
+
+private class UnvoteArguments : Arguments() {
+    val previousId by optionalInt {
+        name = Lg.Unvote.Argument.PreviousId.name
+        description = Lg.Unvote.Argument.PreviousId.description
+    }
 }

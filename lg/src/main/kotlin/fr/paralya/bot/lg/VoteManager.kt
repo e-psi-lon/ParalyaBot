@@ -30,13 +30,25 @@ class VoteManager(private val botCache: DataCache) {
 		botCache.vote(voterId, target)
 	}
 
+    suspend fun unvote(voterId: Snowflake) {
+        botCache.unvote(voterId)
+    }
+
 	/**
-	 * Registers a vote from the Raven role
-	 * @param targetId The ID of the player being marked by the Raven
+	 * Registers a vote from the Corbeau role
+	 * @param targetId The ID of the player being marked by the Corbeau
 	 */
 	suspend fun voteCorbeau(targetId: Snowflake) {
 		botCache.voteCorbeau(targetId)
 	}
+
+    /**
+     * Removes the Corbeau's vote
+     */
+	suspend fun unvoteCorbeau() {
+		botCache.unvoteCorbeau()
+	}
+
 
 	/**
 	 * Creates a new vote for the village (day phase)
