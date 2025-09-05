@@ -1,7 +1,9 @@
 package fr.paralya.bot.lg
 
 import dev.kordex.core.plugins.KordExPlugin
+import fr.paralya.bot.common.ApiVersion
 import fr.paralya.bot.common.config.ConfigManager
+import fr.paralya.bot.common.CommonModule
 import fr.paralya.bot.lg.data.LgConfig
 import org.koin.core.component.inject
 
@@ -12,6 +14,7 @@ import org.koin.core.component.inject
  * It is currently not used because the plugin loader from KordEx is still in development.
  *
  */
+@ApiVersion(CommonModule.API_VERSION)
 class LgBotPlugin : KordExPlugin() {
 	/**
 	 * Setup function that initializes the plugin.
@@ -22,7 +25,7 @@ class LgBotPlugin : KordExPlugin() {
 			getKoin()
 			bot.logger.info { "Koin already started, registering LG config" }
 			registerLgConfig()
-		} catch (e: IllegalStateException) {
+		} catch (_: IllegalStateException) {
 			bot.logger.info { "Koin not started, registering LG config hook after Koin setup" }
 			settings {
 				hooks { afterKoinSetup { registerLgConfig() } }

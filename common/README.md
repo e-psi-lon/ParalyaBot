@@ -247,10 +247,7 @@ kordex {
 2. Create the main plugin class:
 
 ```kotlin
-package fr.paralya.bot.myplugin
-
-import dev.kordex.core.plugins.KordExPlugin
-
+@ApiVersion(CommonModule.VERSION) // This line is mandatory for the bot to load your plugin correctly
 class MyGamePlugin : KordExPlugin() {
     override suspend fun setup() {
 		// Register commands
