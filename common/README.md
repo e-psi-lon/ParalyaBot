@@ -347,3 +347,7 @@ Contributions to improve the Common module are welcome! Please ensure:
 ## License
 
 This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). See the [LICENSE](../LICENSE) file for details.
+
+**License Note**: Since this project is distributed under the AGPL-3.0 and is a required dependency for all plugins,
+any plugin for ParalyaBot must also be distributed under the AGPL-3.0 license or a compatible license, in accordance with
+the terms of the GNU Affero General Public License v3.0.
