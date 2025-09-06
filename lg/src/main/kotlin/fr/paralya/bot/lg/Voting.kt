@@ -1,7 +1,7 @@
 package fr.paralya.bot.lg
 
 import dev.kord.core.entity.User
-import dev.kord.core.entity.effectiveName
+import dev.kord.rest.builder.message.embed
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.PublicSlashCommand
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
@@ -16,13 +16,13 @@ import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.common.translateWithContext
 import fr.paralya.bot.lg.data.LgChannelType
 import fr.paralya.bot.lg.data.getChannelId
-import fr.paralya.bot.lg.data.getCurrentVote
 import fr.paralya.bot.lg.I18n.Lg
 import fr.paralya.bot.lg.data.getGameData
 
 /**
- * Registers the commands for voting in the game.
+ * Registers the commands related to the voting mechanism in the game
  * This includes commands for voting during the day and night phases.
+ * But also the command to retract a vote, shows the vote list and some admin commands.
  *
  * @receiver The instance of the [LG] extension that will handle the commands.
  */
@@ -44,7 +44,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 					}
 					voteManager.voteCorbeau(target.id)
 					respond {
-						content = Lg.Vote.Response.Success.Corbeau.vote.translateWithContext(target.effectiveName)
+						content = Lg.Vote.Response.Success.Corbeau.vote.translateWithContext(target.mention)
 					}
 				} else if (channel.id != botCache.getChannelId(LgChannelType.VOTES))
 					respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
@@ -60,7 +60,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 						voteManager.getCurrentVote(LGState.DAY)?.votes?.containsKey(target.id) == true
 					voteManager.vote(user.id, target)
 					respond {
-						content = Lg.Vote.Response.Success.vote.translateWithContext(target.effectiveName)
+						content = Lg.Vote.Response.Success.vote.translateWithContext(target.mention)
 					}
 					sendAsWebhook(
 						lg.bot,
@@ -84,7 +84,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 				val reason = arguments.reason
 				if (channel.id != botCache.getChannelId(LgChannelType.LOUPS_VOTE))
 					respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
-				else if (voteManager.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && botCache.getCurrentVote(
+				else if (voteManager.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && voteManager.getCurrentVote(
 						LGState.NIGHT
 					)?.choices?.contains(target.id) != true
 				)
@@ -96,7 +96,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 						voteManager.getCurrentVote(LGState.NIGHT)?.votes?.containsKey(target.id) == true
 					voteManager.vote(user.id, target)
 					respond {
-						content = Lg.Vote.Response.Success.vote.translateWithContext(target.effectiveName)
+						content = Lg.Vote.Response.Success.vote.translateWithContext(target.mention)
 					}
 					sendAsWebhook(
 						lg.bot,
@@ -155,6 +155,55 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
                     channel.getMessage(previousId).delete(Lg.System.MessageDelete.VoteMessage.reason.translateWithContext())
             }
         }
+        ephemeralSubCommand {
+            name = Lg.VoteList.Command.name
+            description = Lg.VoteList.Command.description
+
+            action {
+                val village = lg.botCache.getChannelId(LgChannelType.VILLAGE)!!
+                val votes = lg.botCache.getChannelId(LgChannelType.VOTES)!!
+                val loups = lg.botCache.getChannelId(LgChannelType.LOUPS_CHAT)!!
+                val loupsVotes = lg.botCache.getChannelId(LgChannelType.LOUPS_VOTE)!!
+                val dayChannels = setOf(village, votes)
+                val nightChannels = setOf(loups, loupsVotes)
+                if (channel.id !in dayChannels + nightChannels) {
+                    respond { content = Lg.VoteList.Response.Error.cantSeeVotesHere.translateWithContext() }
+                    return@action
+                } else {
+                    val state = if (channel.id in dayChannels) LGState.DAY else LGState.NIGHT
+                    val vote = lg.voteManager.getCurrentVote(state)
+                    val votes = vote?.votes
+                    val isCorrectState = lg.botCache.getGameData().state == state
+                    if (votes.isNullOrEmpty() || !isCorrectState) {
+                        respond { content = Lg.VoteList.Response.Error.noVotes.translateWithContext() }
+                        return@action
+                    }
+                    val votersByTarget = votes.entries.groupBy({ it.value }, { it.key })
+                    val voteCountByTarget = votersByTarget.mapValues { it.value.size }.toMutableMap()
+                    if (vote.corbeau != 0.snowflake && !voteCountByTarget.containsKey(vote.corbeau)) voteCountByTarget[vote.corbeau] = 2
+                    respond {
+                        embed {
+                            title = Lg.VoteList.Response.Success.Embed.title.translateWithContext()
+                            description = if (state == LGState.DAY) Lg.VoteList.Response.Success.Embed.Description.day.translateWithContext()
+                                    else Lg.VoteList.Response.Success.Embed.Description.night.translateWithContext()
+
+                            voteCountByTarget.entries.sortedByDescending { it.value }.forEach { (target, count) ->
+                                field(guild!!.getMember(target).mention, inline = false) {
+                                    val playerNameList = votersByTarget[target]?.map {
+                                        guild!!.getMember(it).mention
+                                    }?.sorted()?.joinToString(", ", prefix = "(", postfix = ")") ?: ""
+                                    if (target == vote.corbeau) {
+                                        Lg.VoteList.Response.Success.Embed.Field.WithCorbeau.description.translateWithContext(count + 2, playerNameList)
+                                    } else {
+                                        Lg.VoteList.Response.Success.Embed.Field.description.translateWithContext(count, playerNameList)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 	}
 }
 
@@ -172,13 +221,13 @@ suspend fun TranslatableContext.getVotePublicResponse(
 	reason: String? = null,
 	alreadyVoted: Boolean = false,
 ) = if (alreadyVoted && reason != null)
-	Lg.Vote.Response.Success.Public.changeReason.translateWithContext(target.effectiveName, reason)
+	Lg.Vote.Response.Success.Public.changeReason.translateWithContext(target.mention, reason)
 else if (alreadyVoted)
-	Lg.Vote.Response.Success.Public.change.translateWithContext(target.effectiveName)
+	Lg.Vote.Response.Success.Public.change.translateWithContext(target.mention)
 else if (reason != null)
-	Lg.Vote.Response.Success.Public.voteReason.translateWithContext(target.effectiveName, reason)
+	Lg.Vote.Response.Success.Public.voteReason.translateWithContext(target.mention, reason)
 else
-	Lg.Vote.Response.Success.Public.vote.translateWithContext(target.effectiveName)
+	Lg.Vote.Response.Success.Public.vote.translateWithContext(target.mention)
 
 /**
  * Arguments for the vote command.
