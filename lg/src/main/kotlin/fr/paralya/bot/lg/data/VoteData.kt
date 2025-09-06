@@ -10,6 +10,10 @@ import dev.kord.core.entity.User
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.lg.LGState
 
+
+typealias Voter = Snowflake
+typealias Target = Snowflake
+
 /**
  * Represents voting data for a Loup-Garou (Werewolf) game.
  *
@@ -24,9 +28,9 @@ data class VoteData(
 	val id: Snowflake,
 	val type: String,
 	val isCurrent: Boolean = false,
-	val votes: Map<Snowflake, Snowflake> = emptyMap(),
-	val choices: List<Snowflake> = listOf(),
-	val corbeau: Snowflake = 0.snowflake,
+	val votes: Map<Voter, Target> = emptyMap(),
+	val choices: List<Target> = listOf(),
+	val corbeau: Target = 0.snowflake,
 ) {
 	companion object {
 		/** Cache description for [VoteData], allowing it to be stored and retrieved from the [DataCache] */
@@ -60,7 +64,7 @@ data class VoteData(
 	 * @param targetId The ID of the player being voted for
 	 * @return A new [VoteData] with the updated votes map
 	 */
-	fun vote(voterId: Snowflake, targetId: Snowflake) =
+	fun vote(voterId: Voter, targetId: Target) =
 		copy(votes = votes + (voterId to targetId))
 
     /**
@@ -69,7 +73,7 @@ data class VoteData(
      * @param voterId The ID of the player removing their vote
      * @return A new [VoteData] with the updated votes map
      */
-    fun unvote(voterId: Snowflake) = copy(votes = votes - voterId)
+    fun unvote(voterId: Voter) = copy(votes = votes - voterId)
 
 	/**
 	 * Records a special Corbeau (Raven) vote if this is a day vote.
@@ -78,7 +82,7 @@ data class VoteData(
 	 * @param targetId The ID of the player receiving the Corbeau's vote
 	 * @return A new [VoteData] with the updated Corbeau vote, or unchanged if not a day vote
 	 */
-	fun voteCorbeau(targetId: Snowflake) =
+	fun voteCorbeau(targetId: Target) =
 		if (type == LGState.DAY.name) copy(corbeau = targetId) else this
 
 
@@ -95,7 +99,7 @@ data class VoteData(
 	 * @param choices The list of player IDs that can be voted for
 	 * @return A new [VoteData] with the updated choices
 	 */
-	fun setChoices(choices: List<Snowflake>) = copy(choices = choices)
+	fun setChoices(choices: List<Target>) = copy(choices = choices)
 
 	/**
 	 * Updates the current status of this vote.
@@ -136,13 +140,13 @@ suspend fun DataCache.updateVote(voteData: VoteData) {
  * @param target The user being voted for
  * @return true if the vote was recorded, false if there's no current vote
  */
-suspend fun DataCache.vote(voterId: Snowflake, target: User) =
+suspend fun DataCache.vote(voterId: Voter, target: User) =
 	getCurrentVote()?.let {
 		put(it.vote(voterId, target.id))
 		true
 	} ?: false
 
-suspend fun DataCache.unvote(voterId: Snowflake) = getCurrentVote()?.let {
+suspend fun DataCache.unvote(voterId: Voter) = getCurrentVote()?.let {
     put(it.unvote(voterId))
     true
 } ?: false
@@ -154,24 +158,29 @@ suspend fun DataCache.unvote(voterId: Snowflake) = getCurrentVote()?.let {
  * @param choices The list of player IDs that can be voted for
  * @return true if the choices were updated, false if there's no current vote
  */
-suspend fun DataCache.setVoteChoices(choices: List<Snowflake>) =
+suspend fun DataCache.setVoteChoices(choices: List<Target>) =
 	getCurrentVote()?.let {
 		put(it.setChoices(choices))
 		true
 	} ?: false
 
 /**
- * Records a special Corbeau (Raven) vote in the current day vote.
+ * Records a special Corbeau (Raven) vote in the current-day vote.
  *
  * @param targetId The ID of the player receiving the Corbeau's vote
  * @return true if the Corbeau vote was recorded, false if there's no current-day vote
  */
-suspend fun DataCache.voteCorbeau(targetId: Snowflake) =
+suspend fun DataCache.voteCorbeau(targetId: Target) =
 	getCurrentVote(LGState.DAY)?.let {
 		put(it.voteCorbeau(targetId))
 		true
 	} ?: false
 
+/**
+ * Removes the Corbeau vote from the current-day vote.
+ *
+ * @return true if the Corbeau vote was removed, false if there's no current-day vote
+ */
 suspend fun DataCache.unvoteCorbeau() = getCurrentVote(LGState.DAY)?.let {
     put(it.unvoteCorbeau())
     true

@@ -1,10 +1,10 @@
 package fr.paralya.bot.lg
 
 import dev.kord.cache.api.DataCache
-import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.User
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.lg.data.*
+import fr.paralya.bot.lg.data.Target
 
 /**
  * Manager class responsible for handling voting operations in the Werewolf game.
@@ -26,11 +26,11 @@ class VoteManager(private val botCache: DataCache) {
 	 * @param voterId The ID of the voter
 	 * @param target The user being voted for
 	 */
-	suspend fun vote(voterId: Snowflake, target: User) {
+	suspend fun vote(voterId: Voter, target: User) {
 		botCache.vote(voterId, target)
 	}
 
-    suspend fun unvote(voterId: Snowflake) {
+    suspend fun unvote(voterId: Voter) {
         botCache.unvote(voterId)
     }
 
@@ -38,7 +38,7 @@ class VoteManager(private val botCache: DataCache) {
 	 * Registers a vote from the Corbeau role
 	 * @param targetId The ID of the player being marked by the Corbeau
 	 */
-	suspend fun voteCorbeau(targetId: Snowflake) {
+	suspend fun voteCorbeau(targetId: Target) {
 		botCache.voteCorbeau(targetId)
 	}
 
