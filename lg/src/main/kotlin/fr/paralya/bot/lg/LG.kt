@@ -19,7 +19,7 @@ import dev.kordex.core.utils.hasRole
 import fr.paralya.bot.common.*
 import fr.paralya.bot.common.I18n.Messages
 import fr.paralya.bot.lg.data.*
-import fr.paralya.bot.lg.I18n.Lg
+import fr.paralya.bot.lg.I18n as Lg
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.component.inject
 
@@ -44,7 +44,7 @@ class LG : Extension() {
 
 	override suspend fun setup() {
 		val gameRegistry by inject<GameRegistry>()
-		gameRegistry.registerGameMode(I18n.GameMode.lg, "lg")
+		gameRegistry.registerGameMode(Lg.GameMode.lg, "lg")
 		kord.cache.register(GameData.description, VoteData.description)
 
 		publicSlashCommand {
