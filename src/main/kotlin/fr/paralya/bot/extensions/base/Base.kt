@@ -1,5 +1,6 @@
 package fr.paralya.bot.extensions.base
 
+import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.event.message.MessageCreateEvent
@@ -7,7 +8,13 @@ import dev.kord.core.event.message.MessageDeleteEvent
 import dev.kord.core.event.message.MessageUpdateEvent
 import dev.kord.rest.builder.message.embed
 import dev.kordex.core.commands.Arguments
+import dev.kordex.core.commands.application.slash.converters.ChoiceEnum
+import dev.kordex.core.commands.application.slash.converters.impl.defaultingEnumChoice
 import dev.kordex.core.commands.application.slash.converters.impl.stringChoice
+import dev.kordex.core.commands.converters.impl.defaultingBoolean
+import dev.kordex.core.commands.converters.impl.optionalChannel
+import dev.kordex.core.commands.converters.impl.optionalInt
+import dev.kordex.core.commands.converters.impl.optionalSnowflake
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.extensions.event
@@ -15,7 +22,10 @@ import fr.paralya.bot.common.*
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.I18n.Common
 import fr.paralya.bot.I18n
+import fr.paralya.bot.common.adminOnly
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.flow.take
+import kotlinx.coroutines.flow.takeWhile
 import org.koin.core.component.inject
 
 /**
@@ -30,7 +40,7 @@ import org.koin.core.component.inject
 class Base : Extension() {
 	override val name = "Base"
 	private val logger = KotlinLogging.logger(this::class.java.name)
-	override suspend fun setup() {
+    override suspend fun setup() {
 		val botConfig = inject<ConfigManager>().value.botConfig
 		val dmChannelId = botConfig.dmLogChannelId.snowflake
 		event<ReadyEvent> {
@@ -96,6 +106,7 @@ class Base : Extension() {
 						val webhook = getWebhook(dmChannelId, bot, "DM")
 						webhook.deleteMessage(webhook.token!!, event.message!!.id)
 					}
+
 				}
 			}
 		}
@@ -127,6 +138,30 @@ class Base : Extension() {
 				}
 			}
 		}
+
+        ephemeralSlashCommand(::ExportArguments) {
+            name = I18n.ChatExport.Command.name
+            description = I18n.ChatExport.Command.description
+
+            adminOnly {
+                val channel = arguments.channel as MessageChannelBehavior? ?: channel
+                val messages = when {
+                arguments.start != null && arguments.end != null ->
+                    channel.getMessagesAfter(arguments.start!!).takeWhile { it.id != arguments.end!! }
+                arguments.start != null && arguments.count != null ->
+                    channel.getMessagesAfter(arguments.start!!).take(arguments.count!!)
+                else ->
+                    channel.getMessagesBefore(channel.asChannel().lastMessageId ?: Snowflake.max, arguments.count!!)
+            }
+                respond {
+                    content = I18n.ChatExport.Response.Success.txt.translateWithContext()
+                    when (arguments.format.parsed) {
+                        Format.TXT -> addStringExport(channel, guild, messages, arguments.anonymous)
+                        Format.HTML -> addHtmlExport(channel, guild, messages, arguments)
+                    }
+                }
+            }
+        }
 	}
 
 	/**
@@ -143,4 +178,59 @@ class Base : Extension() {
 			choices = getKoin().get<GameRegistry>().getGameModes()
 		}
 	}
+
+    inner class ExportArguments : Arguments() {
+        val count: Int? by optionalInt {
+            name = I18n.ChatExport.Argument.Count.name
+            description = I18n.ChatExport.Argument.Count.description
+            minValue = 1
+            maxValue = 1000
+            validate {
+                if (value != null && end != null)
+                    return@validate fail(I18n.ChatExport.Argument.Count.Error.mutuallyExclusive)
+            }
+        }
+
+        val start: Snowflake? by optionalSnowflake {
+            name = I18n.ChatExport.Argument.Start.name
+            description = I18n.ChatExport.Argument.Start.description
+        }
+
+        val end: Snowflake? by optionalSnowflake {
+            name = I18n.ChatExport.Argument.End.name
+            description = I18n.ChatExport.Argument.End.description
+            validate {
+                if (start == null && value != null)
+                    return@validate fail(I18n.ChatExport.Argument.End.Error.startRequired)
+                else if (value != null && value!! < start!!)
+                    return@validate fail(I18n.ChatExport.Argument.End.Error.invalidRange)
+            }
+        }
+
+        val channel by optionalChannel {
+            name = I18n.ChatExport.Argument.Channel.name
+            description = I18n.ChatExport.Argument.Channel.description
+        }
+
+        val format = defaultingEnumChoice<Format> {
+            name = I18n.ChatExport.Argument.Format.name
+            description = I18n.ChatExport.Argument.Format.description
+            typeName = I18n.ChatExport.Argument.Format.typeName
+            defaultValue = Format.TXT
+        }
+
+        val anonymous by defaultingBoolean {
+            name = I18n.ChatExport.Argument.Anonymous.name
+            description = I18n.ChatExport.Argument.Anonymous.description
+            defaultValue = false
+        }
+    }
+}
+
+enum class Format: ChoiceEnum {
+    TXT {
+        override val readableName = I18n.ChatExport.Argument.Format.txt
+    }, HTML {
+        override val readableName = I18n.ChatExport.Argument.Format.html
+    }
 }
