@@ -16,7 +16,7 @@ import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.common.translateWithContext
 import fr.paralya.bot.lg.data.LgChannelType
 import fr.paralya.bot.lg.data.getChannelId
-import fr.paralya.bot.lg.I18n.Lg
+import fr.paralya.bot.lg.I18n as Lg
 import fr.paralya.bot.lg.data.getGameData
 
 /**
@@ -203,6 +203,9 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
                     }
                 }
             }
+        }
+        ephemeralSubCommand {
+
         }
 	}
 }

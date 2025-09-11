@@ -22,6 +22,7 @@ import org.koin.core.module.dsl.withOptions
 import org.koin.core.qualifier.named
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
+import dev.kordex.core.annotations.warnings.ReplacingDefaultErrorResponseBuilder
 import org.slf4j.LoggerFactory
 
 /**
@@ -48,6 +49,7 @@ private fun configureLogging(devMode: Boolean) {
  * @param args Command line arguments for the bot.
  * @return An instance of [ExtensibleBot], ready to be started.
  */
+@OptIn(ReplacingDefaultErrorResponseBuilder::class)
 suspend fun buildBot(args: Array<String>): ExtensibleBot {
 	// We need to define a first instance of ConfigManager to access the bot token.
 	// Then the bot will be configured, and the ConfigManager will be replaced by the one defined in the Koin module

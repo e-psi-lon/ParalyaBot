@@ -1,5 +1,7 @@
 # AI Coding Agent Instructions for ParalyaBot
 
+**DISCLAIMER**: This file contains project-specific context for AI coding assistance. Only reference these instructions when working on ParalyaBot-specific features, architecture questions, or complex integrations. For simple syntax issues, debugging, or general programming questions, standard language knowledge is sufficient.
+
 ## Project Overview
 ParalyaBot is a modular Discord bot built with **KordEx** (Kotlin Discord framework) using a multi-module Gradle architecture. The bot is designed for community management and Discord games for the Paralya server. Currently, the Werewolf (Loup-Garou) game is the only developed module, serving as a reference implementation for the planned plugin system.
 
@@ -199,7 +201,7 @@ suspend fun PublicSlashCommand<*, *>.registerDayCycleCommands() {
 ## Plugin System Architecture (In Development)
 
 ### Current State vs Future Architecture
-**Current Implementation**: 
+**Current Implementation** : 
 - LG module loaded directly in `ParalyaBot.kt` via `add(::LG)`
 - Manual config registration: `configManager.registerConfig<LgConfig>("lgConfig")`
 - Game modules are Extensions, not Plugins
@@ -236,7 +238,7 @@ class LgBotPlugin : KordExPlugin() {
 
 ### Testing
 - Uses JUnit 5, Koin for DI (including in tests), MockK for mocking
-- Test files follow pattern: `ModuleNameTest.kt` in `src/test/kotlin/`
+- Test files follow patterns: `ModuleNameTest.kt` in `src/test/kotlin/`
 - ByteBuddy agent configured for enhanced mocking capabilities
 
 ### Key Dependencies

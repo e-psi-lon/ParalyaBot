@@ -12,7 +12,7 @@ import fr.paralya.bot.common.*
 import fr.paralya.bot.lg.LGState.DAY
 import fr.paralya.bot.lg.LGState.NIGHT
 import fr.paralya.bot.lg.data.*
-import fr.paralya.bot.lg.I18n.Lg
+import fr.paralya.bot.lg.I18n as Lg
 import kotlinx.coroutines.flow.toList
 import org.koin.core.component.inject
 
