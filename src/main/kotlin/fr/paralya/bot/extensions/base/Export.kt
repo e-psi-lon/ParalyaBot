@@ -6,12 +6,30 @@ import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.entity.Embed
 import dev.kord.core.entity.Message
 import dev.kord.rest.builder.message.create.FollowupMessageCreateBuilder
+import fr.paralya.bot.common.getResource
 import io.ktor.client.request.forms.ChannelProvider
 import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.lastOrNull
+import kotlinx.coroutines.flow.toList
+import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.offsetAt
 import kotlinx.datetime.toLocalDateTime
-
+import kotlinx.html.ImgLoading
+import kotlinx.html.body
+import kotlinx.html.div
+import kotlinx.html.head
+import kotlinx.html.html
+import kotlinx.html.img
+import kotlinx.html.lang
+import kotlinx.html.link
+import kotlinx.html.meta
+import kotlinx.html.script
+import kotlinx.html.stream.createHTML
+import kotlinx.html.style
+import kotlinx.html.title
+import kotlinx.html.unsafe
 
 suspend fun FollowupMessageCreateBuilder.addStringExport(channel: MessageChannelBehavior, guild: GuildBehavior?, messages: Flow<Message>, anonymous: Boolean) {
     val export = buildString {
@@ -95,7 +113,147 @@ private fun formatEmbed(embed: Embed): String {
     }
 }
 
-suspend fun FollowupMessageCreateBuilder.addHtmlExport(channel: MessageChannelBehavior, guild: GuildBehavior?, messages: Flow<Message>, arguments: Base.ExportArguments) {}
+suspend fun FollowupMessageCreateBuilder.addHtmlExport(channel: MessageChannelBehavior, guild: GuildBehavior?, messages: Flow<Message>, arguments: Base.ExportArguments) {
+    val css = getResource("style.css").decodeToString()
+    val icons = getResource("icons.svg").decodeToString()
+    val guildName = guild?.asGuildOrNull()?.name ?: "Pas de nom de serveur"
+    val guildIcon = guild?.asGuildOrNull()?.icon?.cdnUrl ?: ""
+    val channelName = guild?.getChannel(channel.id)?.name ?: "Pas de nom de salon"
+    val channelTopic = (channel.asChannelOrNull() as? dev.kord.core.entity.channel.TextChannel)?.topic
+
+    val lastMessageId = messages.lastOrNull()?.id
+    val exportRange = when {
+        arguments.start != null && lastMessageId != null ->
+            "Entre ${formatDate(arguments.start!!)} et ${formatDate(lastMessageId)}"
+        arguments.start != null ->
+            "Après ${formatDate(arguments.start!!)}"
+        lastMessageId != null ->
+            "Jusqu'à ${formatDate(lastMessageId)}"
+        else -> null
+    }
+    val messageList = messages.toList()
+    val mentionedUsers = messageList.map { it.mentionedUsers.toList() }
+    var counter = 0
+    val html = createHTML(prettyPrint = false).html {
+        lang = "en"
+        head {
+            title("$guildName - $channelName")
+            meta("charset", "utf-8")
+            meta("viewport", "width=device-width")
+            style { unsafe { +css } }
+            link(rel="stylesheet", href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/solarized-dark.min.css")
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js") {}
+            unsafeScript(
+                """
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.querySelectorAll('.chatlog__markdown-pre--multiline').forEach(e => hljs.highlightBlock(e));
+                });  
+                """.trimIndent()
+            )
+            script(src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.8.1/lottie.min.js") {}
+            unsafeScript(
+                """
+                document.addEventListener('DOMContentLoaded', () => {
+                    document.querySelectorAll('.chatlog__sticker--media[data-source]').forEach(e => {
+                        const anim = lottie.loadAnimation({
+                            container: e,
+                            renderer: 'svg',
+                            loop: true,
+                            autoplay: true,
+                            path: e.getAttribute('data-source')
+                        });
+        
+                        anim.addEventListener(
+                            'data_failed',
+                            () => e.innerHTML = '<strong>[Sticker cannot be rendered]</strong>'
+                        );
+                    });
+                });
+                """.trimIndent()
+            )
+            unsafeScript(
+                """
+                    function scrollToMessage(event, id) {
+                        const element = document.getElementById('chatlog__message-container-' + id);
+                        if (!element)
+                            return;
+
+                        event.preventDefault();
+                        element.classList.add('chatlog__message-container--highlighted');
+
+                        window.scrollTo({
+                            top: element.getBoundingClientRect().top - document.body.getBoundingClientRect().top - (window.innerHeight / 2),
+                            behavior: 'smooth'
+                        });
+
+                        window.setTimeout(
+                            () => element.classList.remove('chatlog__message-container--highlighted'),
+                            2000
+                        );
+                    }
+
+                    function showSpoiler(event, element) {
+                        if (!element)
+                            return;
+
+                        if (element.classList.contains('chatlog__attachment--hidden')) {
+                            event.preventDefault();
+                            element.classList.remove('chatlog__attachment--hidden');
+                        }
+
+                        if (element.classList.contains('chatlog__markdown-spoiler--hidden')) {
+                            event.preventDefault();
+                            element.classList.remove('chatlog__markdown-spoiler--hidden');
+                        }
+                    }
+                """.trimIndent()
+            )
+            unsafe { +icons }
+        }
+        body {
+            div("preamble") {
+                div("preamble__guild-icon-container") {
+                    img(classes = "preamble__guild-icon") {
+                        src = guildIcon.toString()
+                        alt = guildName
+                        loading = ImgLoading.lazy
+                    }
+                }
+                div("preamble__entries-container") {
+                    preambleEntry(guildName)
+                    preambleEntry(channelName)
+                    if (!channelTopic.isNullOrBlank()) {
+                        preambleEntry(channelTopic, true)
+                    }
+                    if (exportRange != null) {
+                        preambleEntry(exportRange, true)
+                    }
+                }
+            }
+            div("chatlog") {
+                div("chatlog__messages-group") {
+                    messageList.forEachIndexed { index, message ->
+                        discordMessageContainer(message, index, mentionedUsers.getOrElse(index) { emptyList() })
+                        counter++
+                    }
+                }
+            }
+            div("postamble") {
+                postambleEntry("$counter message(s) exportés")
+                postambleEntry {
+                    val offsetHours = TimeZone.currentSystemDefault().offsetAt(Clock.System.now()).totalSeconds / 3600.0
+                    val formattedOffset = when {
+                        offsetHours > 0 -> "+${offsetHours}"
+                        offsetHours < 0 -> "-${-offsetHours}"
+                        else -> "+0"
+                    }
+                    +"Zone UTC: UTC@$formattedOffset"
+                }
+            }
+        }
+    }
+    addFile("export.html", ChannelProvider { ByteReadChannel(html) })
+}
 
 private fun formatDate(snowflake: Snowflake): String {
     val dateTime = snowflake.timestamp.toLocalDateTime(TimeZone.currentSystemDefault())

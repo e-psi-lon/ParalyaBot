@@ -46,6 +46,7 @@ subprojects {
 dependencies {
 	testImplementation(kotlin("test"))
 	implementation(libs.logback)
+    implementation(libs.kotlinx.html)
 	implementation(projects.common)
 	implementation(projects.lg)
     implementation(projects.sta)
