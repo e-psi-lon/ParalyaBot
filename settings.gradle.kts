@@ -17,3 +17,4 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include("common")
 include("lg")
+include("sta")

@@ -48,6 +48,7 @@ dependencies {
 	implementation(libs.logback)
 	implementation(projects.common)
 	implementation(projects.lg)
+    implementation(projects.sta)
 }
 
 tasks.test {
