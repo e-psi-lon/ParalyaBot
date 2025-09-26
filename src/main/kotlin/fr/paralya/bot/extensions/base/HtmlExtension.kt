@@ -25,6 +25,7 @@ import kotlinx.html.style
 import kotlinx.html.svg
 import kotlinx.html.title
 import kotlinx.html.unsafe
+import kotlin.time.ExperimentalTime
 
 
 @HtmlTagMarker
@@ -97,7 +98,7 @@ fun FlowContent.span(text: String) = span { +text }
 
 
 
-@OptIn(BlockingAccessor::class, KordExperimental::class, KordUnsafe::class)
+@OptIn(BlockingAccessor::class, KordExperimental::class, KordUnsafe::class, ExperimentalTime::class)
 @HtmlTagMarker
 fun FlowContent.discordMessageContainer(message: Message, index: Int, mentionedUsers: List<User>) {
     val author = message.author

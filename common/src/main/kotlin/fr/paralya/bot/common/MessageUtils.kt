@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.toList
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 
 
 private val logger = KotlinLogging.logger("MessageUtils")
@@ -74,6 +75,7 @@ fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
  * @param message The message to find the corresponding message for.
  * @return The corresponding message if found, or null if not found.
  */
+@OptIn(ExperimentalTime::class)
 suspend fun MessageChannelBehavior.getCorrespondingMessage(message: Message): Message? {
 	val date = message.timestamp
 
