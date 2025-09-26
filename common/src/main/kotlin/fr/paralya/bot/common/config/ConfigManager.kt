@@ -7,8 +7,6 @@ import dev.kordex.core.utils.loadModule
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.konform.validation.Validation
 import io.konform.validation.ValidationResult
-import io.konform.validation.constraints.minItems
-import io.konform.validation.constraints.minLength
 import io.konform.validation.onEach
 import kotlinx.serialization.*
 import kotlinx.serialization.hocon.Hocon
@@ -16,7 +14,7 @@ import kotlinx.serialization.hocon.decodeFromConfig
 import org.koin.core.module.dsl.withOptions
 import org.koin.core.qualifier.named
 import java.io.File
-import kotlin.system.exitProcess
+import kotlin.reflect.KClass
 
 /**
  * Configuration manager for the bot.
@@ -33,7 +31,6 @@ class ConfigManager : KordExKoinComponent {
 	private lateinit var config: Config
 	private val configFile = File(System.getenv()["PARALYA_BOT_CONFIG_FILE"] ?: "config.conf")
 	val logger = KotlinLogging.logger("ConfigManager")
-	private val registeredConfigs = mutableListOf<String>()
 
 
 	// Core bot configuration, directly integrated into the ConfigManager
@@ -43,45 +40,6 @@ class ConfigManager : KordExKoinComponent {
 		loadFile()
 		botConfig = Hocon.decodeFromConfig(getSubConfig("bot"))
 	}
-
-	fun reloadConfig() {
-		try {
-			loadFile()
-			val tempConfig = Hocon.decodeFromConfig<BotConfig>(getSubConfig("bot"))
-			// Validate the new bot config
-			validateConfig(tempConfig)
-			botConfig = tempConfig
-			// Then reload all registered configs
-			val toRemove = mutableListOf<String>()
-			registeredConfigs.forEach { name ->
-				val config = try {
-					getKoin().get<ValidatedConfig>(named(name))
-				} catch (e: Exception) {
-					logger.warn(e) { "Failed to get config for $name. Its related plugin might has been removed" }
-					return@forEach
-				}
-				val configClass = config::class
-				val configPath = "games.${name.removeSuffix("Config").lowercase()}"
-				if (!this.config.hasPath(configPath)) {
-					logger.warn { "No configuration found for $name at path $configPath. Removing it from registered configs." }
-					toRemove.add(name)
-					return@forEach
-				}
-				loadModule(true) {
-					single {
-						Hocon.decodeFromConfig(configClass.serializer(), getSubConfig(configPath)).also {
-							validateConfig(it)
-						}
-					} withOptions { named(name) }
-				}
-			}
-			registeredConfigs.removeAll(toRemove)
-		} catch (e: Exception) {
-			logger.error(e) { "Failed to reload the configuration" }
-			exitProcess(1)
-		}
-	}
-
 	/**
 	 * Loads the configuration file into a [Config] object.
 	 * If the file does not exist, it creates a default configuration file.
@@ -95,7 +53,6 @@ class ConfigManager : KordExKoinComponent {
 			config = ConfigFactory.parseFile(configFile)
 		} catch (e: Exception) {
 			logger.error(e) { "Failed to load config file" }
-			exitProcess(1)
 		}
 	}
 
@@ -119,7 +76,6 @@ class ConfigManager : KordExKoinComponent {
         """.trimMargin()
 		)
 		logger.warn { "Default config created at ${configFile.absolutePath}. Please fill in required values." }
-		exitProcess(1)
 	}
 
 	/**
@@ -130,40 +86,41 @@ class ConfigManager : KordExKoinComponent {
 	 * @param name The name of the configuration, used as a key in the config file.
 	 */
 	inline fun <reified T : ValidatedConfig> registerConfig(name: String) {
-		logger.debug { "Registering config for $name at path games.${name.removeSuffix("Config")} with datatype ${T::class.simpleName}" }
-		val configObject = try {
-			Hocon.decodeFromConfig<T>(getSubConfig("games.${name.removeSuffix("Config").lowercase()}"))
-		} catch (e: IllegalArgumentException) {
-			logger.error(e) {
-				"Failed to find the configuration for name $name at path games.${
-					name.removeSuffix("Config").lowercase()
-				}. Please ensure it exists in the config file."
-			}
-			exitProcess(1)
-		}
-		validateConfig(configObject)
-		loadModule(true) {
+        val configObject = getConfigObject(T::class, name) ?: return
+        loadModule(true) {
 			single<T> { configObject } withOptions { named(name) }
 		}
 		logger.debug { "Config for $name registered successfully" }
 	}
 
-	fun getSubConfig(path: String): Config {
+    fun <T : ValidatedConfig> getConfigObject(clazz: KClass<T>, name: String): T? {
+        logger.debug { "Registering config for $name at path games.${name.removeSuffix("Config")} with datatype ${clazz.simpleName}" }
+        val configObject = try {
+            Hocon.decodeFromConfig(clazz.serializer(), getSubConfig("games.${name.removeSuffix("Config").lowercase()}"))
+        } catch (e: IllegalArgumentException) {
+            logger.error(e) {
+                "Failed to find the configuration for name $name at path games.${
+                    name.removeSuffix("Config").lowercase()
+                }. Please ensure it exists in the config file."
+            }
+            return null
+        }
+        validateConfig(configObject)
+        return configObject
+    }
+
+	private fun getSubConfig(path: String): Config {
 		if (!config.hasPath(path))
 			throw IllegalArgumentException("No configuration found for path: $path")
 		return config.getConfig(path)
 	}
 
-	fun validateConfig(config: ValidatedConfig) {
+	private fun validateConfig(config: ValidatedConfig) {
 		val result = config.validate()
 		if (result.isValid) {
 			logger.info { "Configuration for ${config::class.simpleName} is valid." }
 		} else {
-			logger.error {
-				"Configuration for ${config::class.simpleName} is invalid due to the following errors:" +
-						" ${result.errors.joinToString("\n")}"
-			}
-			exitProcess(1)
+			throw IllegalStateException("Configuration for ${config::class.simpleName} is invalid due to the following errors: ${result.errors.joinToString("\n")}")
 		}
 	}
 }
