@@ -32,6 +32,17 @@ enum class LGState {
 	}
 }
 
+private val DAY_CHANNELS = listOf(
+	LgChannelType.VILLAGE,
+	LgChannelType.VOTES,
+	LgChannelType.SUJETS
+)
+
+private val WOLF_CHANNELS = listOf(
+	LgChannelType.LOUPS_VOTE,
+	LgChannelType.LOUPS_CHAT
+)
+
 /**
  * Registers the commands for managing the day and night cycle in the game.
  * This includes commands for starting a new day, ending the current day, and transitioning to night.
@@ -99,7 +110,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				botCache.updateVote(this)
 			}
 			botCache.nextDay()
-			listOf(LgChannelType.VILLAGE, LgChannelType.VOTES, LgChannelType.SUJETS).forEach { channelName ->
+			DAY_CHANNELS.forEach { channelName ->
 				botCache.getChannel(channelName)
 					?.getTopChannel()
 					?.addRolePermissions(aliveRole, Permission.ViewChannel, Permission.SendMessages)
@@ -179,7 +190,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				botCache.updateVote(this)
 			}
 			botCache.nextNight()
-			listOf(LgChannelType.VILLAGE, LgChannelType.VOTES, LgChannelType.SUJETS).forEach { channelName ->
+			DAY_CHANNELS.forEach { channelName ->
 				botCache.getChannel(channelName)
 					?.getTopChannel()
 					?.run {
@@ -197,7 +208,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				?.toList()?.forEach { member ->
 					val reason = Lg.System.Permissions.Night.reason.translateWithContext()
 
-					listOf(LgChannelType.LOUPS_VOTE, LgChannelType.LOUPS_VOTE).forEach { channelName ->
+					WOLF_CHANNELS.forEach { channelName ->
 						botCache.getChannel(channelName)?.getTopChannel()?.apply {
 							addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
 							addMemberPermissions(member.id, Permission.SendMessages, reason = reason)
