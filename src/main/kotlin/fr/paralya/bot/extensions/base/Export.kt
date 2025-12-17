@@ -12,8 +12,8 @@ import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.lastOrNull
 import kotlinx.coroutines.flow.toList
-import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.number
 import kotlinx.datetime.offsetAt
 import kotlinx.datetime.toLocalDateTime
 import kotlinx.html.ImgLoading
@@ -31,6 +31,7 @@ import kotlinx.html.style
 import kotlinx.html.title
 import kotlinx.html.unsafe
 import kotlin.time.ExperimentalTime
+import kotlin.time.Clock
 
 @OptIn(ExperimentalTime::class)
 suspend fun FollowupMessageCreateBuilder.addStringExport(channel: MessageChannelBehavior, guild: GuildBehavior?, messages: Flow<Message>, anonymous: Boolean) {
@@ -45,8 +46,8 @@ suspend fun FollowupMessageCreateBuilder.addStringExport(channel: MessageChannel
         messages.collect { message ->
             val localDateTime = message.timestamp.toLocalDateTime(TimeZone.currentSystemDefault())
             val formattedDate = "%02d/%02d/%04d %02d:%02d".format(
-                localDateTime.dayOfMonth,
-                localDateTime.monthNumber,
+                localDateTime.day,
+                localDateTime.month.number,
                 localDateTime.year,
                 localDateTime.hour,
                 localDateTime.minute
@@ -262,6 +263,6 @@ suspend fun FollowupMessageCreateBuilder.addHtmlExport(channel: MessageChannelBe
 private fun formatDate(snowflake: Snowflake): String {
     val dateTime = snowflake.timestamp.toLocalDateTime(TimeZone.currentSystemDefault())
     return "%02d/%02d/%04d %02d:%02d".format(
-        dateTime.dayOfMonth, dateTime.monthNumber, dateTime.year, dateTime.hour, dateTime.minute
+        dateTime.day, dateTime.month.number, dateTime.year, dateTime.hour, dateTime.minute
     )
 }

@@ -11,7 +11,6 @@ import dev.kord.core.entity.Message
 import dev.kord.core.entity.Reaction
 import dev.kord.core.entity.Sticker
 import dev.kord.core.entity.User
-import kotlinx.datetime.Instant
 import kotlinx.html.DIV
 import kotlinx.html.FlowContent
 import kotlinx.html.HEAD
@@ -26,7 +25,7 @@ import kotlinx.html.svg
 import kotlinx.html.title
 import kotlinx.html.unsafe
 import kotlin.time.ExperimentalTime
-
+import kotlin.time.Instant
 
 @HtmlTagMarker
 fun HEAD.unsafeScript(js: String) = script { unsafe { +js } }
@@ -216,6 +215,7 @@ fun DIV.reactionsBlock(reactions: List<Reaction>) {}
 fun DIV.stickersBlock(stickers: List<Sticker>) {}
 @HtmlTagMarker
 fun DIV.invitesBlock(invites: List<Invite>) {}
+@OptIn(ExperimentalTime::class)
 @HtmlTagMarker
 fun DIV.timestamp(timestamp: Instant, messageId: Snowflake, isSystem: Boolean = false) {
     span("chatlog__${if (isSystem) "system-notification-" else ""}timestamp") {
@@ -224,6 +224,7 @@ fun DIV.timestamp(timestamp: Instant, messageId: Snowflake, isSystem: Boolean = 
     }
 }
 
+@OptIn(ExperimentalTime::class)
 fun formatDiscordTimestamp(timestamp: Instant): String {
     return ""
 }
