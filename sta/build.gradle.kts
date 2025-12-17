@@ -35,14 +35,14 @@ tasks.test {
 	useJUnitPlatform()
 }
 kotlin {
-	jvmToolchain(21)
+	jvmToolchain(25)
 	compilerOptions {
 		freeCompilerArgs.add("-Xcontext-parameters")
 	}
 }
 
 
-task("exportToGames") {
+tasks.register("exportToGames") {
 	// This task depends on the jar task and moves it to the games folder
 	dependsOn(":lg:distZip")
 	doLast {

@@ -37,7 +37,7 @@ subprojects {
 	dependencies {
 		if (name != "common") {
 			compileOnly(typesafeProjects.common) // The common subproject serve as a base for all other subprojects
-			testImplementation(typesafeProjects.common) // The common subproject also includes test dependencies
+			testImplementation(testFixtures(typesafeProjects.common)) // The common subproject also includes test dependencies
 		}
 	}
 }
@@ -65,7 +65,7 @@ tasks {
 }
 
 kotlin {
-	jvmToolchain(21)
+	jvmToolchain(25)
 	compilerOptions {
 		freeCompilerArgs.add("-Xcontext-parameters")
 	}

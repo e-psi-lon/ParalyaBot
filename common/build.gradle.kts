@@ -1,5 +1,6 @@
 plugins {
 	alias(libs.plugins.kordex.gradle)
+	`java-test-fixtures`
 }
 
 kordEx {
@@ -22,13 +23,18 @@ val byteBuddyAgent: Configuration by configurations.creating
 
 dependencies {
 	// Test dependencies
-	testApi(kotlin("test"))
-	testApi(libs.koin.test)  // For tests that involve Koin
-	testApi(libs.mockk)  // Allow mocking in tests
+	testImplementation(kotlin("test"))
+	testImplementation(libs.koin.test)  // For tests that involve Koin
+	testImplementation(libs.mockk)  // Allow mocking in tests
 
 	// Main dependencies (used internally by the common module)
 	implementation(libs.typesafe.config)
 	implementation(libs.kotlinx.serialization.hocon)
+
+	// Expose test dependencies
+	testFixturesImplementation(kotlin("test"))
+	testFixturesImplementation(libs.konform)
+	testFixturesImplementation(libs.mockk)
 
 	// Exposed dependencies, for use in plugins
 	api(libs.konform)
@@ -44,7 +50,7 @@ tasks.test {
 
 
 kotlin {
-	jvmToolchain(21)
+	jvmToolchain(25)
 	compilerOptions {
 		freeCompilerArgs.add("-Xcontext-parameters")
 	}
