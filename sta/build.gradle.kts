@@ -1,59 +1,23 @@
 plugins {
+	id("game-plugin")
 	alias(libs.plugins.kordex.gradle)
+	alias(libs.plugins.kordex.i18n)
 }
-
-
-group = "fr.paralya.bot"
-version = "0.1.0"
 
 kordEx {
 	plugin {
 		id = "paralya-sta"
 		version = getVersion() as String
 		description = "ParalyaBot's Stats Arena game plugin"
-		pluginClass = "fr.paralya.bot.lg.StatsAreBotPlugin"
+		pluginClass = "fr.paralya.bot.sta.StaBotPlugin"
 	}
+}
 
-	i18n {
-		classPackage = "fr.paralya.bot.sta"
+i18n {
+	bundle("paralyabot-sta.strings", "fr.paralya.bot.sta") {
 		className = "I18n"
-		translationBundle = "paralyabot-sta"
 		publicVisibility = false
 	}
 }
 
-repositories {
-	mavenCentral()
-}
 
-dependencies {
-	testImplementation(libs.mockk)
-	testImplementation(libs.koin.test)
-}
-
-tasks.test {
-	useJUnitPlatform()
-}
-kotlin {
-	jvmToolchain(25)
-	compilerOptions {
-		freeCompilerArgs.add("-Xcontext-parameters")
-	}
-}
-
-
-tasks.register("exportToGames") {
-	// This task depends on the jar task and moves it to the games folder
-	dependsOn(":lg:distZip")
-	doLast {
-		val zip = project(":lg").tasks.getByName("distZip").outputs.files.singleFile
-		val gamesDir = projectDir.resolve("../games/")
-		gamesDir.mkdirs()
-		zip.copyTo(gamesDir.resolve(zip.name), true)
-		val extractedDir = gamesDir.resolve(zip.nameWithoutExtension)
-		if (extractedDir.exists()) {
-			extractedDir.deleteRecursively()
-		}
-
-	}
-}

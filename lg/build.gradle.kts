@@ -1,10 +1,8 @@
 plugins {
+	id("game-plugin")
 	alias(libs.plugins.kordex.gradle)
+	alias(libs.plugins.kordex.i18n)
 }
-
-
-group = "fr.paralya.bot"
-version = "0.1.0"
 
 kordEx {
 	plugin {
@@ -13,47 +11,13 @@ kordEx {
 		description = "ParalyaBot's Werewolf game plugin"
 		pluginClass = "fr.paralya.bot.lg.LgBotPlugin"
 	}
+}
 
-	i18n {
-		classPackage = "fr.paralya.bot.lg"
+i18n {
+	bundle("paralyabot-lg.strings", "fr.paralya.bot.lg") {
 		className = "I18n"
-		translationBundle = "paralyabot-lg"
 		publicVisibility = false
 	}
 }
 
-repositories {
-	mavenCentral()
-}
 
-dependencies {
-	testImplementation(libs.mockk)
-	testImplementation(libs.koin.test)
-}
-
-tasks.test {
-	useJUnitPlatform()
-}
-kotlin {
-	jvmToolchain(25)
-	compilerOptions {
-		freeCompilerArgs.add("-Xcontext-parameters")
-	}
-}
-
-
-tasks.register("exportToGames") {
-	// This task depends on the jar task and moves it to the games folder
-	dependsOn(":lg:distZip")
-	doLast {
-		val zip = project(":lg").tasks.getByName("distZip").outputs.files.singleFile
-		val gamesDir = projectDir.resolve("../games/")
-		gamesDir.mkdirs()
-		zip.copyTo(gamesDir.resolve(zip.name), true)
-		val extractedDir = gamesDir.resolve(zip.nameWithoutExtension)
-		if (extractedDir.exists()) {
-			extractedDir.deleteRecursively()
-		}
-
-	}
-}

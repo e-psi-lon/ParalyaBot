@@ -1,23 +1,18 @@
 plugins {
+	id("kotlin-common")
 	alias(libs.plugins.kordex.gradle)
+	alias(libs.plugins.kordex.i18n)
 	`java-test-fixtures`
 }
 
-kordEx {
-	i18n {
-		classPackage = "fr.paralya.bot.common"
+i18n {
+	bundle("paralyabot-common.strings", "fr.paralya.bot.common") {
 		className = "I18n"
-		translationBundle = "paralyabot-common"
 	}
 }
 
 group = "fr.paralya.bot"
 version = "1.0-SNAPSHOT"
-
-repositories {
-	mavenCentral()
-}
-
 
 val byteBuddyAgent: Configuration by configurations.creating
 
@@ -38,20 +33,12 @@ dependencies {
 
 	// Exposed dependencies, for use in plugins
 	api(libs.konform)
+	api(libs.kordex.i18n.runtime)
 
 	// An agent for testing
 	byteBuddyAgent("net.bytebuddy:byte-buddy-agent:1.17.5")
 }
 
 tasks.test {
-	useJUnitPlatform()
 	jvmArgs("-javaagent:${byteBuddyAgent.asPath}")
-}
-
-
-kotlin {
-	jvmToolchain(25)
-	compilerOptions {
-		freeCompilerArgs.add("-Xcontext-parameters")
-	}
 }
