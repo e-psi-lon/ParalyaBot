@@ -5,8 +5,10 @@ plugins {
 	kotlin("jvm")
 }
 
+val libs: VersionCatalog = extensions.getByType<VersionCatalogsExtension>().named("libs")
+
 kotlin {
-	jvmToolchain(25)
+	jvmToolchain(libs.findVersion("jvm").get().toString().toInt())
 	compilerOptions {
 		freeCompilerArgs.add("-Xcontext-parameters")
 	}
@@ -19,4 +21,3 @@ tasks.withType<Test> {
 repositories {
 	mavenCentral()
 }
-
