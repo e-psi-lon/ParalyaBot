@@ -169,8 +169,8 @@ event<MessageCreateEvent> {
         val userId = event.message.author?.id?.value ?: return@action
         respond {
             // Translation context is automatically set based on user locale
-            content = I18n.Messages.Success.gameStarted.translateWithContext("game-channel") 
-            
+            // You can also use contextTranslateArray and contextTranslateNamed for a finer control
+            content = I18n.Messages.Success.gameStarted.contextTranslate("game-channel")
         }
     }
 }

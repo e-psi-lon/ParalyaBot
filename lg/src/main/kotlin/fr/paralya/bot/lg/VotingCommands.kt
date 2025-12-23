@@ -11,9 +11,9 @@ import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.types.TranslatableContext
+import fr.paralya.bot.common.contextTranslate
 import fr.paralya.bot.common.sendAsWebhook
 import fr.paralya.bot.common.snowflake
-import fr.paralya.bot.common.translateWithContext
 import fr.paralya.bot.lg.data.LgChannelType
 import fr.paralya.bot.lg.data.getChannelId
 import fr.paralya.bot.lg.I18n as Lg
@@ -40,27 +40,27 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 				val reason = arguments.reason
 				if (channel.id == botCache.getChannelId(LgChannelType.CORBEAU)) {
 					if (voteManager.getCurrentVote(LGState.DAY)?.corbeau != 0.snowflake) {
-						respond { content = Lg.Vote.Response.Error.Corbeau.alreadyVoted.translateWithContext() }
+						respond { content = Lg.Vote.Response.Error.Corbeau.alreadyVoted.contextTranslate() }
 					}
 					voteManager.voteCorbeau(target.id)
 					respond {
-						content = Lg.Vote.Response.Success.Corbeau.vote.translateWithContext(target.mention)
+						content = Lg.Vote.Response.Success.Corbeau.vote.contextTranslate(target.mention)
 					}
 				} else if (channel.id != botCache.getChannelId(LgChannelType.VOTES))
-					respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
+					respond { content = Lg.Vote.Response.Error.cantVoteHere.contextTranslate() }
 				else if (voteManager.getCurrentVote(LGState.DAY)?.choices?.isNotEmpty() == true && voteManager.getCurrentVote(
 						LGState.DAY
 					)?.choices?.contains(target.id) != true
 				)
-					respond { content = Lg.Vote.Response.Error.notInChoices.translateWithContext() }
+					respond { content = Lg.Vote.Response.Error.notInChoices.contextTranslate() }
 				else if (voteManager.getCurrentVote(LGState.DAY) == null)
-					respond { content = Lg.Vote.Response.Error.noCurrentVote.translateWithContext() }
+					respond { content = Lg.Vote.Response.Error.noCurrentVote.contextTranslate() }
 				else {
 					val alreadyVoted =
 						voteManager.getCurrentVote(LGState.DAY)?.votes?.containsKey(target.id) == true
 					voteManager.vote(user.id, target)
 					respond {
-						content = Lg.Vote.Response.Success.vote.translateWithContext(target.mention)
+						content = Lg.Vote.Response.Success.vote.contextTranslate(target.mention)
 					}
 					sendAsWebhook(
 						lg.bot,
@@ -83,20 +83,20 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 				val target = arguments.target
 				val reason = arguments.reason
 				if (channel.id != botCache.getChannelId(LgChannelType.LOUPS_VOTE))
-					respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
+					respond { content = Lg.Vote.Response.Error.cantVoteHere.contextTranslate() }
 				else if (voteManager.getCurrentVote(LGState.NIGHT)?.choices?.isNotEmpty() == true && voteManager.getCurrentVote(
 						LGState.NIGHT
 					)?.choices?.contains(target.id) != true
 				)
-					respond { content = Lg.Vote.Response.Error.notInChoices.translateWithContext() }
+					respond { content = Lg.Vote.Response.Error.notInChoices.contextTranslate() }
 				else if (voteManager.getCurrentVote(LGState.NIGHT) == null)
-					respond { content = Lg.Vote.Response.Error.noCurrentVote.translateWithContext() }
+					respond { content = Lg.Vote.Response.Error.noCurrentVote.contextTranslate() }
 				else {
 					val alreadyVoted =
 						voteManager.getCurrentVote(LGState.NIGHT)?.votes?.containsKey(target.id) == true
 					voteManager.vote(user.id, target)
 					respond {
-						content = Lg.Vote.Response.Success.vote.translateWithContext(target.mention)
+						content = Lg.Vote.Response.Success.vote.contextTranslate(target.mention)
 					}
 					sendAsWebhook(
 						lg.bot,
@@ -124,7 +124,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
                 val voteChannels = listOf(votes, voteLoups, voteCorbeau)
 
                 if (channelId !in voteChannels) {
-                    respond { content = Lg.Vote.Response.Error.cantVoteHere.translateWithContext() }
+                    respond { content = Lg.Vote.Response.Error.cantVoteHere.contextTranslate() }
                     return@action
                 } else {
                     when (channelId) {
@@ -133,26 +133,26 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
                             val currentVote = voteManager.getCurrentVote(state)
                             val isCorrectState = lg.botCache.getGameData().state == state
                             if (currentVote == null || !currentVote.votes.containsKey(user.id) || !isCorrectState) {
-                                respond { content = Lg.Unvote.Response.Error.noVote.translateWithContext() }
+                                respond { content = Lg.Unvote.Response.Error.noVote.contextTranslate() }
                                 return@action
                             }
                             voteManager.unvote(user.id)
-                            respond { content = Lg.Unvote.Response.success.translateWithContext() }
+                            respond { content = Lg.Unvote.Response.success.contextTranslate() }
                         }
                         voteCorbeau -> {
                             val currentVote = voteManager.getCurrentVote(LGState.DAY)
                             val isCorrectState = lg.botCache.getGameData().state == LGState.NIGHT
                             if (currentVote == null || currentVote.corbeau == 0.snowflake || !isCorrectState) {
-                                respond { content = Lg.Unvote.Response.Error.noVote.translateWithContext() }
+                                respond { content = Lg.Unvote.Response.Error.noVote.contextTranslate() }
                                 return@action
                             }
                             voteManager.unvoteCorbeau()
-                            respond { content = Lg.Unvote.Response.success.translateWithContext() }
+                            respond { content = Lg.Unvote.Response.success.contextTranslate() }
                         }
                     }
                 }
                 if (previousId != null)
-                    channel.getMessage(previousId).delete(Lg.System.MessageDelete.VoteMessage.reason.translateWithContext())
+                    channel.getMessage(previousId).delete(Lg.System.MessageDelete.VoteMessage.reason.contextTranslate())
             }
         }
         ephemeralSubCommand {
@@ -167,7 +167,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
                 val dayChannels = setOf(village, votes)
                 val nightChannels = setOf(loups, loupsVotes)
                 if (channel.id !in dayChannels + nightChannels) {
-                    respond { content = Lg.VoteList.Response.Error.cantSeeVotesHere.translateWithContext() }
+                    respond { content = Lg.VoteList.Response.Error.cantSeeVotesHere.contextTranslate() }
                     return@action
                 } else {
                     val state = if (channel.id in dayChannels) LGState.DAY else LGState.NIGHT
@@ -175,7 +175,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
                     val votes = vote?.votes
                     val isCorrectState = lg.botCache.getGameData().state == state
                     if (votes.isNullOrEmpty() || !isCorrectState) {
-                        respond { content = Lg.VoteList.Response.Error.noVotes.translateWithContext() }
+                        respond { content = Lg.VoteList.Response.Error.noVotes.contextTranslate() }
                         return@action
                     }
                     val votersByTarget = votes.entries.groupBy({ it.value }, { it.key })
@@ -183,9 +183,9 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
                     if (vote.corbeau != 0.snowflake && !voteCountByTarget.containsKey(vote.corbeau)) voteCountByTarget[vote.corbeau] = 2
                     respond {
                         embed {
-                            title = Lg.VoteList.Response.Success.Embed.title.translateWithContext()
-                            description = if (state == LGState.DAY) Lg.VoteList.Response.Success.Embed.Description.day.translateWithContext()
-                                    else Lg.VoteList.Response.Success.Embed.Description.night.translateWithContext()
+                            title = Lg.VoteList.Response.Success.Embed.title.contextTranslate()
+                            description = if (state == LGState.DAY) Lg.VoteList.Response.Success.Embed.Description.day.contextTranslate()
+                                    else Lg.VoteList.Response.Success.Embed.Description.night.contextTranslate()
 
                             voteCountByTarget.entries.sortedByDescending { it.value }.forEach { (target, count) ->
                                 field(guild!!.getMember(target).mention, inline = false) {
@@ -193,9 +193,9 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
                                         guild!!.getMember(it).mention
                                     }?.sorted()?.joinToString(", ", prefix = "(", postfix = ")") ?: ""
                                     if (target == vote.corbeau) {
-                                        Lg.VoteList.Response.Success.Embed.Field.WithCorbeau.description.translateWithContext(count + 2, playerNameList)
+                                        Lg.VoteList.Response.Success.Embed.Field.WithCorbeau.description.contextTranslate(count + 2, playerNameList)
                                     } else {
-                                        Lg.VoteList.Response.Success.Embed.Field.description.translateWithContext(count, playerNameList)
+                                        Lg.VoteList.Response.Success.Embed.Field.description.contextTranslate(count, playerNameList)
                                     }
                                 }
                             }
@@ -203,9 +203,6 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
                     }
                 }
             }
-        }
-        ephemeralSubCommand {
-
         }
 	}
 }
@@ -223,14 +220,13 @@ suspend fun TranslatableContext.getVotePublicResponse(
 	target: User,
 	reason: String? = null,
 	alreadyVoted: Boolean = false,
-) = if (alreadyVoted && reason != null)
-	Lg.Vote.Response.Success.Public.changeReason.translateWithContext(target.mention, reason)
-else if (alreadyVoted)
-	Lg.Vote.Response.Success.Public.change.translateWithContext(target.mention)
-else if (reason != null)
-	Lg.Vote.Response.Success.Public.voteReason.translateWithContext(target.mention, reason)
-else
-	Lg.Vote.Response.Success.Public.vote.translateWithContext(target.mention)
+) = when {
+	alreadyVoted && reason != null ->
+		Lg.Vote.Response.Success.Public.changeReason.contextTranslate(target.mention, reason)
+	alreadyVoted -> Lg.Vote.Response.Success.Public.change.contextTranslate(target.mention)
+	reason != null -> Lg.Vote.Response.Success.Public.voteReason.contextTranslate(target.mention, reason)
+	else -> Lg.Vote.Response.Success.Public.vote.contextTranslate(target.mention)
+}
 
 /**
  * Arguments for the vote command.

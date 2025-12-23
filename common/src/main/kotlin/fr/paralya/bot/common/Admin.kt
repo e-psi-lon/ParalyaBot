@@ -27,10 +27,10 @@ import org.koin.core.component.inject
 fun <C : SlashCommandContext<*, A, M>, A : Arguments, M : ModalForm> SlashCommand<C, A, M>.adminOnly(action: suspend C.(M?) -> Unit) {
 	action { modal ->
 		val configManager by inject<ConfigManager>()
-		if (configManager.botConfig.admins.contains(this.member?.id?.value)) {
+		if (configManager.botConfig.admins.contains(member?.id?.value)) {
 			action(modal)
 		} else {
-			val text = I18n.System.Permissions.notAdmin.translateWithContext()
+			val text = I18n.System.Permissions.notAdmin.contextTranslate()
 			when (this) {
 				is PublicSlashCommandContext<*, *> -> respond { content = text }
 				is EphemeralSlashCommandContext<*, *> -> respond { content = text }
@@ -44,7 +44,7 @@ fun <C : SlashCommandContext<*, A, M>, A : Arguments, M : ModalForm> SlashComman
  * @return true if the user is an admin, false otherwise.
  */
 fun User?.isAdmin(config: BotConfig): Boolean {
-	return this != null && config.admins.contains(this.id.value)
+	return this != null && config.admins.contains(id.value)
 }
 
 /**
@@ -52,5 +52,5 @@ fun User?.isAdmin(config: BotConfig): Boolean {
  * @return true if the member is an admin, false otherwise.
  */
 fun Member?.isAdmin(config: BotConfig): Boolean {
-	return this != null && config.admins.contains(this.id.value)
+	return this != null && config.admins.contains(id.value)
 }

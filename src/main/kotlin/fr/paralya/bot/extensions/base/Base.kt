@@ -63,7 +63,7 @@ class Base : Extension() {
 					) {
 						content = message.content
 						if (message.referencedMessage != null) embed {
-							title = Common.Transmission.Reference.title.translateWithContext()
+							title = Common.Transmission.Reference.title.contextTranslate()
 							description = message.referencedMessage!!.content
 						}
 					}
@@ -87,7 +87,7 @@ class Base : Extension() {
 						) {
 							content = event.new.content.toString()
 							embed {
-								title = Common.Transmission.Update.title.translateWithContext()
+								title = Common.Transmission.Update.title.contextTranslate()
 								description = event.new.content.toString()
 							}
 						}
@@ -120,7 +120,7 @@ class Base : Extension() {
 					gameMode(gameRegistry.getGameMode(arguments.game))
 				}
 				respond {
-					content = I18n.StartGame.Response.success.translateWithContext(arguments.game)
+					content = I18n.StartGame.Response.success.contextTranslate(arguments.game)
 				}
 			}
 		}
@@ -134,7 +134,7 @@ class Base : Extension() {
 					gameMode(GameRegistry.NONE)
 				}
 				respond {
-					content = I18n.StopGame.Response.success.translateWithContext()
+					content = I18n.StopGame.Response.success.contextTranslate()
 				}
 			}
 		}
@@ -154,7 +154,7 @@ class Base : Extension() {
                     channel.getMessagesBefore(channel.asChannel().lastMessageId ?: Snowflake.max, arguments.count!!)
             }
                 respond {
-                    content = I18n.ChatExport.Response.Success.txt.translateWithContext()
+                    content = I18n.ChatExport.Response.Success.txt.contextTranslate()
                     when (arguments.format.parsed) {
                         Format.TXT -> addStringExport(channel, guild, messages, arguments.anonymous)
                         Format.HTML -> addHtmlExport(channel, guild, messages, arguments)
@@ -179,7 +179,7 @@ class Base : Extension() {
 		}
 	}
 
-    inner class ExportArguments : Arguments() {
+    class ExportArguments : Arguments() {
         val count: Int? by optionalInt {
             name = I18n.ChatExport.Argument.Count.name
             description = I18n.ChatExport.Argument.Count.description
@@ -200,10 +200,11 @@ class Base : Extension() {
             name = I18n.ChatExport.Argument.End.name
             description = I18n.ChatExport.Argument.End.description
             validate {
-                if (start == null && value != null)
-                    return@validate fail(I18n.ChatExport.Argument.End.Error.startRequired)
+				return@validate if (start == null && value != null)
+                     fail(I18n.ChatExport.Argument.End.Error.startRequired)
                 else if (value != null && value!! < start!!)
-                    return@validate fail(I18n.ChatExport.Argument.End.Error.invalidRange)
+                    fail(I18n.ChatExport.Argument.End.Error.invalidRange)
+				else Unit
             }
         }
 

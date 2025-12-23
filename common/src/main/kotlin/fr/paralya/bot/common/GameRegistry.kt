@@ -2,7 +2,8 @@ package fr.paralya.bot.common
 
 import dev.kord.common.entity.PresenceStatus
 import dev.kord.gateway.builder.PresenceBuilder
-import dev.kordex.core.i18n.types.Key
+import dev.kordex.i18n.Key
+import dev.kordex.i18n.I18n as KI18n
 import dev.kordex.core.koin.KordExKoinComponent
 
 
@@ -74,6 +75,6 @@ fun PresenceBuilder.gameMode(gameMode: Pair<Key, String>) {
 		this.watching("Paralya sans animation en cours...")
 	} else {
 		status = PresenceStatus.Online
-		this.playing("une partie de ${gameMode.first.translate()}")
+		this.playing("une partie de ${gameMode.first.translateLocale(KI18n.defaultLocale)}")
 	}
 }

@@ -59,7 +59,7 @@ class LG : Extension() {
 				description = Lg.Notif.Command.description
 				action { modal ->
 					if (guild == null) {
-						respond { content = Messages.Error.onlyInGuild.translateWithContext() }
+						respond { content = Messages.Error.onlyInGuild.contextTranslate() }
 						return@action
 					}
 
@@ -68,21 +68,21 @@ class LG : Extension() {
 						guild?.members?.collect { member ->
 							if (member.hasRole(arguments.role)) {
 								member.dm(
-									Lg.Notif.Content.main.translateWithContext(
-										modal?.message?.value ?: Lg.Notif.Content.error.translateWithContext()
+									Lg.Notif.Content.main.contextTranslate(
+										modal?.message?.value ?: Lg.Notif.Content.error
 									)
 								) ?: failed.add(member.username)
 							}
 						}
 					} catch (e: Exception) {
-						respond { content = Lg.Notif.Response.success.translateWithContext(e.message) }
+						respond { content = Lg.Notif.Response.success.contextTranslate(e.message) }
 					}
 
 					respond {
 						content = if (failed.isEmpty()) {
-							Lg.Notif.Response.success.translateWithContext()
+							Lg.Notif.Response.success.contextTranslate()
 						} else {
-							Lg.Notif.Response.failed.translateWithContext(failed.joinToString(", "))
+							Lg.Notif.Response.failed.contextTranslate(failed.joinToString(", "))
 						}
 					}
 				}
@@ -123,7 +123,7 @@ class LG : Extension() {
 						""".trimIndent()
 					}
 					respond {
-						content = Lg.EndDay.Response.success.translateWithContext(
+						content = Lg.EndDay.Response.success.contextTranslate(
 							day,
 							hour
 						)
@@ -137,7 +137,7 @@ class LG : Extension() {
 
                 adminOnly {
                     val target = arguments.target
-                    val reason = arguments.reason ?: Lg.Kill.Argument.Reason.default.translateWithContext()
+                    val reason = arguments.reason ?: Lg.Kill.Argument.Reason.default.contextTranslate()
                     val config by inject<LgConfig>()
 
                     guild!!.getMember(target.id).swapRoles(
@@ -146,7 +146,7 @@ class LG : Extension() {
                         reason
                     )
                     respond {
-                        content = Lg.Kill.Response.success.translateWithContext(target.effectiveName, reason)
+                        content = Lg.Kill.Response.success.contextTranslate(target.effectiveName, reason)
                     }
                 }
             }

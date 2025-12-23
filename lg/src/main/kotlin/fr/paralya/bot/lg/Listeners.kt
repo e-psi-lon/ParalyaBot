@@ -83,7 +83,7 @@ suspend fun LG.registerListeners() {
                         content = message.content
 
                         if (message.referencedMessage != null) embed {
-                            title = Common.Transmission.Reference.title.translateWithContext()
+                            title = Common.Transmission.Reference.title.contextTranslate()
                             description = message.referencedMessage!!.content
                         }
                     }
@@ -109,7 +109,7 @@ suspend fun LG.registerListeners() {
 							content = newMessage.content
 							if (newMessage.referencedMessage != null) {
 								embed {
-									title = Common.Transmission.Reference.title.translateWithContext()
+									title = Common.Transmission.Reference.title.contextTranslate()
 									description = newMessage.referencedMessage!!.content
 								}
 							} else {
@@ -128,11 +128,11 @@ suspend fun LG.registerListeners() {
 					) {
 						content = newMessage.content
 						if (newMessage.referencedMessage != null) embed {
-							title = Common.Transmission.Reference.title.translateWithContext()
+							title = Common.Transmission.Reference.title.contextTranslate()
 							description = newMessage.referencedMessage!!.content
 						}
 						embed {
-							title = Common.Transmission.Update.title.translateWithContext()
+							title = Common.Transmission.Update.title.contextTranslate()
 							description = oldMessage.content
 						}
 					}

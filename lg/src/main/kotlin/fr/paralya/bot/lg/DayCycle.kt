@@ -6,7 +6,7 @@ import dev.kordex.core.commands.application.slash.PublicSlashCommand
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.converters.impl.defaultingBoolean
 import dev.kordex.core.components.forms.ModalForm
-import dev.kordex.core.i18n.types.Key
+import dev.kordex.i18n.Key
 import dev.kordex.core.utils.getTopChannel
 import fr.paralya.bot.common.*
 import fr.paralya.bot.lg.LGState.DAY
@@ -63,7 +63,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			val voteManager = lg.voteManager
 
 			if (gameData.state == DAY) {
-				respond { content = Lg.Day.Response.Error.alreadyDay.translateWithContext() }
+				respond { content = Lg.Day.Response.Error.alreadyDay.contextTranslate() }
 				return@adminOnly
 			}
 			voteManager.createVillageVote()
@@ -80,7 +80,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 							botCache.getChannelId(LgChannelType.LOUPS_VOTE)!!,
 							"ParalyaLG",
 							getAsset("paralya_lg", lg.prefix)	) {
-							content = Lg.DayCycle.Response.Other.equality.translateWithContext(
+							content = Lg.DayCycle.Response.Other.equality.contextTranslate(
 								result.players.joinToString(", ") { "<@${it.value}>" }
 							)
 						}
@@ -88,7 +88,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 							setChoices(result.toList())
 							botCache.updateVote(this)
 						}
-						respond { content = Lg.DayCycle.Response.Other.secondVote.translateWithContext() }
+						respond { content = Lg.DayCycle.Response.Other.secondVote.contextTranslate() }
 						return@adminOnly
 					}
 
@@ -96,11 +96,11 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 						guild!!.getMember(result.player).swapRoles(
 							config.deadRole.snowflake,
 							aliveRole,
-							Lg.System.Permissions.PlayerKilled.reason.translateWithContext()
+							Lg.System.Permissions.PlayerKilled.reason.contextTranslate()
 						)
 						respond {
 							content =
-								Lg.DayCycle.Response.Success.killed.translateWithContext(guild!!.getMember(result.player).effectiveName)
+								Lg.DayCycle.Response.Success.killed.contextTranslate(guild!!.getMember(result.player).effectiveName)
 						}
 					}
 				}
@@ -120,7 +120,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			botCache.getChannel(LgChannelType.LOUPS_CHAT)?.getMembersWithAccess()
 				?.filterByRole(aliveRole)
 				?.toList()?.forEach { member ->
-					val reason = Lg.System.Permissions.Day.reason.translateWithContext()
+					val reason = Lg.System.Permissions.Day.reason.contextTranslate()
 					listOf(LgChannelType.LOUPS_VOTE, LgChannelType.LOUPS_CHAT).forEach { channelName ->
 						botCache.getChannel(channelName)?.getTopChannel()?.apply {
 							addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
@@ -128,7 +128,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 						}
 					}
 				}
-			respond { content = Lg.Day.Response.success.translateWithContext() }
+			respond { content = Lg.Day.Response.success.contextTranslate() }
 		}
 	}
 	ephemeralSubCommand(::NightArguments) {
@@ -142,7 +142,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			val gameData = botCache.getGameData()
 			val voteManager = lg.voteManager
 			if (gameData.state == NIGHT) {
-				respond { content = Lg.Night.Response.Error.alreadyNight.translateWithContext() }
+				respond { content = Lg.Night.Response.Error.alreadyNight.contextTranslate() }
 				return@adminOnly
 			}
 			voteManager.createWerewolfVote()
@@ -160,7 +160,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 							"ParalyaLG",
 							getAsset("paralya_lg", lg.prefix),
 						) {
-							content = Lg.DayCycle.Response.Other.equality.translateWithContext(
+							content = Lg.DayCycle.Response.Other.equality.contextTranslate(
 								result.players.joinToString(", ") { "<@${it.value}>" }
 							)
 						}
@@ -168,16 +168,16 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 							setChoices(result.players.toList())
 							botCache.updateVote(this)
 						}
-						Lg.DayCycle.Response.Other.secondVote.translateWithContext()
+						Lg.DayCycle.Response.Other.secondVote.contextTranslate()
 					}
 
 					is VoteResult.Killed -> {
 						guild!!.getMember(result.player).swapRoles(
 							config.deadRole.snowflake,
 							aliveRole,
-							Lg.System.Permissions.PlayerKilled.reason.translateWithContext()
+							Lg.System.Permissions.PlayerKilled.reason.contextTranslate()
 						)
-						Lg.DayCycle.Response.Success.killed.translateWithContext(
+						Lg.DayCycle.Response.Success.killed.contextTranslate(
 							guild!!.getMember(result.player).effectiveName
 						)
 					}
@@ -196,7 +196,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					?.run {
 						removeRolePermissions(aliveRole, Permission.ViewChannel, Permission.SendMessages)
 						sendAsWebhook(lg.bot, this.id, "ParalyaLG", getAsset("paralya_lg", lg.prefix)) {
-							content = Lg.System.separator.translateWithContext()
+							content = Lg.System.separator.contextTranslate()
 						}
 					}
 
@@ -206,7 +206,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			botCache.getChannel(LgChannelType.LOUPS_CHAT)?.getMembersWithAccess()
 				?.filterByRole(aliveRole)
 				?.toList()?.forEach { member ->
-					val reason = Lg.System.Permissions.Night.reason.translateWithContext()
+					val reason = Lg.System.Permissions.Night.reason.contextTranslate()
 
 					WOLF_CHANNELS.forEach { channelName ->
 						botCache.getChannel(channelName)?.getTopChannel()?.apply {
@@ -221,9 +221,9 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				"Corbeau",
 				getAsset("\"\uD83D\uDC26\u200D⬛ Corbeau\"", lg.prefix)
 			) {
-				content = Lg.Night.Response.Other.corbeau.translateWithContext(oldVillageVote?.corbeau?.value ?: 0)
+				content = Lg.Night.Response.Other.corbeau.contextTranslate(oldVillageVote?.corbeau?.value ?: 0)
 			}
-			respond { content = Lg.Night.Response.success.translateWithContext() }
+			respond { content = Lg.Night.Response.success.contextTranslate() }
 		}
 	}
 }

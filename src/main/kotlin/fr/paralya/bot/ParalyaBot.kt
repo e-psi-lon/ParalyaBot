@@ -5,7 +5,7 @@ import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
 import dev.kord.rest.builder.message.embed
 import dev.kordex.core.ExtensibleBot
-import dev.kordex.core.i18n.SupportedLocales
+import dev.kordex.i18n.I18n as KI18n
 import dev.kordex.core.utils.getKoin
 import dev.kordex.core.utils.loadModule
 import fr.paralya.bot.common.GameRegistry
@@ -24,6 +24,7 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import dev.kordex.core.annotations.warnings.ReplacingDefaultErrorResponseBuilder
 import org.slf4j.LoggerFactory
+import java.util.Locale
 
 /**
  * Main entry point for the Paralya's Discord bot.
@@ -78,8 +79,8 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 
 		// Configure internationalization with French as the default language
 		i18n {
-			defaultLocale = SupportedLocales.FRENCH
-			applicationCommandLocale(SupportedLocales.FRENCH)
+			KI18n.defaultLocale = Locale.FRENCH
+			applicationCommandLocale(Locale.FRENCH)
 		}
 
 		members { all() }

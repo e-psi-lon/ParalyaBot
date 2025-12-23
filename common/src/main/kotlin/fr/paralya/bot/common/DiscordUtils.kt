@@ -15,8 +15,6 @@ import dev.kord.core.entity.channel.TextChannel
 import dev.kord.rest.Image
 import dev.kord.rest.builder.message.create.WebhookMessageCreateBuilder
 import dev.kordex.core.ExtensibleBot
-import dev.kordex.core.i18n.types.Key
-import dev.kordex.core.i18n.withContext
 import dev.kordex.core.types.TranslatableContext
 import dev.kordex.core.utils.any
 import dev.kordex.core.utils.hasRole
@@ -105,16 +103,6 @@ suspend fun sendAsWebhook(
 		}
 	}
 }
-
-/**
- * Translates a key with the current translation context and optional replacements.
- *
- * @param replacements Optional replacements to include in the translation.
- * @return The translated string.
- */
-context(ctx: TranslatableContext)
-suspend fun Key.translateWithContext(vararg replacements: Any?) =
-	withContext(ctx).translate(*replacements)
 
 /**
  * Retrieves an image asset from the specified path.

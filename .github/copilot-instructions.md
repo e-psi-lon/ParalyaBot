@@ -268,8 +268,8 @@ name = Lg.Vote.Village.Command.name
 description = Lg.Vote.Village.Command.description
 
 // Dynamic content
-content = Messages.Error.channelNotFound.translateWithContext(channelType)
-respond { content = I18n.StartGame.Response.success.translateWithContext(arguments.game) }
+content = Messages.Error.channelNotFound.contextTranslate(channelType)
+respond { content = I18n.StartGame.Response.success.contextTranslate(arguments.game) }
 ```
 
 **Key Structure Examples**:
