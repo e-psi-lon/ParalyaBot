@@ -1,6 +1,7 @@
 [versions]
-kotlin = "2.3.0"
-kordex-plugin = "1.8.1"
+kotlin = "2.2.21"
+kordex-plugin = "1.9.0"
+kordex-i18n = "1.1.1"
 logback = "1.5.22"
 shadow = "9.3.0"
 typesafe-config = "1.4.4"
@@ -19,9 +20,11 @@ mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 kotlinx-serialization-hocon = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-hocon", version.ref = "kotlinx-serialization-hocon" }
 konform = { group = "io.konform", name = "konform-jvm", version.ref = "konform" }
 kotlinx-html = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinx-html" }
+kordex-i18n-runtime = { group = "dev.kordex.i18n", name = "i18n", version.ref = "kordex-i18n" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kordex-gradle = { id = "dev.kordex.gradle.kordex", version.ref = "kordex-plugin" }
+kordex-i18n = { id = "dev.kordex.gradle.i18n", version.ref = "kordex-i18n" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
