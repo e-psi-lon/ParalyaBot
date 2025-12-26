@@ -81,6 +81,8 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 		i18n {
 			KI18n.defaultLocale = Locale.FRENCH
 			applicationCommandLocale(Locale.FRENCH)
+			interactionUserLocaleResolver()
+			interactionGuildLocaleResolver()
 		}
 
 		members { all() }
