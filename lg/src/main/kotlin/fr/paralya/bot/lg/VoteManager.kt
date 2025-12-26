@@ -82,6 +82,14 @@ class VoteManager(private val botCache: DataCache) {
 		botCache.updateVote(voteData)
 	}
 
+	suspend fun resetVotes(state: LGState) {
+        botCache.updateVote(
+            getCurrentVote(state)?.copy(
+                votes = emptyMap()
+            ) ?: return
+        )
+    }
+
 	/**
 	 * Finishes the current vote for a specific game state
 	 * @param state The game state (DAY or NIGHT)
