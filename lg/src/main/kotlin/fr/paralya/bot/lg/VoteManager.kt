@@ -106,7 +106,8 @@ class VoteManager(private val botCache: DataCache) {
 		kill: Boolean,
 		force: Boolean
 	): VoteResult {
-		val voteCount = vote.votes.values.groupingBy { it }.eachCount()
+		val voteCount = vote.votes.values.groupingBy { it }.eachCount().toMutableMap()
+		if (vote.type == LGState.DAY && vote.corbeau != 0.snowflake) voteCount[vote.corbeau] = (voteCount[vote.corbeau] ?: 0) + 2
 		val maxVote = voteCount.maxByOrNull { it.value }?.key
 		val maxVotedPlayers = voteCount.filter { it.key == maxVote }.keys
 
