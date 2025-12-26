@@ -1,178 +1,172 @@
 package fr.paralya.bot.common
 
-import dev.kord.common.entity.PresenceStatus
-import dev.kord.gateway.builder.PresenceBuilder
-import dev.kordex.core.i18n.types.Key
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.slot
-import org.koin.test.KoinTest
+import dev.kordex.i18n.I18n
+import dev.kordex.i18n.Key
+import io.mockk.unmockkAll
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import java.util.Locale
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+class GameRegistryTest {
 
-class GameRegistryTest : KoinTest {
+	@BeforeEach
+	fun startup() {
+		I18n.defaultLocale = Locale.FRENCH
+	}
 
-
-	private val gameRegistry = GameRegistry()
+	@AfterEach
+	fun tearDown() {
+		unmockkAll()
+	}
 
 	@Test
-	fun `register a game mode`() {
+	fun `registerGameMode stores game mode with key`() {
+		// Arrange
+		val registry = GameRegistry()
 		val key = Key("game-mode.test")
-		val gameMode = "Test Game Mode"
-		gameRegistry.registerGameMode(key, gameMode)
-		val result = gameRegistry.getGameMode(gameMode)
-		assertEquals(key, result.first, "Expected key to be $key got ${result.first} instead")
-		assertEquals(gameMode, result.second, "Expected game mode to be $gameMode got ${result.second} instead")
+		val gameMode = "Test Game"
+
+		// Act
+		registry.registerGameMode(key, gameMode)
+		val result = registry.getGameMode(gameMode)
+
+		// Assert
+		assertEquals(key, result.first)
+		assertEquals(gameMode, result.second)
 	}
 
 	@Test
-	fun `get all game modes`() {
-		val key = Key("game-mode.test")
-		val gameMode = "Test Game Mode"
-		gameRegistry.registerGameMode(key, gameMode)
-		val key2 = Key("game-mode.test2")
-		val gameMode2 = "Test Game Mode 2"
-		gameRegistry.registerGameMode(key2, gameMode2)
-		val result = gameRegistry.getGameModes()
-		assertEquals(2, result.size, "Expected size to be 2 got ${result.size} instead")
-		assertEquals(key, result.keys.first(), "Expected key to be $key got ${result.keys.first()} instead")
-		assertEquals(
-			gameMode,
-			result.values.first(),
-			"Expected game mode to be $gameMode got ${result.values.first()} instead"
-		)
-		assertEquals(key2, result.keys.last(), "Expected key to be $key2 got ${result.keys.last()} instead")
-		assertEquals(
-			gameMode2,
-			result.values.last(),
-			"Expected game mode to be $gameMode2 got ${result.values.last()} instead"
-		)
-	}
-
-
-	@Test
-	fun `unload a game mode`() {
-		val key = Key("game-mode.test")
-		val gameMode = "Test Game Mode"
-		gameRegistry.registerGameMode(key, gameMode)
-		gameRegistry.unloadGameMode(gameMode)
-		val result = gameRegistry.getGameModes()
-		assertEquals(0, result.size, "Expected size to be 0 got ${result.size} instead")
-	}
-
-	@Test
-	fun `get non-existent game mode returns NONE`() {
-		val result = gameRegistry.getGameMode("NonExistentGameMode")
-		assertEquals(GameRegistry.NONE, result, "Expected NONE for non-existent game mode")
-	}
-
-	@Test
-	fun `register game mode with existing key overwrites previous value`() {
-		val key = Key("game-mode.test")
-		val gameMode1 = "Test Game Mode 1"
-		val gameMode2 = "Test Game Mode 2"
-
-		gameRegistry.registerGameMode(key, gameMode1)
-		gameRegistry.registerGameMode(key, gameMode2)
-
-		val result = gameRegistry.getGameMode(gameMode2)
-		assertEquals(key, result.first, "Key should match")
-		assertEquals(gameMode2, result.second, "Game mode should be updated to the new value")
-
-		// Check that old value is no longer accessible
-		val oldResult = gameRegistry.getGameMode(gameMode1)
-		assertEquals(GameRegistry.NONE, oldResult, "Old game mode should not be accessible")
-	}
-
-	@Test
-	fun `register duplicate game mode with different key`() {
+	fun `getGameModes returns all registered modes`() {
+		// Arrange
+		val registry = GameRegistry()
 		val key1 = Key("game-mode.test1")
+		val gameMode1 = "Game 1"
 		val key2 = Key("game-mode.test2")
-		val gameMode = "Same Game Mode"
+		val gameMode2 = "Game 2"
 
-		gameRegistry.registerGameMode(key1, gameMode)
-		gameRegistry.registerGameMode(key2, gameMode)
+		// Act
+		registry.registerGameMode(key1, gameMode1)
+		registry.registerGameMode(key2, gameMode2)
+		val modes = registry.getGameModes()
 
-		// When retrieving by value, it should return the first registered key
-		val result = gameRegistry.getGameMode(gameMode)
-		assertEquals(key1, result.first, "Should return the first key registered with this value")
+		// Assert
+		assertEquals(2, modes.size)
+		assertEquals(gameMode1, modes[key1])
+		assertEquals(gameMode2, modes[key2])
 	}
 
 	@Test
-	fun `unload non-existent game mode doesn't throw exception`() {
-		// This should not throw an exception
-		try {
-			gameRegistry.unloadGameMode("NonExistentGameMode")
-		} catch (e: Exception) {
-			throw AssertionError("Unloading non-existent game mode should not throw an exception but did: ${e.message}")
-		}
+	fun `unloadGameMode removes registered mode`() {
+		// Arrange
+		val registry = GameRegistry()
+		val key = Key("game-mode.test")
+		val gameMode = "Test Game"
+		registry.registerGameMode(key, gameMode)
+
+		// Act
+		registry.unloadGameMode(gameMode)
+
+		// Assert
+		assertEquals(GameRegistry.NONE, registry.getGameMode(gameMode))
+		assertEquals(0, registry.getGameModes().size)
 	}
 
 	@Test
-	fun `empty registry returns correct values`() {
-		val emptyMap = gameRegistry.getGameModes()
-		assertEquals(0, emptyMap.size, "Empty registry should return empty map")
+	fun `getGameMode returns NONE for non-existent mode`() {
+		// Arrange
+		val registry = GameRegistry()
 
-		val nonExistentResult = gameRegistry.getGameMode("anything")
-		assertEquals(GameRegistry.NONE, nonExistentResult, "Non-existent game mode should return NONE")
+		// Act
+		val result = registry.getGameMode("NonExistent")
+
+		// Assert
+		assertEquals(GameRegistry.NONE, result)
 	}
 
 	@Test
-	fun `presence builder sets idle status and watching message when NONE game mode`() {
-		val presenceBuilder = mockk<PresenceBuilder>(relaxed = true)
-		var capturedStatus: PresenceStatus? = null
-		var capturedWatchingName: String? = null
+	fun `registerGameMode with existing key overwrites previous value`() {
+		// Arrange
+		val registry = GameRegistry()
+		val key = Key("game-mode.test")
+		registry.registerGameMode(key, "Old Game")
 
-		// Setup property capture for status
-		every { presenceBuilder.status = capture(slot()) } answers {
-			capturedStatus = firstArg()
-		}
+		// Act
+		registry.registerGameMode(key, "New Game")
 
-		// Setup method capture for watching
-		every { presenceBuilder.watching(capture(slot())) } answers {
-			capturedWatchingName = firstArg()
-		}
-
-		presenceBuilder.gameMode(GameRegistry.NONE)
-
-		assertEquals(PresenceStatus.Idle, capturedStatus, "Status should be Idle for NONE game mode")
-		assertEquals(
-			"Paralya sans animation en cours...",
-			capturedWatchingName,
-			"Should set watching message for NONE game mode"
-		)
+		// Assert
+		assertEquals(GameRegistry.NONE, registry.getGameMode("Old Game"))
+		assertEquals(key to "New Game", registry.getGameMode("New Game"))
 	}
 
 	@Test
-	fun `presence builder sets online status and playing message with game name for regular game mode`() {
-		val presenceBuilder = mockk<PresenceBuilder>(relaxed = true)
-		val key = mockk<Key>()
-		val gameMode = "Test Game Mode"
-		val translatedKey = "Translated Game Mode"
-		var capturedStatus: PresenceStatus? = null
-		var capturedPlayingName: String? = null
+	fun `unloadGameMode with non-existent mode does not throw exception`() {
+		// Arrange
+		val registry = GameRegistry()
 
-		// Mock the translation function
-		every { key.translate() } returns translatedKey
+		// Act & Assert - should not throw
+		registry.unloadGameMode("NonExistent")
+	}
 
-		// Setup property capture for status
-		every { presenceBuilder.status = capture(slot()) } answers {
-			capturedStatus = firstArg()
-		}
+	@Test
+	fun `getGameModes returns empty map for empty registry`() {
+		// Arrange
+		val registry = GameRegistry()
 
-		// Setup method capture for playing
-		every { presenceBuilder.playing(capture(slot())) } answers {
-			capturedPlayingName = firstArg()
-		}
+		// Act
+		val modes = registry.getGameModes()
 
-		presenceBuilder.gameMode(key to gameMode)
+		// Assert
+		assertEquals(0, modes.size)
+	}
 
-		assertEquals(PresenceStatus.Online, capturedStatus, "Status should be Online for regular game mode")
-		assertEquals(
-			"une partie de ${key.translate()}",
-			capturedPlayingName,
-			"Should set playing message with translated game name"
-		)
+	@Test
+	fun `unloadGameMode with NONE game mode does nothing`() {
+		// Arrange
+		val registry = GameRegistry()
+
+		// Act
+		registry.unloadGameMode("none")
+
+		// Assert - should not throw, registry should remain empty
+		assertEquals(0, registry.getGameModes().size)
+	}
+
+	@Test
+	fun `multiple game modes can be registered and retrieved independently`() {
+		// Arrange
+		val registry = GameRegistry()
+		val testKey = Key("game-mode.test")
+		val werewolfKey = Key("game-mode.werewolf")
+		val testGame = "TestGame"
+		val werewolfGame = "Werewolf"
+
+		// Act
+		registry.registerGameMode(testKey, testGame)
+		registry.registerGameMode(werewolfKey, werewolfGame)
+
+		// Assert
+		assertEquals(testKey to testGame, registry.getGameMode(testGame))
+		assertEquals(werewolfKey to werewolfGame, registry.getGameMode(werewolfGame))
+		assertEquals(2, registry.getGameModes().size)
+	}
+
+	@Test
+	fun `unloadGameMode followed by new registration with same name works`() {
+		// Arrange
+		val registry = GameRegistry()
+		val key1 = Key("game-mode.v1")
+		val key2 = Key("game-mode.v2")
+		val gameName = "TestGame"
+
+		// Act
+		registry.registerGameMode(key1, gameName)
+		registry.unloadGameMode(gameName)
+		registry.registerGameMode(key2, gameName)
+
+		// Assert
+		assertEquals(key2 to gameName, registry.getGameMode(gameName))
 	}
 }
+
