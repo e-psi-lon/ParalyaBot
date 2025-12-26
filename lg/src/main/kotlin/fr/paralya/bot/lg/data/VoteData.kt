@@ -7,6 +7,7 @@ import dev.kord.cache.api.query
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.cache.idEq
 import dev.kord.core.entity.User
+import fr.paralya.bot.common.idEq
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.lg.LGState
 
@@ -26,7 +27,7 @@ typealias Target = Snowflake
  */
 data class VoteData(
 	val id: Snowflake,
-	val type: String,
+	val type: LGState,
 	val isCurrent: Boolean = false,
 	val votes: Map<Voter, Target> = emptyMap(),
 	val choices: List<Target> = listOf(),
@@ -44,7 +45,7 @@ data class VoteData(
 		 * @return A new VoteData instance for werewolf voting
 		 */
 		fun createWerewolfVote(id: Snowflake, isCurrent: Boolean = true) =
-			VoteData(id, LGState.NIGHT.name, isCurrent)
+			VoteData(id, LGState.NIGHT, isCurrent)
 
 		/**
 		 * Creates a new village vote for the day phase.
@@ -54,7 +55,7 @@ data class VoteData(
 		 * @return A new [VoteData] instance for village voting
 		 */
 		fun createVillageVote(id: Snowflake, isCurrent: Boolean = true) =
-			VoteData(id, LGState.DAY.name, isCurrent)
+			VoteData(id, LGState.DAY, isCurrent)
 	}
 
 	/**
@@ -83,7 +84,7 @@ data class VoteData(
 	 * @return A new [VoteData] with the updated Corbeau vote, or unchanged if not a day vote
 	 */
 	fun voteCorbeau(targetId: Target) =
-		if (type == LGState.DAY.name) copy(corbeau = targetId) else this
+		if (type == LGState.DAY) copy(corbeau = targetId) else this
 
 
     /**
@@ -117,7 +118,7 @@ data class VoteData(
  * @return The current Vo[]teData matching the type, or null if none exists
  */
 suspend fun DataCache.getCurrentVote(type: LGState? = null): VoteData? {
-	val queryType = type?.name ?: getGameData().state.name
+	val queryType = type ?: getGameData().state
 	return query<VoteData> {
 		idEq(VoteData::type, queryType)
 		idEq(VoteData::isCurrent, true)

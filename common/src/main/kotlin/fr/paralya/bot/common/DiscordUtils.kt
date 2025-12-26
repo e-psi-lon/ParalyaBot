@@ -1,5 +1,6 @@
 package fr.paralya.bot.common
 
+import dev.kord.cache.api.QueryBuilder
 import dev.kord.common.entity.DiscordUser
 import dev.kord.common.entity.Permission
 import dev.kord.common.entity.Snowflake
@@ -15,7 +16,6 @@ import dev.kord.core.entity.channel.TextChannel
 import dev.kord.rest.Image
 import dev.kord.rest.builder.message.create.WebhookMessageCreateBuilder
 import dev.kordex.core.ExtensibleBot
-import dev.kordex.core.types.TranslatableContext
 import dev.kordex.core.utils.any
 import dev.kordex.core.utils.hasRole
 import dev.kordex.core.utils.permissionsForMember
@@ -23,6 +23,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.withContext
+import kotlin.reflect.KProperty1
 
 /**
  * Retrieves or creates a webhook in a specified channel.
@@ -150,6 +151,11 @@ fun Flow<Member>.filterByRole(role: RoleBehavior): Flow<Member> {
 	return filter { it.hasRole(role) }
 }
 
+
+@JvmName("enumEq")
+fun <T : Any, E : Enum<E>> QueryBuilder<T>.idEq(property: KProperty1<T, E?>, value: E?) {
+	property.eq(value)
+}
 
 /**
  * Converts a [DiscordUser] to a [User] using the provided [Kord] instance.
