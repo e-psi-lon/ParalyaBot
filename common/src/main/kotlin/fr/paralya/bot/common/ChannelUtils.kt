@@ -6,6 +6,11 @@ import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.channel.TopGuildChannelBehavior
 import dev.kord.core.behavior.channel.editMemberPermission
 import dev.kord.core.behavior.channel.editRolePermission
+import dev.kord.core.entity.Member
+import dev.kord.core.entity.channel.TextChannel
+import dev.kordex.core.utils.permissionsForMember
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.filter
 
 /**
  * Adds a permission to a role in a channel.
@@ -15,15 +20,15 @@ import dev.kord.core.behavior.channel.editRolePermission
  * @param reason An optional reason for the permission change.
  */
 suspend fun TopGuildChannelBehavior.addRolePermission(
-	id: Snowflake,
-	permission: Permission,
-	reason: String? = null,
+    id: Snowflake,
+    permission: Permission,
+    reason: String? = null,
 ) {
-	editRolePermission(id) {
-		allowed = allowed.plus(permission)
-		denied = denied.minus(permission)
-		this.reason = reason
-	}
+    editRolePermission(id) {
+        allowed = allowed.plus(permission)
+        denied = denied.minus(permission)
+        this.reason = reason
+    }
 }
 
 /**
@@ -34,15 +39,15 @@ suspend fun TopGuildChannelBehavior.addRolePermission(
  * @param reason An optional reason for the permission change.
  */
 suspend fun TopGuildChannelBehavior.addMemberPermission(
-	id: Snowflake,
-	permission: Permission,
-	reason: String? = null,
+    id: Snowflake,
+    permission: Permission,
+    reason: String? = null,
 ) {
-	editMemberPermission(id) {
-		allowed = allowed.plus(permission)
-		denied = denied.minus(permission)
-		this.reason = reason
-	}
+    editMemberPermission(id) {
+        allowed = allowed.plus(permission)
+        denied = denied.minus(permission)
+        this.reason = reason
+    }
 }
 
 /**
@@ -53,15 +58,15 @@ suspend fun TopGuildChannelBehavior.addMemberPermission(
  * @param reason An optional reason for the permission change.
  */
 suspend fun TopGuildChannelBehavior.addRolePermissions(
-	id: Snowflake,
-	vararg permissions: Permission,
-	reason: String? = null
+    id: Snowflake,
+    vararg permissions: Permission,
+    reason: String? = null
 ) {
-	editRolePermission(id) {
-		allowed = allowed.plus(Permissions(permissions.toSet()))
-		denied = denied.minus(Permissions(permissions.toSet()))
-		this.reason = reason
-	}
+    editRolePermission(id) {
+        allowed = allowed.plus(Permissions(permissions.toSet()))
+        denied = denied.minus(Permissions(permissions.toSet()))
+        this.reason = reason
+    }
 }
 
 /**
@@ -72,15 +77,15 @@ suspend fun TopGuildChannelBehavior.addRolePermissions(
  * @param reason An optional reason for the permission change.
  */
 suspend fun TopGuildChannelBehavior.addMemberPermissions(
-	id: Snowflake,
-	vararg permissions: Permission,
-	reason: String? = null
+    id: Snowflake,
+    vararg permissions: Permission,
+    reason: String? = null
 ) {
-	editMemberPermission(id) {
-		allowed = allowed.plus(Permissions(permissions.toSet()))
-		denied = denied.minus(Permissions(permissions.toSet()))
-		this.reason = reason
-	}
+    editMemberPermission(id) {
+        allowed = allowed.plus(Permissions(permissions.toSet()))
+        denied = denied.minus(Permissions(permissions.toSet()))
+        this.reason = reason
+    }
 }
 
 /**
@@ -91,15 +96,15 @@ suspend fun TopGuildChannelBehavior.addMemberPermissions(
  * @param reason An optional reason for the permission change.
  */
 suspend fun TopGuildChannelBehavior.removeRolePermission(
-	id: Snowflake,
-	permission: Permission,
-	reason: String? = null,
+    id: Snowflake,
+    permission: Permission,
+    reason: String? = null,
 ) {
-	editRolePermission(id) {
-		allowed = allowed.minus(permission)
-		denied = denied.plus(permission)
-		this.reason = reason
-	}
+    editRolePermission(id) {
+        allowed = allowed.minus(permission)
+        denied = denied.plus(permission)
+        this.reason = reason
+    }
 }
 
 /**
@@ -110,15 +115,15 @@ suspend fun TopGuildChannelBehavior.removeRolePermission(
  * @param reason An optional reason for the permission change.
  */
 suspend fun TopGuildChannelBehavior.removeMemberPermission(
-	id: Snowflake,
-	permission: Permission,
-	reason: String? = null,
+    id: Snowflake,
+    permission: Permission,
+    reason: String? = null,
 ) {
-	editMemberPermission(id) {
-		allowed = allowed.minus(permission)
-		denied = denied.plus(permission)
-		this.reason = reason
-	}
+    editMemberPermission(id) {
+        allowed = allowed.minus(permission)
+        denied = denied.plus(permission)
+        this.reason = reason
+    }
 }
 
 /**
@@ -129,15 +134,15 @@ suspend fun TopGuildChannelBehavior.removeMemberPermission(
  * @param reason An optional reason for the permission change.
  */
 suspend fun TopGuildChannelBehavior.removeRolePermissions(
-	id: Snowflake,
-	vararg permissions: Permission,
-	reason: String? = null
+    id: Snowflake,
+    vararg permissions: Permission,
+    reason: String? = null
 ) {
-	editRolePermission(id) {
-		allowed = allowed.minus(Permissions(permissions.toSet()))
-		denied = denied.plus(Permissions(permissions.toSet()))
-		this.reason = reason
-	}
+    editRolePermission(id) {
+        allowed = allowed.minus(Permissions(permissions.toSet()))
+        denied = denied.plus(Permissions(permissions.toSet()))
+        this.reason = reason
+    }
 }
 
 /**
@@ -148,13 +153,24 @@ suspend fun TopGuildChannelBehavior.removeRolePermissions(
  * @param reason An optional reason for the permission change.
  */
 suspend fun TopGuildChannelBehavior.removeMemberPermissions(
-	id: Snowflake,
-	vararg permissions: Permission,
-	reason: String? = null
+    id: Snowflake,
+    vararg permissions: Permission,
+    reason: String? = null
 ) {
-	editMemberPermission(id) {
-		allowed = allowed.minus(Permissions(permissions.toSet()))
-		denied = denied.plus(Permissions(permissions.toSet()))
-		this.reason = reason
-	}
+    editMemberPermission(id) {
+        allowed = allowed.minus(Permissions(permissions.toSet()))
+        denied = denied.plus(Permissions(permissions.toSet()))
+        this.reason = reason
+    }
+}
+
+/**
+ * Retrieves a flow of members who have access to the current text channel.
+ *
+ * @return A flow of [Member] objects representing the members with access to the channel.
+ */
+suspend fun TextChannel.getMembersWithAccess(): Flow<Member> {
+    return guild.members.filter { member ->
+        this.permissionsForMember(member).contains(Permission.ViewChannel)
+    }
 }
