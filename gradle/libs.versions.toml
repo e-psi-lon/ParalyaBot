@@ -3,7 +3,7 @@ kotlin = "2.2.21"
 jvm = "21"
 kordex-plugin = "1.9.0"
 kordex-i18n = "1.1.1"
-logback = "1.5.22"
+logback = "1.5.23"
 shadow = "9.3.0"
 typesafe-config = "1.4.4"
 koin-test = "4.1.1"
@@ -11,7 +11,8 @@ mockk = "1.14.7"
 kotlinx-serialization-hocon = "1.9.0"
 konform = "0.11.1"
 kotlinx-html = "0.12.0"
-
+kover = "0.9.4"
+junit = "6.0.1"
 
 [libraries]
 logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
@@ -22,6 +23,7 @@ kotlinx-serialization-hocon = { group = "org.jetbrains.kotlinx", name = "kotlinx
 konform = { group = "io.konform", name = "konform-jvm", version.ref = "konform" }
 kotlinx-html = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinx-html" }
 kordex-i18n-runtime = { group = "dev.kordex.i18n", name = "i18n", version.ref = "kordex-i18n" }
+junit = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
@@ -29,3 +31,4 @@ kordex-gradle = { id = "dev.kordex.gradle.kordex", version.ref = "kordex-plugin"
 kordex-i18n = { id = "dev.kordex.gradle.i18n", version.ref = "kordex-i18n" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }

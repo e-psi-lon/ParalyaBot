@@ -9,6 +9,7 @@ repositories {
 
 dependencies {
 	implementation(plugin(libs.plugins.kotlin.jvm))
+	implementation(plugin(libs.plugins.kover))
 }
 
 

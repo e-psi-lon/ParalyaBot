@@ -14,31 +14,24 @@ i18n {
 group = "fr.paralya.bot"
 version = "1.0-SNAPSHOT"
 
-val byteBuddyAgent: Configuration by configurations.creating
+fun DependencyHandlerScope.bothTestScopes(dependencyNotation: Any) {
+	testImplementation(dependencyNotation)
+	testFixturesImplementation(dependencyNotation)
+}
+
 
 dependencies {
-	// Test dependencies
-	testImplementation(kotlin("test"))
-	testImplementation(libs.koin.test)  // For tests that involve Koin
-	testImplementation(libs.mockk)  // Allow mocking in tests
+	// Test dependencies (exposed to test fixtures)
+	bothTestScopes(kotlin("test"))
+	bothTestScopes(libs.koin.test) // For tests that involve Koin
+	bothTestScopes(libs.mockk) // Allow mocking in tests
+	bothTestScopes(libs.junit)
 
 	// Main dependencies (used internally by the common module)
 	implementation(libs.typesafe.config)
 	implementation(libs.kotlinx.serialization.hocon)
 
-	// Expose test dependencies
-	testFixturesImplementation(kotlin("test"))
-	testFixturesImplementation(libs.konform)
-	testFixturesImplementation(libs.mockk)
-
 	// Exposed dependencies, for use in plugins
 	api(libs.konform)
 	api(libs.kordex.i18n.runtime)
-
-	// An agent for testing
-	byteBuddyAgent("net.bytebuddy:byte-buddy-agent:1.17.5")
-}
-
-tasks.test {
-	jvmArgs("-javaagent:${byteBuddyAgent.asPath}")
 }
