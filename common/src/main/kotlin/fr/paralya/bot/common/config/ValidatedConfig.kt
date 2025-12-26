@@ -22,7 +22,7 @@ interface ValidatedConfig {
  * - Its timestamp is not in the future (allowing 60 seconds for clock drift)
  *
  * Note: This only validates the structure, not that the ID exists in Discord or that it is entirely valid.
- * For more information, see the [Discord Snowflake](h²ttps://discord.com/developers/docs/reference#snowflakes)
+ * For more information, see the [Discord Snowflake](https://discord.com/developers/docs/reference#snowflakes)
  * documentation.
  */
 fun ValidationBuilder<ULong>.appearsToBeSnowflake(displayName: String) =
@@ -31,7 +31,7 @@ fun ValidationBuilder<ULong>.appearsToBeSnowflake(displayName: String) =
 				&& ((it shr 22) + DISCORD_EPOCH) <= (System.currentTimeMillis() + 60_000).toULong()
 	}
 
-fun <T> ValidationBuilder<T>.defined(displayName: String? = null) = constrain(displayName?.let { "$it must be defined and it appears not to be" } ?: "") {
+fun <T> ValidationBuilder<T>.defined(displayName: String = "Value ") = constrain("$displayName must be defined and it appears not to be") {
 	when (it) {
 		is String -> it.isNotBlank()
 		is Collection<*> -> it.isNotEmpty()

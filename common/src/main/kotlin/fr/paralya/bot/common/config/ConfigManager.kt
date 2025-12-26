@@ -13,7 +13,11 @@ import kotlinx.serialization.hocon.Hocon
 import kotlinx.serialization.hocon.decodeFromConfig
 import org.koin.core.module.dsl.withOptions
 import org.koin.core.qualifier.named
-import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
+import kotlin.io.path.exists
+import kotlin.io.path.writeText
 import kotlin.reflect.KClass
 
 /**
@@ -27,18 +31,21 @@ import kotlin.reflect.KClass
  * @constructor Creates a new [ConfigManager] instance and automatically populates the base configuration.
  */
 @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
-class ConfigManager : KordExKoinComponent {
+class ConfigManager internal constructor(private val configFile: Path) : KordExKoinComponent {
 	private lateinit var config: Config
-	private val configFile = File(System.getenv()["PARALYA_BOT_CONFIG_FILE"] ?: "config.conf")
 	val logger = KotlinLogging.logger("ConfigManager")
+
+	constructor() : this(Path(System.getenv("PARALYA_BOT_CONFIG_FILE") ?: "config.conf"))
 
 
 	// Core bot configuration, directly integrated into the ConfigManager
 	var botConfig: BotConfig
 
 	init {
+		val fileExistedBeforeLoad = configFile.exists()
 		loadFile()
 		botConfig = Hocon.decodeFromConfig(getSubConfig("bot"))
+		if (fileExistedBeforeLoad) validateConfig(botConfig)
 	}
 	/**
 	 * Loads the configuration file into a [Config] object.
@@ -46,11 +53,10 @@ class ConfigManager : KordExKoinComponent {
 	 * It also handles any exceptions that may occur during the loading process.
 	 */
 	private fun loadFile() {
-		if (!configFile.exists())
-			createDefaultConfig()
+		if (!configFile.exists()) createDefaultConfig()
 
 		try {
-			config = ConfigFactory.parseFile(configFile)
+			config = ConfigFactory.parseFile(configFile.toFile())
 		} catch (e: Exception) {
 			logger.error(e) { "Failed to load config file" }
 		}
@@ -75,7 +81,7 @@ class ConfigManager : KordExKoinComponent {
             |}
         """.trimMargin()
 		)
-		logger.warn { "Default config created at ${configFile.absolutePath}. Please fill in required values." }
+		logger.warn { "Default config created at ${configFile.absolutePathString()}. Please fill in required values." }
 	}
 
 	/**
@@ -93,7 +99,8 @@ class ConfigManager : KordExKoinComponent {
 		logger.debug { "Config for $name registered successfully" }
 	}
 
-    fun <T : ValidatedConfig> getConfigObject(clazz: KClass<T>, name: String): T? {
+	@PublishedApi
+    internal fun <T : ValidatedConfig> getConfigObject(clazz: KClass<T>, name: String): T? {
         logger.debug { "Registering config for $name at path games.${name.removeSuffix("Config")} with datatype ${clazz.simpleName}" }
         val configObject = try {
             Hocon.decodeFromConfig(clazz.serializer(), getSubConfig("games.${name.removeSuffix("Config").lowercase()}"))
