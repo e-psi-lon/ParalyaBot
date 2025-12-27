@@ -103,6 +103,20 @@ class VoteManager(private val botCache: DataCache) {
 	}
 
 	/**
+	 * Counts votes for a given vote, including corbeau bonus for day votes
+	 * @param vote The vote data to count
+	 * @return Map of target IDs to their vote counts
+	 */
+	fun getVoteCount(vote: VoteData): Map<Target, Int> {
+		val voteCount = vote.votes.values.groupingBy { it }.eachCount().toMutableMap()
+
+		// Add corbeau vote if present (only for day votes)
+		if (vote.type == LGState.DAY && vote.corbeau != 0.snowflake) voteCount[vote.corbeau] = (voteCount[vote.corbeau] ?: 0) + 2
+
+		return voteCount
+	}
+
+	/**
 	 * Calculates the result of a vote
 	 * @param vote The vote data to calculate results for
 	 * @param kill Whether to kill the voted player
@@ -114,8 +128,7 @@ class VoteManager(private val botCache: DataCache) {
 		kill: Boolean,
 		force: Boolean
 	): VoteResult {
-		val voteCount = vote.votes.values.groupingBy { it }.eachCount().toMutableMap()
-		if (vote.type == LGState.DAY && vote.corbeau != 0.snowflake) voteCount[vote.corbeau] = (voteCount[vote.corbeau] ?: 0) + 2
+		val voteCount = getVoteCount(vote)
 		val maxVote = voteCount.maxByOrNull { it.value }?.key
 		val maxVotedPlayers = voteCount.filter { it.key == maxVote }.keys
 

@@ -12,6 +12,7 @@ import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.types.TranslatableContext
+import dev.kordex.core.utils.dm
 import dev.kordex.i18n.Key
 import fr.paralya.bot.common.adminOnly
 import fr.paralya.bot.common.contextTranslate
@@ -47,42 +48,43 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 				handleVote(LGState.NIGHT, LgChannelType.LOUPS_VOTE, arguments.target, arguments.reason)
 			}
 		}
-        ephemeralSubCommand {
-            name = Lg.Vote.List.Command.name
-            description = Lg.Vote.List.Command.description
+		ephemeralSubCommand {
+			name = Lg.Vote.List.Command.name
+			description = Lg.Vote.List.Command.description
 
-            action {
-                val state = validateVoteChannel(Lg.Vote.Response.Error.cantVoteHere) ?: return@action
+			action {
+				val state = validateVoteChannel(Lg.Vote.Response.Error.cantVoteHere) ?: return@action
 				val vote = lg.voteManager.getCurrentVote(state)
-				val votes = vote?.votes
 				val isCorrectState = lg.botCache.getGameData().state == state
-				if (votes.isNullOrEmpty() || !isCorrectState) {
+				if (vote?.votes.isNullOrEmpty() || !isCorrectState) {
 					respond { content = Lg.Vote.List.Response.Error.noVotes.contextTranslate() }
 					return@action
 				}
-				val votersByTarget = votes.entries.groupBy({ it.value }, { it.key })
-				val voteCountByTarget = votersByTarget.mapValues { it.value.size }.toMutableMap()
-				if (vote.corbeau != 0.snowflake && !voteCountByTarget.containsKey(vote.corbeau)) voteCountByTarget[vote.corbeau] = 2
+				val voteCount = lg.voteManager.getVoteCount(vote)
+				val votersByTarget = vote.votes.entries.groupBy({ it.value }, { it.key })
 				respond {
 					embed {
 						title = Lg.Vote.List.Response.Success.Embed.title.contextTranslate()
-						description = if (state == LGState.DAY) Lg.Vote.List.Response.Success.Embed.Description.day.contextTranslate()
+						description = if (state == LGState.DAY)
+							Lg.Vote.List.Response.Success.Embed.Description.day.contextTranslate()
 						else Lg.Vote.List.Response.Success.Embed.Description.night.contextTranslate()
-
-						voteCountByTarget.entries.sortedByDescending { it.value }.forEach { (target, count) ->
+						voteCount.entries.sortedByDescending { it.value }.forEach { (target, count) ->
 							field(guild!!.getMember(target).mention, inline = false) {
 								val playerNameList = votersByTarget[target]?.map {
 									guild!!.getMember(it).mention
 								}?.sorted()?.joinToString(", ", prefix = "(", postfix = ")") ?: ""
-								if (target == vote.corbeau)
-									Lg.Vote.List.Response.Success.Embed.Field.WithCorbeau.description.contextTranslate(count + 2, playerNameList)
-								else Lg.Vote.List.Response.Success.Embed.Field.description.contextTranslate(count, playerNameList)
+
+								if (target == vote.corbeau) {
+									Lg.Vote.List.Response.Success.Embed.Field.WithCorbeau.description
+										.contextTranslate(count, playerNameList)
+								} else Lg.Vote.List.Response.Success.Embed.Field.description
+									.contextTranslate(count, playerNameList)
 							}
 						}
 					}
 				}
-            }
-        }
+			}
+		}
 		ephemeralSubCommand {
 			name = Lg.Vote.Reset.Command.name
 			description = Lg.Vote.Reset.Command.description
@@ -143,6 +145,50 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			}
 			if (previousId != null)
 				channel.getMessage(previousId).delete(Lg.System.MessageDelete.VoteMessage.reason.contextTranslate())
+		}
+	}
+	ephemeralSubCommand {
+		name = Lg.MostVoted.Command.name
+		description = Lg.MostVoted.Command.description
+
+		adminOnly {
+			val state = validateVoteChannel(Lg.MostVoted.Response.Error.cantUseHere)
+				?: return@adminOnly
+			if (state != LGState.DAY) {
+				respond { content = Lg.MostVoted.Response.Error.onlyVillageVotes.contextTranslate() }
+				return@adminOnly
+			}
+			val currentVote = lg.voteManager.getCurrentVote(state)
+			if (currentVote?.votes.isNullOrEmpty()) {
+				respond { content = Lg.MostVoted.Response.Error.noVotes.contextTranslate() }
+				return@adminOnly
+			}
+			val voteCount = lg.voteManager.getVoteCount(currentVote)
+			val maxVotes = voteCount.values.maxOrNull() ?: 0
+			val mostVotedPlayers = voteCount.filter { it.value == maxVotes }.keys
+			if (mostVotedPlayers.size > 1) {
+				val members = mostVotedPlayers.map { playerId ->
+					val member = guild!!.getMember(playerId)
+					member.dm {
+						content = Lg.MostVoted.Response.Success.tie.contextTranslate(maxVotes)
+					}
+					member
+				}
+				respond {
+					content = Lg.MostVoted.Response.Success.sentTie.contextTranslate(
+						members.joinToString(", ") { it.mention },
+						maxVotes
+					)
+				}
+			} else {
+				val member = guild!!.getMember(mostVotedPlayers.first())
+				member.dm {
+					content = Lg.MostVoted.Response.Success.single.contextTranslate(maxVotes)
+				}
+				respond {
+					content = Lg.MostVoted.Response.Success.sentSingle.contextTranslate(member.mention, maxVotes)
+				}
+			}
 		}
 	}
 }
@@ -252,8 +298,8 @@ private class VoteArguments : Arguments() {
 }
 
 private class UnvoteArguments : Arguments() {
-    val previousId by optionalInt {
-        name = Lg.Unvote.Argument.PreviousId.name
-        description = Lg.Unvote.Argument.PreviousId.description
-    }
+	val previousId by optionalInt {
+		name = Lg.Unvote.Argument.PreviousId.name
+		description = Lg.Unvote.Argument.PreviousId.description
+	}
 }
