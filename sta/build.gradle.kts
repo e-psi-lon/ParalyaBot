@@ -5,6 +5,7 @@ plugins {
 }
 
 kordEx {
+	ignoreIncompatibleKotlinVersion = true // Temporary fix for KordEx until it's updated to support Kotlin 2.2.21+
 	plugin {
 		id = "paralya-sta"
 		version = getVersion() as String

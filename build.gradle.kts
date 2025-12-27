@@ -12,6 +12,7 @@ group = "fr.paralya.bot"
 version = "1.0-SNAPSHOT"
 
 kordEx {
+	ignoreIncompatibleKotlinVersion = true // Temporary fix for KordEx until it's updated to support Kotlin 2.2.21+
 	module("web-backend")
 	bot {
 		dataCollection(DataCollection.None)

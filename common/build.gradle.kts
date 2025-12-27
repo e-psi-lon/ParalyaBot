@@ -5,6 +5,10 @@ plugins {
 	`java-test-fixtures`
 }
 
+kordEx {
+	ignoreIncompatibleKotlinVersion = true // Temporary fix for KordEx until it's updated to support Kotlin 2.2.21+
+}
+
 i18n {
 	bundle("paralyabot-common.strings", "fr.paralya.bot.common") {
 		className = "I18n"
