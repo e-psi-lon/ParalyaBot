@@ -1,11 +1,9 @@
 package fr.paralya.bot.lg
 
-import dev.kordex.core.plugins.KordExPlugin
 import fr.paralya.bot.common.ApiVersion
-import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.CommonModule
+import fr.paralya.bot.common.plugin.Plugin
 import fr.paralya.bot.lg.data.LgConfig
-import org.koin.core.component.inject
 
 /**
  * The main plugin class for the Werewolf (Loup-Garou) game.
@@ -15,32 +13,16 @@ import org.koin.core.component.inject
  *
  */
 @ApiVersion(CommonModule.API_VERSION)
-class LgBotPlugin : KordExPlugin() {
+class LgBotPlugin : Plugin() {
+	override val name = "LG"
+	override val key = I18n.GameMode.lg
+
+	override fun defineConfig() = define<LgConfig>()
+
 	/**
 	 * Setup function that initializes the plugin.
 	 */
-	override suspend fun setup() {
-		bot.logger.info { "Setting up LG plugin" }
-		try {
-			getKoin()
-			bot.logger.info { "Koin already started, registering LG config" }
-			registerLgConfig()
-		} catch (_: IllegalStateException) {
-			bot.logger.info { "Koin not started, registering LG config hook after Koin setup" }
-			settings {
-				hooks { afterKoinSetup { registerLgConfig() } }
-			}
-		}
+	override suspend fun onSetup() {
 		extension(::LG)
-	}
-
-	/**
-	 * Registers the [LgConfig] configuration class with the [ConfigManager].
-	 *
-	 * This allows the plugin to manage its configuration settings.
-	 */
-	private fun registerLgConfig() {
-		val configManager by inject<ConfigManager>()
-		configManager.registerConfig<LgConfig>("lgConfig")
 	}
 }

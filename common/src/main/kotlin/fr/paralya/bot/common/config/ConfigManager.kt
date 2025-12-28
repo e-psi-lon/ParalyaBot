@@ -101,14 +101,13 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 
 	@PublishedApi
     internal fun <T : ValidatedConfig> getConfigObject(clazz: KClass<T>, name: String): T? {
-        logger.debug { "Registering config for $name at path games.${name.removeSuffix("Config")} with datatype ${clazz.simpleName}" }
+		val actualName = name.lowercase()
+        logger.debug { "Registering config for $name at path games.$actualName with datatype ${clazz.simpleName}" }
         val configObject = try {
-            Hocon.decodeFromConfig(clazz.serializer(), getSubConfig("games.${name.removeSuffix("Config").lowercase()}"))
+            Hocon.decodeFromConfig(clazz.serializer(), getSubConfig("games.$actualName"))
         } catch (e: IllegalArgumentException) {
             logger.error(e) {
-                "Failed to find the configuration for name $name at path games.${
-                    name.removeSuffix("Config").lowercase()
-                }. Please ensure it exists in the config file."
+                "Failed to find the configuration for name $name at path games.$actualName. Please ensure it exists in the config file."
             }
             return null
         }

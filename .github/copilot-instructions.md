@@ -239,7 +239,6 @@ class LgBotPlugin : KordExPlugin() {
 ### Testing
 - Uses JUnit 5, Koin for DI (including in tests), MockK for mocking
 - Test files follow patterns: `ModuleNameTest.kt` in `src/test/kotlin/`
-- ByteBuddy agent configured for enhanced mocking capabilities
 
 ### Key Dependencies
 - **KordEx**: Discord bot framework with i18n, commands, extensions
@@ -380,7 +379,7 @@ Access game data through cache extensions:
 ### Testing Architecture
 - **Framework**: JUnit 5 with KotlinTest assertions
 - **Dependency Injection**: Koin for DI (including in tests with `KoinTest`)
-- **Mocking**: MockK for mocking, ByteBuddy agent for enhanced mocking capabilities
+- **Mocking**: MockK for mocking
 - **Test Structure**: `src/test/kotlin/` with pattern `ModuleNameTest.kt`
 - **Game Logic Testing**: LG module includes comprehensive tests for voting (`VoteManagerTest`), day/night cycles (`DayCycleTest`), and special roles (`SpecialRolesTest`)
 
