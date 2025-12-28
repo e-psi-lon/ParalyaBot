@@ -62,6 +62,9 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 		configureLogging(devMode)
 		logger.info { "Starting bot in ${if (devMode) "development" else "production"} mode" }
 		extensions {
+			sentry {
+				enable = false
+			}
 			add(::Base)
 			add(::LG) // Loaded manually until plugin system implementation is complete
 			help {
