@@ -45,7 +45,6 @@ class LG : Extension() {
 	override suspend fun setup() {
 		val gameRegistry by inject<GameRegistry>()
 		gameRegistry.registerGameMode(Lg.GameMode.lg, "lg")
-		kord.cache.register(GameData.description, VoteData.description)
 
 		publicSlashCommand {
 			name = Lg.Command.name

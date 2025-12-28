@@ -86,7 +86,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 						}
 						newVoteWerewolf.apply {
 							setChoices(result.toList())
-							botCache.updateVote(this)
+							botCache.putVote(this)
 						}
 						respond { content = Lg.DayCycle.Response.Other.secondVote.contextTranslate() }
 						return@adminOnly
@@ -107,7 +107,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			}
 			newVoteWerewolf.apply {
 				setChoices(emptyList())
-				botCache.updateVote(this)
+				botCache.putVote(this)
 			}
 			botCache.nextDay()
 			DAY_CHANNELS.forEach { channelName ->
@@ -166,7 +166,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 						}
 						newVoteVillage.apply {
 							setChoices(result.players.toList())
-							botCache.updateVote(this)
+							botCache.putVote(this)
 						}
 						Lg.DayCycle.Response.Other.secondVote.contextTranslate()
 					}
@@ -187,7 +187,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			}
 			newVoteVillage.apply {
 				setChoices(emptyList())
-				botCache.updateVote(this)
+				botCache.putVote(this)
 			}
 			botCache.nextNight()
 			DAY_CHANNELS.forEach { channelName ->

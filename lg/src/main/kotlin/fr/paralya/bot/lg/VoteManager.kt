@@ -58,7 +58,7 @@ class VoteManager(private val botCache: DataCache) {
 		val newVote =
 			botCache.getCurrentVote(LGState.DAY) ?: VoteData.createVillageVote(System.currentTimeMillis().snowflake)
 				.setCurrent(true)
-		botCache.updateVote(newVote)
+		botCache.putVote(newVote)
 		return newVote
 	}
 
@@ -70,7 +70,7 @@ class VoteManager(private val botCache: DataCache) {
 		val newVote =
 			botCache.getCurrentVote(LGState.NIGHT) ?: VoteData.createWerewolfVote(System.currentTimeMillis().snowflake)
 				.setCurrent(true)
-		botCache.updateVote(newVote)
+		botCache.putVote(newVote)
 		return newVote
 	}
 
@@ -79,11 +79,11 @@ class VoteManager(private val botCache: DataCache) {
 	 * @param voteData The vote data to update
 	 */
 	suspend fun updateVote(voteData: VoteData) {
-		botCache.updateVote(voteData)
+		botCache.putVote(voteData)
 	}
 
 	suspend fun resetVotes(state: LGState) {
-        botCache.updateVote(
+        botCache.putVote(
             getCurrentVote(state)?.copy(
                 votes = emptyMap()
             ) ?: return

@@ -23,6 +23,7 @@ import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.I18n.Common
 import fr.paralya.bot.I18n
 import fr.paralya.bot.common.adminOnly
+import fr.paralya.bot.common.cache.CachedData
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.takeWhile
@@ -41,6 +42,7 @@ class Base : Extension() {
 	override val name = "Base"
 	private val logger = KotlinLogging.logger(this::class.java.name)
     override suspend fun setup() {
+		kord.cache.register(CachedData.description)
 		val botConfig = inject<ConfigManager>().value.botConfig
 		val dmChannelId = botConfig.dmLogChannelId.snowflake
 		event<ReadyEvent> {

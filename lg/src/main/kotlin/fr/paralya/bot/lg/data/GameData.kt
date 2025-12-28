@@ -1,14 +1,16 @@
 package fr.paralya.bot.lg.data
 
 import dev.kord.cache.api.DataCache
-import dev.kord.cache.api.data.description
 import dev.kord.cache.api.put
-import dev.kord.cache.api.query
-import dev.kord.cache.api.remove
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.channel.TextChannel
 import dev.kordex.core.commands.application.ApplicationCommandContext
+import fr.paralya.bot.common.cache.putSerialized
+import fr.paralya.bot.common.cache.querySerialized
+import fr.paralya.bot.common.cache.removeSerialized
+import fr.paralya.bot.common.cache.updateSerialized
 import fr.paralya.bot.lg.LGState
+import kotlinx.serialization.Serializable
 
 /**
  * Represents the game data for the Werewolf game.
@@ -22,8 +24,8 @@ import fr.paralya.bot.lg.LGState
  * @property channels Map of channel types/name to their respective [Snowflake] IDs.
  * @property interviews List of interview channel IDs.
  */
+@Serializable
 data class GameData(
-	val id: Snowflake = Snowflake(0),
 	val state: LGState = LGState.NIGHT,
 	val dayCount: Int = 0,
 	val lastWereWolfMessageSender: Snowflake = Snowflake(0),
@@ -32,10 +34,6 @@ data class GameData(
 	val channels: Map<String, Snowflake> = mapOf(),
 	val interviews: List<Snowflake> = listOf()
 ) {
-	companion object {
-		/** Description for caching [GameData] instances by their id */
-		val description = description<GameData, Snowflake>(GameData::id)
-	}
 
 	/**
 	 * Creates a copy of the current game data, advancing to the next day.
@@ -81,22 +79,24 @@ data class GameData(
  * Retrieves the current game data from the cache or creates a new one if none exists.
  * @return The current [GameData] instance.
  */
-suspend fun DataCache.getGameData() = query<GameData>().singleOrNull() ?: GameData()
+suspend fun DataCache.getGameData() = querySerialized<GameData>("lg").singleOrNull() ?: GameData().also {
+	putSerialized("lg", it)
+}
 
 /**
  * Resets the game data by removing existing data and adding a fresh [GameData] instance.
  */
 suspend fun DataCache.resetGameData() {
-	remove<GameData>()
-	put(GameData())
+	removeSerialized<GameData>("lg")
+	putSerialized("lg", GameData())
 }
 
 /**
  * Updates the game data using the provided modifier function.
  * @param modifier A function that transforms the current [GameData] to a new [GameData].
  */
-suspend fun DataCache.updateGameData(modifier: (GameData) -> GameData) {
-	put(modifier(getGameData()))
+suspend fun DataCache.updateGameData(modifier: suspend (GameData) -> GameData) {
+	updateSerialized("lg", transform = modifier)
 }
 
 /**

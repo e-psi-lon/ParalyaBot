@@ -1,6 +1,5 @@
 package fr.paralya.bot.common
 
-import dev.kord.cache.api.QueryBuilder
 import dev.kord.common.entity.DiscordUser
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.Kord
@@ -15,11 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.withContext
-import kotlin.reflect.KProperty1
-
-
-@JvmName("enumEq")
-fun <T : Any, E : Enum<E>> QueryBuilder<T>.idEq(property: KProperty1<T, E?>, value: E?) = property.eq(value)
 
 /**
  * Retrieves an image asset from the specified path.
