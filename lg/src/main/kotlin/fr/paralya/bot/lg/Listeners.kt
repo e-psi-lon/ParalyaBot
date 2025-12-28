@@ -7,10 +7,13 @@ import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.channel.TopGuildChannelBehavior
 import dev.kord.core.behavior.edit
+import dev.kord.core.entity.ReactionEmoji
+import dev.kord.core.entity.channel.TextChannel
 import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.event.message.*
 import dev.kord.rest.builder.message.embed
 import dev.kordex.core.extensions.event
+import dev.kordex.core.utils.from
 import dev.kordex.core.utils.getCategory
 import fr.paralya.bot.common.*
 import fr.paralya.bot.common.config.ConfigManager
@@ -53,46 +56,49 @@ suspend fun LG.registerListeners() {
 		action {
 			val message = event.message
 
-            when (message.channelId) {
-                botCache.getChannelId(LgChannelType.INTERVIEW) if message.author?.id in botCache.getInterviews() -> {
-                    botCache.removeInterview(message.author!!.id)
-                    (message.channel as TopGuildChannelBehavior)
-                        .removeMemberPermission(message.author!!.id, Permission.SendMessages)
-                }
+			when (message.channelId) {
+				botCache.getChannelId(LgChannelType.LOUPS_CHAT) -> {
+					if (message.author.isAdmin(botConfig) || message.author?.isBot == true || message.author?.isSelf == true)
+						return@action
 
-                botCache.getChannelId(LgChannelType.LOUPS_CHAT) if !message.author.isAdmin(
-                    botConfig
-                ) &&
-                        message.author?.isBot == false && message.author?.isSelf == false
-                    -> {
-                    val cached = botCache.getLastWerewolfMessageSender().value
-                    logger.debug { "Message sender is ${message.author?.id?.value} and cache is $cached" }
-                    if (message.author?.id != botCache.getLastWerewolfMessageSender()) {
-                        botCache.setLastWerewolfMessageSender(message.author!!.id)
-                        botCache.updateProfilePicture()
-                    }
-                    val (wolfName, wolfAvatar) = botCache.getBotAnonymousIdentity()
-                    logger.debug { "Avatar is $wolfAvatar and name is $wolfName" }
-                    sendAsWebhook(
-                        bot,
-                        botCache.getChannelId(LgChannelType.PETITE_FILLE)!!,
-                        wolfName,
-                        getAsset(wolfAvatar, this@registerListeners.prefix),
-                        WEBHOOK_NAME
-                    ) {
-                        content = message.content
+					val cached = botCache.getLastWerewolfMessageSender().value
+					logger.debug { "Message sender is ${message.author?.id?.value} and cache is $cached" }
+					if (message.author?.id != botCache.getLastWerewolfMessageSender()) {
+						botCache.setLastWerewolfMessageSender(message.author!!.id)
+						botCache.updateProfilePicture()
+					}
+					val (wolfName, wolfAvatar) = botCache.getBotAnonymousIdentity()
+					logger.debug { "Avatar is $wolfAvatar and name is $wolfName" }
+					sendAsWebhook(
+						bot,
+						botCache.getChannelId(LgChannelType.PETITE_FILLE)!!,
+						wolfName,
+						getAsset(wolfAvatar, this@registerListeners.prefix),
+						WEBHOOK_NAME
+					) {
+						content = message.content
 
-                        if (message.referencedMessage != null) embed {
-                            title = Common.Transmission.Reference.title.contextTranslate()
-                            description = message.referencedMessage!!.content
-                        }
-                    }
-                }
+						if (message.referencedMessage != null) embed {
+							title = Common.Transmission.Reference.title.contextTranslate()
+							description = message.referencedMessage!!.content
+						}
+					}
+				}
 
-                botCache.getChannelId(LgChannelType.SUJETS) -> {
-                    return@action
-                }
-            }
+				botCache.getChannelId(LgChannelType.INTERVIEW) -> {
+					if (message.author?.id in botCache.getInterviews()) {
+						botCache.removeInterview(message.author!!.id)
+						(message.channel as TopGuildChannelBehavior)
+							.removeMemberPermission(message.author!!.id, Permission.SendMessages)
+					}
+				}
+
+				botCache.getChannelId(LgChannelType.SUJETS) -> {
+					(message.channel as TextChannel).startPublicThreadWithMessage(message.id, message.content.truncate(100)) {
+						// reason =
+					}
+				}
+			}
 		}
 
 	}
@@ -235,3 +241,6 @@ private suspend fun collectChannelsFromCategory(categoryId: Snowflake, guild: Gu
  */
 private suspend fun DataCache.getBotAnonymousIdentity(): Pair<String, String> =
 	(if (getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme") to (if (getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1")
+
+fun String.truncate(maxLength: Int): String =
+	if (length <= maxLength) this else take(maxLength - 3) + "..."
