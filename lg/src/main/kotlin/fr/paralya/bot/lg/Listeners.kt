@@ -13,8 +13,8 @@ import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.event.message.*
 import dev.kord.rest.builder.message.embed
 import dev.kordex.core.extensions.event
-import dev.kordex.core.utils.from
 import dev.kordex.core.utils.getCategory
+import dev.kordex.core.utils.toReaction
 import fr.paralya.bot.common.*
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.I18n.Common
@@ -94,9 +94,15 @@ suspend fun LG.registerListeners() {
 				}
 
 				botCache.getChannelId(LgChannelType.SUJETS) -> {
+					val reasonText = I18n.System.Topics.creation.contextTranslate()
 					(message.channel as TextChannel).startPublicThreadWithMessage(message.id, message.content.truncate(100)) {
-						// reason =
+						reason = reasonText
 					}
+					message.addReactions(
+						"🟢".toReaction(),
+						"🤔".toReaction(),
+						"🔴".toReaction()
+					)
 				}
 			}
 		}
