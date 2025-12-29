@@ -12,7 +12,7 @@ import kotlin.reflect.KProperty1
 class DeserializedQuery<T : Any>(
     private val cache: DataCache,
     private val namespace: String,
-    private var items: Flow<Pair<T, CachedData>>,
+    private val items: Flow<Pair<T, CachedData>>,
     private val clazz: KClass<T>,
     private val itemIdProperty: KProperty1<T, Any>? = null
 ) : Query<T> {

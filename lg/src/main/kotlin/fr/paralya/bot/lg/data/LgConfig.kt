@@ -17,10 +17,10 @@ import kotlinx.serialization.Transient
  */
 @Serializable
 data class LgConfig(
-	var rolesCategory: ULong = 0u,
-	var mainCategory: ULong = 0u,
-	var aliveRole: ULong = 0u,
-	var deadRole: ULong = 0u
+	val rolesCategory: ULong = 0u,
+	val mainCategory: ULong = 0u,
+	val aliveRole: ULong = 0u,
+	val deadRole: ULong = 0u
 ) : ValidatedConfig {
 	@Transient
 	private val validator = Validation {

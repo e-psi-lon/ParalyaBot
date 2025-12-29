@@ -14,8 +14,7 @@ class LogFormater : LayoutWrappingEncoder<ILoggingEvent>() {
 		layout = object : LayoutBase<ILoggingEvent>() {
 			private val format = "[%d{dd/MM/yyyy HH:mm:ss}] %highlight(%-5level) [%logger] - %msg%ex\n"
 			private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-			private val date = Date()
-			override fun doLayout(event: ILoggingEvent) = StringBuilder(format.length + 100).apply {
+			override fun doLayout(event: ILoggingEvent) = buildString(format.length + 100) {
 				append("[")
 				append(dateFormat.format(Date(event.timeStamp)))
 				append("] ")
@@ -26,13 +25,11 @@ class LogFormater : LayoutWrappingEncoder<ILoggingEvent>() {
 				append(event.formattedMessage)
 				event.throwableProxy?.let { append(formatException(it)) }
 				append("\n")
-			}.toString()
+			}
 
 
 			private val loggerNameCache = object : LinkedHashMap<String, String>() {
-				override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?): Boolean {
-					return size > 100 // Limit cache size to 1000 entries
-				}
+				override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?) = size > 100
 			}
 			private fun formatLoggerName(log: ILoggingEvent): String {
 				val loggerName = log.loggerName
@@ -53,9 +50,7 @@ class LogFormater : LayoutWrappingEncoder<ILoggingEvent>() {
 				"CRITICAL" to "\u001B[41mCRITICAL\u001B[0m"
 			)
 
-			private fun highlightLevel(level: String): String {
-				return levelMap[level] ?: level
-			}
+			private fun highlightLevel(level: String) = levelMap[level] ?: level
 
 			/**
 			 * Formats the exception stack trace to a human-readable string.
@@ -63,28 +58,20 @@ class LogFormater : LayoutWrappingEncoder<ILoggingEvent>() {
 			 * @param throwableProxy The throwable proxy to format.
 			 * @return The formatted stack trace.
 			 */
-			private fun formatException(throwableProxy: IThrowableProxy): String {
-				val stackTrace = StringBuilder(256)
-				stackTrace.append("\n\t").append(throwableProxy.className)
-				if (throwableProxy.message != null) {
-					stackTrace.append(": ").append(throwableProxy.message)
-				}
-				for (element in throwableProxy.stackTraceElementProxyArray) {
-					stackTrace.append("\n\t\tat ").append(element)
-				}
-				var cause = throwableProxy.cause
-				while (cause != null) {
-					stackTrace.append("\nCaused by: ").append(cause.className)
-					if (cause.message != null) {
-						stackTrace.append(": ").append(cause.message)
-					}
-					for (element in cause.stackTraceElementProxyArray) {
-						stackTrace.append("\n\t\tat ").append(element)
-					}
-					cause = cause.cause
-				}
+			private fun formatException(throwableProxy: IThrowableProxy) = buildString(256) {
+				append("\n\t").append(throwableProxy.className)
+				if (throwableProxy.message != null)
+					append(": ").append(throwableProxy.message)
+				for (element in throwableProxy.stackTraceElementProxyArray)
+					append("\n\t\tat ").append(element)
 
-				return stackTrace.toString()
+				generateSequence(throwableProxy.cause) { it.cause }.forEach { cause ->
+					append("\nCaused by: ").append(cause.className)
+					if (cause.message != null)
+						append(": ").append(cause.message)
+					for (element in cause.stackTraceElementProxyArray)
+						append("\n\t\tat ").append(element)
+				}
 			}
 		}
 	}
