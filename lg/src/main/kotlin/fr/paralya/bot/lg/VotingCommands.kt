@@ -110,9 +110,9 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			val previousId = arguments.previousId?.snowflake
 			val channelId = channel.id
 			val voteManager = lg.voteManager
-			val votes = lg.botCache.getChannelId(LgChannelType.VOTES)!!
-			val voteLoups = lg.botCache.getChannelId(LgChannelType.LOUPS_VOTE)!!
-			val voteCorbeau = lg.botCache.getChannelId(LgChannelType.CORBEAU)!!
+			val votes = LgChannelType.VOTES.toId()!!
+			val voteLoups = LgChannelType.LOUPS_VOTE.toId()!!
+			val voteCorbeau = LgChannelType.CORBEAU.toId()!!
 			val voteChannels = listOf(votes, voteLoups, voteCorbeau)
 
 			if (channelId !in voteChannels) {
@@ -195,10 +195,10 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 
 context(lg: LG)
 suspend fun <C : EphemeralSlashCommandContext<*, *>> C.validateVoteChannel(errorMessage: Key): LGState? {
-	val village = lg.botCache.getChannelId(LgChannelType.VILLAGE)!!
-	val votes = lg.botCache.getChannelId(LgChannelType.VOTES)!!
-	val loups = lg.botCache.getChannelId(LgChannelType.LOUPS_CHAT)!!
-	val loupsVotes = lg.botCache.getChannelId(LgChannelType.LOUPS_VOTE)!!
+	val village = LgChannelType.VILLAGE.toId()!!
+	val votes = LgChannelType.VOTES.toId()!!
+	val loups = LgChannelType.LOUPS_CHAT.toId()!!
+	val loupsVotes = LgChannelType.LOUPS_VOTE.toId()!!
 	val dayChannels = setOf(village, votes)
 	val nightChannels = setOf(loups, loupsVotes)
 
@@ -220,10 +220,9 @@ private suspend fun <A : Arguments, M : ModalForm> EphemeralSlashCommandContext<
 	reason: String?,
 	handleCorbeau: Boolean = false
 ) {
-	val botCache = lg.botCache
 	val voteManager = lg.voteManager
 	val currentVote = voteManager.getCurrentVote(state)
-	if (handleCorbeau && channel.id == botCache.getChannelId(LgChannelType.CORBEAU)) {
+	if (handleCorbeau && channel.id == LgChannelType.CORBEAU.toId()) {
 		if (currentVote?.corbeau != 0.snowflake) {
 			respond { content = Lg.Vote.Response.Error.Corbeau.alreadyVoted.contextTranslate() }
 			return
@@ -232,7 +231,7 @@ private suspend fun <A : Arguments, M : ModalForm> EphemeralSlashCommandContext<
 		respond { content = Lg.Vote.Response.Success.Corbeau.vote.contextTranslate(target.mention) }
 		return
 	}
-	if (channel.id != botCache.getChannelId(voteChannelType)) {
+	if (channel.id != voteChannelType.toId()) {
 		respond { content = Lg.Vote.Response.Error.cantVoteHere.contextTranslate() }
 		return
 	}
@@ -249,7 +248,7 @@ private suspend fun <A : Arguments, M : ModalForm> EphemeralSlashCommandContext<
 	respond { content = Lg.Vote.Response.Success.vote.contextTranslate(target.mention) }
 	sendAsWebhook(
 		lg.bot,
-		botCache.getChannelId(voteChannelType)!!,
+		voteChannelType.toId()!!,
 		member?.asMember()?.effectiveName ?: "Inconnu",
 		member?.asMember()?.avatar?.cdnUrl?.toUrl(),
 		"votes"

@@ -23,7 +23,7 @@ import kotlinx.coroutines.withContext
  * @return The image as an [Image] object.
  * @throws IllegalArgumentException if the resource is not found at the specified path.
  */
-suspend fun getAsset(path: String, game: String? = null)=
+suspend fun getAsset(path: String, game: String? = null) =
     Image.raw(getResource("assets/${if (game != null) "$game/" else ""}$path.webp"), Image.Format.WEBP)
 
 suspend fun getResource(path: String): ByteArray {

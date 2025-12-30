@@ -57,7 +57,6 @@ suspend fun LG.registerListeners() {
 			val message = event.message
 
 			when (message.channelId) {
-				botCache.getChannelId(LgChannelType.LOUPS_CHAT) -> {
 					if (message.author.isAdmin(botConfig) || message.author?.isBot == true || message.author?.isSelf == true)
 						return@action
 
@@ -85,7 +84,8 @@ suspend fun LG.registerListeners() {
 					}
 				}
 
-				botCache.getChannelId(LgChannelType.INTERVIEW) -> {
+				LgChannelType.LOUPS_CHAT.toId() -> {
+				LgChannelType.INTERVIEW.toId() -> {
 					if (message.author?.id in botCache.getInterviews()) {
 						botCache.removeInterview(message.author!!.id)
 						(message.channel as TopGuildChannelBehavior)
@@ -94,6 +94,7 @@ suspend fun LG.registerListeners() {
 				}
 
 				botCache.getChannelId(LgChannelType.SUJETS) -> {
+				LgChannelType.SUJETS.toId() -> {
 					val reasonText = I18n.System.Topics.creation.contextTranslate()
 					(message.channel as TextChannel).startPublicThreadWithMessage(message.id, message.content.truncate(100)) {
 						reason = reasonText
@@ -112,28 +113,24 @@ suspend fun LG.registerListeners() {
 	event<MessageUpdateEvent> {
 		action {
 			val oldMessage = event.old?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
-			val webhook = getWebhook(botCache.getChannelId(LgChannelType.PETITE_FILLE)!!, bot, WEBHOOK_NAME)
+			val webhook = getWebhook(LgChannelType.PETITE_FILLE.toId()!!, bot, WEBHOOK_NAME)
 			val newMessage = event.message.asMessage()
 			if (oldMessage != null) {
 				try {
 					webhook.token?.let {
 						webhook.getMessage(it, oldMessage.id).edit {
 							content = newMessage.content
-							if (newMessage.referencedMessage != null) {
-								embed {
-									title = Common.Transmission.Reference.title.contextTranslate()
-									description = newMessage.referencedMessage!!.content
-								}
-							} else {
-								embeds?.clear()
-							}
+							if (newMessage.referencedMessage != null) embed {
+								title = Common.Transmission.Reference.title.contextTranslate()
+								description = newMessage.referencedMessage!!.content
+							} else embeds?.clear()
 						}
 					}
 				} catch (_: Exception) {
 					val (wolfName, wolfAvatar) = botCache.getBotAnonymousIdentity()
 					sendAsWebhook(
 						bot,
-						botCache.getChannelId(LgChannelType.PETITE_FILLE)!!,
+						LgChannelType.PETITE_FILLE.toId()!!,
 						wolfName,
 						wolfAvatar,
 						WEBHOOK_NAME

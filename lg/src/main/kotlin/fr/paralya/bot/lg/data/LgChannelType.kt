@@ -1,5 +1,7 @@
 package fr.paralya.bot.lg.data
 
+import dev.kordex.core.extensions.Extension
+
 /**
  * Enum class for a typesafe accessor of channels in the game.
  */
@@ -17,5 +19,8 @@ enum class LgChannelType {
 
 	// Werewolf channels
 	LOUPS_CHAT,
-	LOUPS_VOTE
+	LOUPS_VOTE;
+
+	context(extension: Extension)
+    internal suspend fun toId() = extension.kord.cache.getChannelId(this)
 }

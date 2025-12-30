@@ -92,7 +92,7 @@ class LG : Extension() {
 				description = Lg.Interview.Command.description
 				action {
 					val interviewChannel =
-						guild?.getChannel(botCache.getChannelId(LgChannelType.INTERVIEW)!!) as TopGuildChannel
+						guild?.getChannel(LgChannelType.INTERVIEW.toId()!!) as TopGuildChannel
 					val user = arguments.user
 					interviewChannel.addOverwrite(
 						PermissionOverwrite.forMember(user.id, Permissions(Permission.SendMessages))
@@ -110,7 +110,7 @@ class LG : Extension() {
 
 					sendAsWebhook(
 						bot,
-						botCache.getChannelId(LgChannelType.ANNONCES_VILLAGE)!!,
+						LgChannelType.ANNONCES_VILLAGE.toId()!!,
 						"ParalyaLG",
 						getAsset("paralya_lg", prefix)
 					) {
