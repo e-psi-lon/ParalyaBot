@@ -1,23 +1,19 @@
 package fr.paralya.bot.lg
 
-import dev.kord.cache.api.DataCache
 import dev.kord.common.entity.Permission
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.GuildBehavior
-import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.channel.TopGuildChannelBehavior
-import dev.kord.core.behavior.edit
-import dev.kord.core.entity.ReactionEmoji
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.event.message.*
-import dev.kord.rest.builder.message.embed
 import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
 import dev.kordex.core.utils.toReaction
 import fr.paralya.bot.common.*
 import fr.paralya.bot.common.config.ConfigManager
-import fr.paralya.bot.common.I18n.Common
+import fr.paralya.bot.common.config.BotConfig
+import fr.paralya.bot.common.plugins.PluginReadyEvent
 import fr.paralya.bot.lg.data.*
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
@@ -30,6 +26,8 @@ private val requiredRoleChannels = listOf(
 	LgChannelType.LOUPS_VOTE,
 	LgChannelType.CORBEAU,
 	LgChannelType.PETITE_FILLE,
+	LgChannelType.CUPIDON,
+	LgChannelType.DATE_MYSTERE
 )
 
 private val requiredMainChannels = listOf(
@@ -40,7 +38,9 @@ private val requiredMainChannels = listOf(
 	LgChannelType.VILLAGE,
 )
 
-private const val WEBHOOK_NAME = "PF"
+private const val WEBHOOK_PF_NAME = "PF"
+private const val WEBHOOK_CUPIDON_NAME = "Cupidon"
+
 /**
  * Registers all event listeners for the Werewolf (Loup-Garou) game.
  *
@@ -50,41 +50,16 @@ private const val WEBHOOK_NAME = "PF"
 suspend fun LG.registerListeners() {
 	val lgConfig by inject<LgConfig>()
 	val botConfig = inject<ConfigManager>().value.botConfig
-	val dmChannelId = botConfig.dmLogChannelId.snowflake
+	val relayService = LgRelayService(this, botConfig)
 
 	event<MessageCreateEvent> {
 		action {
 			val message = event.message
-
 			when (message.channelId) {
-					if (message.author.isAdmin(botConfig) || message.author?.isBot == true || message.author?.isSelf == true)
-						return@action
-
-					val cached = botCache.getLastWerewolfMessageSender().value
-					logger.debug { "Message sender is ${message.author?.id?.value} and cache is $cached" }
-					if (message.author?.id != botCache.getLastWerewolfMessageSender()) {
-						botCache.setLastWerewolfMessageSender(message.author!!.id)
-						botCache.updateProfilePicture()
-					}
-					val (wolfName, wolfAvatar) = botCache.getBotAnonymousIdentity()
-					logger.debug { "Avatar is $wolfAvatar and name is $wolfName" }
-					sendAsWebhook(
-						bot,
-						botCache.getChannelId(LgChannelType.PETITE_FILLE)!!,
-						wolfName,
-						getAsset(wolfAvatar, this@registerListeners.prefix),
-						WEBHOOK_NAME
-					) {
-						content = message.content
-
-						if (message.referencedMessage != null) embed {
-							title = Common.Transmission.Reference.title.contextTranslate()
-							description = message.referencedMessage!!.content
-						}
-					}
-				}
-
-				LgChannelType.LOUPS_CHAT.toId() -> {
+				LgChannelType.LOUPS_CHAT.toId() ->
+					relayService.onMessageSent(WEBHOOK_PF_NAME,
+						LgChannelType.PETITE_FILLE.toId()!!, false
+					)
 				LgChannelType.INTERVIEW.toId() -> {
 					if (message.author?.id in botCache.getInterviews()) {
 						botCache.removeInterview(message.author!!.id)
@@ -93,7 +68,11 @@ suspend fun LG.registerListeners() {
 					}
 				}
 
-				botCache.getChannelId(LgChannelType.SUJETS) -> {
+				LgChannelType.DATE_MYSTERE.toId() ->
+					relayService.onMessageSent(WEBHOOK_CUPIDON_NAME,
+						LgChannelType.CUPIDON.toId()!!, false
+					)
+
 				LgChannelType.SUJETS.toId() -> {
 					val reasonText = I18n.System.Topics.creation.contextTranslate()
 					(message.channel as TextChannel).startPublicThreadWithMessage(message.id, message.content.truncate(100)) {
@@ -112,98 +91,102 @@ suspend fun LG.registerListeners() {
 
 	event<MessageUpdateEvent> {
 		action {
-			val oldMessage = event.old?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
-			val webhook = getWebhook(LgChannelType.PETITE_FILLE.toId()!!, bot, WEBHOOK_NAME)
-			val newMessage = event.message.asMessage()
-			if (oldMessage != null) {
-				try {
-					webhook.token?.let {
-						webhook.getMessage(it, oldMessage.id).edit {
-							content = newMessage.content
-							if (newMessage.referencedMessage != null) embed {
-								title = Common.Transmission.Reference.title.contextTranslate()
-								description = newMessage.referencedMessage!!.content
-							} else embeds?.clear()
-						}
-					}
-				} catch (_: Exception) {
-					val (wolfName, wolfAvatar) = botCache.getBotAnonymousIdentity()
-					sendAsWebhook(
-						bot,
-						LgChannelType.PETITE_FILLE.toId()!!,
-						wolfName,
-						wolfAvatar,
-						WEBHOOK_NAME
-					) {
-						content = newMessage.content
-						if (newMessage.referencedMessage != null) embed {
-							title = Common.Transmission.Reference.title.contextTranslate()
-							description = newMessage.referencedMessage!!.content
-						}
-						embed {
-							title = Common.Transmission.Update.title.contextTranslate()
-							description = oldMessage.content
-						}
-					}
-				}
+			when (event.message.channelId) {
+				LgChannelType.LOUPS_CHAT.toId() ->
+					relayService.onMessageUpdate(WEBHOOK_PF_NAME,
+						LgChannelType.PETITE_FILLE.toId()!!, false
+					)
+				LgChannelType.DATE_MYSTERE.toId() ->
+					relayService.onMessageUpdate(WEBHOOK_CUPIDON_NAME,
+						LgChannelType.CUPIDON.toId()!!, false
+					)
 			}
 		}
 	}
 
 	event<MessageDeleteEvent> {
 		action {
-			val oldMessage =
-				event.message?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
-			if (oldMessage != null && event.message?.channelId == botCache.getChannelId(LgChannelType.PETITE_FILLE)) {
-				val webhook = getWebhook(botCache.getChannelId(LgChannelType.PETITE_FILLE)!!, bot, WEBHOOK_NAME)
-				try {
-					webhook.token?.let { webhook.deleteMessage(it, oldMessage.id) }
-				} catch (e: Exception) {
-					logger.error(e) { "Error while deleting message" }
-				}
+			when (event.message?.channelId) {
+				LgChannelType.LOUPS_CHAT.toId() ->
+					relayService.onMessageDelete(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId())
+				LgChannelType.DATE_MYSTERE.toId() ->
+					relayService.onMessageDelete(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId())
+				else -> return@action
 			}
 		}
 	}
 
 	event<ReactionAddEvent> {
 		action {
-			// TODO: Handle reaction add events for PF and other
+			when (event.message.channelId) {
+				LgChannelType.LOUPS_CHAT.toId() ->
+					relayService.onReactionAdd(
+						WEBHOOK_PF_NAME,
+						LgChannelType.PETITE_FILLE.toId()!!, false
+					)
+				LgChannelType.DATE_MYSTERE.toId() ->
+					relayService.onReactionAdd(
+						WEBHOOK_CUPIDON_NAME,
+						LgChannelType.CUPIDON.toId()!!, false
+					)
+				else -> return@action
+			}
 		}
 	}
 	event<ReactionRemoveEvent> {
 		action {
-			// TODO: Handle reaction remove events for PF and other
+			when (event.message.channelId) {
+				LgChannelType.LOUPS_CHAT.toId() ->
+					relayService.onReactionRemove(WEBHOOK_PF_NAME,
+						LgChannelType.PETITE_FILLE.toId()!!, isAnonymous = false
+					)
+				LgChannelType.DATE_MYSTERE.toId() ->
+					relayService.onReactionRemove(WEBHOOK_CUPIDON_NAME,
+						LgChannelType.CUPIDON.toId()!!, isAnonymous = false
+					)
+				else -> return@action
+			}
 		}
 	}
 
 	event<ReadyEvent> {
 		action {
-			logger.debug { "Fetching channels from werewolf related categories" }
-			val paralya = event.guilds.firstOrNull { it.id.value == botConfig.paralyaId }
-				?: throw IllegalStateException("Paralya guild not found")
-
-			val rolesChannels = collectChannelsFromCategory(lgConfig.rolesCategory.snowflake, paralya)
-			val mainChannels = collectChannelsFromCategory(lgConfig.mainCategory.snowflake, paralya)
-
-			logger.debug { "Found ${rolesChannels.size} channels in the roles category" }
-			logger.debug { "Found ${mainChannels.size} channels in the main category" }
-
-			// If the required channels are not found, throw an exception
-			requiredRoleChannels.forEach { channelName ->
-				if (rolesChannels[channelName.name] == null) {
-					throw IllegalStateException("Channel $channelName not found in the roles category")
-				}
-			}
-			requiredMainChannels.forEach { channelName ->
-				if (mainChannels[channelName.name] == null) {
-					throw IllegalStateException("Channel $channelName not found in the main category")
-				}
-			}
-
-			(rolesChannels + mainChannels).forEach { (name, id) ->
-				botCache.registerChannel(name, id)
-			}
+			handleReadyEvent(event.guilds, botConfig, lgConfig)
 		}
+	}
+
+	event<PluginReadyEvent> {
+		action {
+			handleReadyEvent(event.guilds, botConfig, lgConfig)
+		}
+	}
+}
+
+private suspend fun LG.handleReadyEvent(guilds: Set<GuildBehavior>, botConfig: BotConfig, lgConfig: LgConfig) {
+	logger.debug { "Fetching channels from werewolf related categories" }
+	val paralya = guilds.firstOrNull { it.id.value == botConfig.paralyaId }
+		?: throw IllegalStateException("Paralya guild not found")
+
+	val rolesChannels = collectChannelsFromCategory(lgConfig.rolesCategory.snowflake, paralya)
+	val mainChannels = collectChannelsFromCategory(lgConfig.mainCategory.snowflake, paralya)
+
+	logger.debug { "Found ${rolesChannels.size} channels in the roles category" }
+	logger.debug { "Found ${mainChannels.size} channels in the main category" }
+
+	// If the required channels are not found, throw an exception
+	requiredRoleChannels.forEach { channelName ->
+		if (rolesChannels[channelName.name] == null) {
+			throw IllegalStateException("Channel $channelName not found in the roles category")
+		}
+	}
+	requiredMainChannels.forEach { channelName ->
+		if (mainChannels[channelName.name] == null) {
+			throw IllegalStateException("Channel $channelName not found in the main category")
+		}
+	}
+
+	(rolesChannels + mainChannels).forEach { (name, id) ->
+		botCache.registerChannel(name, id)
 	}
 }
 
@@ -233,17 +216,3 @@ private suspend fun collectChannelsFromCategory(categoryId: Snowflake, guild: Gu
 		.toMap()
 		.filterKeys { it.isNotBlank() && it != "_".repeat(it.length) }
 }
-
-/**
- * Gets the anonymous identity for the bot in the game.
- *
- * This function retrieves the bot's anonymous identity based on the profile picture (and technically name too) state.
- * It returns a pair containing the bot's name and resource ID for the avatar.
- *
- * @return A pair containing the bot's name and resource ID for the avatar.
- */
-private suspend fun DataCache.getBotAnonymousIdentity(): Pair<String, String> =
-	(if (getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme") to (if (getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1")
-
-fun String.truncate(maxLength: Int): String =
-	if (length <= maxLength) this else take(maxLength - 3) + "..."

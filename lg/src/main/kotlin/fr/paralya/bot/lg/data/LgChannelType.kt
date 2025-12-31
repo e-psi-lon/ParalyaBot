@@ -16,6 +16,8 @@ enum class LgChannelType {
 	CORBEAU,
 	INTERVIEW,
 	PETITE_FILLE,
+	CUPIDON,
+	DATE_MYSTERE,
 
 	// Werewolf channels
 	LOUPS_CHAT,

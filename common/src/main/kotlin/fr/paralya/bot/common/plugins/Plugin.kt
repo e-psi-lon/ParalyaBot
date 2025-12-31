@@ -1,6 +1,5 @@
 package fr.paralya.bot.common.plugins
 
-import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.plugins.KordExPlugin
 import dev.kordex.i18n.Key
 import fr.paralya.bot.common.GameRegistry

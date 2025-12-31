@@ -19,7 +19,6 @@ import fr.paralya.bot.common.contextTranslate
 import fr.paralya.bot.common.sendAsWebhook
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.lg.data.LgChannelType
-import fr.paralya.bot.lg.data.getChannelId
 import fr.paralya.bot.lg.I18n as Lg
 import fr.paralya.bot.lg.data.getGameData
 

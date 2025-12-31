@@ -26,3 +26,6 @@ suspend fun Member.swapRoles(
 	addRole(addRoleId, reason)
 	removeRole(removeRoleId, reason)
 }
+
+fun String.truncate(maxLength: Int): String =
+	if (length <= maxLength) this else take(maxLength - 3) + "..."

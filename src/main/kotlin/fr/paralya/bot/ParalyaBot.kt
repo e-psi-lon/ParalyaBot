@@ -117,7 +117,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 				// Register game-specific configs manually until the plugin system is implemented
 				// In the future, plugins will register their own config
 				val configManager = getKoin().get<ConfigManager>(named("configManager"))
-				configManager.registerConfig<LgConfig>("lgConfig")
+				configManager.registerConfig<LgConfig>("LG")
 			}
 		}
 	}

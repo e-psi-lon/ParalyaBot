@@ -2,7 +2,7 @@ package fr.paralya.bot.lg
 
 import fr.paralya.bot.common.ApiVersion
 import fr.paralya.bot.common.CommonModule
-import fr.paralya.bot.common.plugin.Plugin
+import fr.paralya.bot.common.plugins.Plugin
 import fr.paralya.bot.lg.data.LgConfig
 
 /**
