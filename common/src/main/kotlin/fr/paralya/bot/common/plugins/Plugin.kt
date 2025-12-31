@@ -1,10 +1,13 @@
-package fr.paralya.bot.common.plugin
+package fr.paralya.bot.common.plugins
 
+import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.plugins.KordExPlugin
 import dev.kordex.i18n.Key
 import fr.paralya.bot.common.GameRegistry
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.config.ValidatedConfig
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import org.koin.core.component.inject
 import kotlin.getValue
 
@@ -13,6 +16,8 @@ abstract class Plugin: KordExPlugin() {
     abstract val key: Key
     @PublishedApi
     internal var configDefined = false
+    open val isGame = true
+
     override suspend fun setup() {
         prepareRegistration()
         onSetup()
@@ -21,10 +26,37 @@ abstract class Plugin: KordExPlugin() {
     /**
      * Register your plugin's config type by calling `define<T>()`.
      */
-    abstract fun defineConfig()
-    abstract suspend fun onSetup()
+    protected abstract fun defineConfig()
 
-    inline fun <reified T : ValidatedConfig>define() = register<T>(key).also { configDefined = true }
+
+    open suspend fun onSetup() {}
+    open suspend fun onDelete() {}
+    open suspend fun onStop() {}
+
+    override fun delete() = runBlocking {
+        kord.launch {
+            removeAllRegistration()
+            onDelete()
+        }.join()
+        super.delete()
+    }
+
+    override fun stop() = runBlocking {
+        kord.launch {
+            removeAllRegistration()
+            onStop()
+        }.join()
+        super.stop()
+    }
+
+    private fun removeAllRegistration() {
+        // val configManager by inject<ConfigManager>()
+        // configManager.unregisterConfig(name) // Somehow find a way to unregister it
+        val gameRegistry by inject<GameRegistry>()
+        gameRegistry.unloadGameMode(name)
+    }
+
+    protected inline fun <reified T : ValidatedConfig>define() = register<T>(key).also { configDefined = true }
 
     private fun executeDefine() {
         defineConfig()
@@ -33,23 +65,24 @@ abstract class Plugin: KordExPlugin() {
         )
     }
 
-    fun prepareRegistration() {
+    private fun prepareRegistration() {
         try {
             getKoin()
-            bot.logger.info { "Koin already started, registering $name config and game" }
-            executeDefine()
         } catch (_: IllegalStateException) {
             bot.logger.info { "Koin not started, registering $name config and game hook after Koin setup" }
             settings {
                 hooks { afterKoinSetup { executeDefine() } }
             }
+            return
         }
+        bot.logger.info { "Koin already started, registering $name config and game" }
+        executeDefine()
     }
 
     @PublishedApi
     internal inline fun <reified T : ValidatedConfig>register(key: Key) {
         registerConfig<T>()
-        registerGame(key)
+        if (isGame) registerGame(key)
     }
 
     @PublishedApi

@@ -1,4 +1,4 @@
-package fr.paralya.bot.common.plugin
+package fr.paralya.bot.common.plugins
 
 open class PluginException(message: String) : Exception(message)
 
