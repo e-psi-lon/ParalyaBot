@@ -1,16 +1,20 @@
 package fr.paralya.bot.lg
 
-import dev.kord.cache.api.DataCache
 import dev.kord.core.entity.User
+import dev.kordex.core.koin.KordExKoinComponent
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.lg.data.*
 import fr.paralya.bot.lg.data.Target
+import org.koin.core.component.inject
 
 /**
  * Manager class responsible for handling voting operations in the Werewolf game.
  * This provides a centralized way to manage votes for both day and night phases.
  */
-class VoteManager(private val botCache: DataCache) {
+class VoteManager : KordExKoinComponent {
+	private val lg by inject<LG>()
+	private val botCache by lazy { lg.botCache }
+
 
 	/**
 	 * Gets the current vote for the specified game state

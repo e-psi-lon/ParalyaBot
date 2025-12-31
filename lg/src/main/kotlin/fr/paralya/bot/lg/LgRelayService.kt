@@ -11,10 +11,11 @@ import dev.kord.core.event.message.MessageDeleteEvent
 import dev.kord.core.event.message.MessageUpdateEvent
 import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.event.message.ReactionRemoveEvent
+import dev.kord.core.exception.EntityNotFoundException
 import dev.kord.rest.builder.message.MessageBuilder
 import dev.kord.rest.builder.message.embed
 import dev.kordex.core.events.EventContext
-import dev.kordex.core.types.TranslatableContext
+import dev.kordex.core.koin.KordExKoinComponent
 import fr.paralya.bot.common.config.BotConfig
 import fr.paralya.bot.common.contextTranslate
 import fr.paralya.bot.common.format
@@ -28,19 +29,16 @@ import fr.paralya.bot.lg.data.getLastWerewolfMessageSender
 import fr.paralya.bot.lg.data.getProfilePictureState
 import fr.paralya.bot.lg.data.setLastWerewolfMessageSender
 import fr.paralya.bot.lg.data.updateProfilePicture
+import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.minutes
 import fr.paralya.bot.lg.I18n as Lg
 
-class LgRelayService(
-    lg: LG,
-    private val botConfig: BotConfig
-) {
+class LgRelayService : KordExKoinComponent {
+    private val lg by inject<LG>()
+    private val logger by lazy { lg.logger }
+    private val botCache by lazy { lg.botCache }
+    private val bot by lazy { lg.bot }
 
-    private val logger = lg.logger
-    private val bot = lg.bot
-    private val botCache = lg.botCache
-    private val kord = lg.kord
-    private val prefix = lg.prefix
 
     context(context: EventContext<MessageCreateEvent>)
     suspend fun onMessageSent(
@@ -48,12 +46,14 @@ class LgRelayService(
         outChannel: Snowflake,
         isAnonymous: Boolean
     ) {
+        val botConfig by this.inject<BotConfig>()
         val message = context.event.message
         if (message.author.isAdmin(botConfig) || message.author?.isBot == true || message.author?.isSelf == true)
             return
 
         if (message.content.length > 2000) {
             val channel = message.channel
+            logger.warn { "Received a message too long (${message.content.length} characters). It'll be deleted and the user will be alerted." }
             channel.sendTemporaryMessage(
                 Lg.Transmission.Error.messageTooLong.contextTranslate(message.content.length),
                 1.minutes
@@ -72,7 +72,7 @@ class LgRelayService(
             bot,
             outChannel,
             userName,
-            getAsset(userAvatar, prefix),
+            getAsset(userAvatar, lg.prefix),
             webhookName,
             content
         ) else sendAsWebhook(
@@ -91,10 +91,11 @@ class LgRelayService(
         webhookName: String,
         outChannel: Snowflake?,
     ) {
+        val botConfig by this.inject<BotConfig>()
         val event = context.event
         if (event.message?.author.isAdmin(botConfig) || event.message?.author?.isBot == true || event.message?.author?.isSelf == true)
             return
-        val oldMessage = outChannel?.let { MessageChannelBehavior(outChannel, kord).getCorrespondingMessage(event.message!!) }
+        val oldMessage = outChannel?.let { MessageChannelBehavior(outChannel, bot.kordRef).getCorrespondingMessage(event.message!!) }
         if (oldMessage != null) {
             val webhook = getWebhook(outChannel, bot, webhookName)
             try {
@@ -111,10 +112,11 @@ class LgRelayService(
         outChannel: Snowflake,
         isAnonymous: Boolean
     ) {
+        val botConfig by this.inject<BotConfig>()
         val event = context.event
         if (event.old?.author.isAdmin(botConfig) || event.old?.author?.isBot == true || event.old?.author?.isSelf == true)
             return
-        val oldMessage = event.old?.let { MessageChannelBehavior(outChannel, kord).getCorrespondingMessage(it) }
+        val oldMessage = event.old?.let { MessageChannelBehavior(outChannel, bot.kordRef).getCorrespondingMessage(it) }
         val webhook = getWebhook(outChannel, bot, webhookName)
         val newMessage = event.message.asMessage()
         if (oldMessage != null) {
@@ -158,8 +160,14 @@ class LgRelayService(
         isAnonymous: Boolean
     ) {
         val event = context.event
-        onReactionChange(webhookName, outChannel, isAnonymous, event.getMessageAuthorOrNull(),
-            event.message as Message, event.emoji, true)
+        try {
+            onReactionChange(
+                webhookName, outChannel, isAnonymous,
+                event.getUserOrNull(), event.message.asMessage(), event.emoji, true
+            )
+        } catch (_: EntityNotFoundException) {
+            logger.debug { "Message not found while processing reaction add" }
+        }
     }
 
     context(context: EventContext<ReactionRemoveEvent>)
@@ -169,12 +177,18 @@ class LgRelayService(
         isAnonymous: Boolean
     ) {
         val event = context.event
-        onReactionChange(webhookName, outChannel, isAnonymous, null,
-            event.message as Message, event.emoji, true)
+        try {
+            onReactionChange(
+                webhookName, outChannel, isAnonymous,
+                event.getUserOrNull(), event.message.asMessage(), event.emoji, false
+            )
+        } catch (_: EntityNotFoundException) {
+            logger.debug { "Message not found while processing reaction remove" }
+        }
     }
 
 
-    context(ctx: TranslatableContext)
+    context(ctx: EventContext<*>)
     private suspend fun onReactionChange(
         webhookName: String,
         outChannel: Snowflake,
@@ -184,7 +198,10 @@ class LgRelayService(
         emoji: ReactionEmoji,
         isAdd: Boolean
     ) {
-        if (author.isAdmin(botConfig) || author?.isBot == true || author?.isSelf == true)
+        val botConfig by this.inject<BotConfig>()
+        if (message.author.isAdmin(botConfig) || message.author?.isBot == true || message.author?.isSelf == true)
+            return
+        if (author?.isAdmin(botConfig) == true || author?.isBot == true || author?.isSelf == true)
             return
         val (userName, userAvatar) = getMessageIdentity(author, isAnonymous)
         val content = buildRelayReactionContent(emoji, message, isAdd)
@@ -192,7 +209,7 @@ class LgRelayService(
             bot,
             outChannel,
             userName,
-            getAsset(userAvatar, prefix),
+            getAsset(userAvatar, lg.prefix),
             webhookName,
             content
         ) else sendAsWebhook(
@@ -217,14 +234,15 @@ class LgRelayService(
         (if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme") to (if (botCache.getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1")
     } else (author?.username ?: "Message Author") to (author?.avatar?.cdnUrl?.toUrl() ?: "")
 
-    context(ctx: TranslatableContext)
+    context(ctx: EventContext<*>)
     private fun buildRelayContent(
         message: Message,
         additionalElements: (suspend MessageBuilder.() -> Unit)? = null
     ): suspend MessageBuilder.() -> Unit = {
+        val botConfig by ctx.inject<BotConfig>()
         content = message.content
 
-        if (message.referencedMessage != null) embed {
+        if (message.referencedMessage != null && !message.referencedMessage!!.author.isAdmin(botConfig)) embed {
             title = Lg.Transmission.Reference.title.contextTranslate()
             description = message.referencedMessage!!.content
         }
@@ -232,7 +250,7 @@ class LgRelayService(
         additionalElements?.invoke(this)
     }
 
-    context(ctx: TranslatableContext)
+    context(ctx: EventContext<*>)
     private fun buildRelayReactionContent(
         reaction: ReactionEmoji,
         message: Message,
@@ -245,18 +263,12 @@ class LgRelayService(
             title = Lg.Transmission.Reaction.Content.title.contextTranslate()
             description = message.content
         }
-
-        if (message.referencedMessage != null) embed {
+        val botConfig by ctx.inject<BotConfig>()
+        if (message.referencedMessage != null && !message.referencedMessage!!.author.isAdmin(botConfig)) embed {
             title = Lg.Transmission.Reference.title.contextTranslate()
             description = message.referencedMessage!!.content
         }
 
         additionalElements?.invoke(this)
-
-    }
-
-    companion object {
-        context(lg: LG)
-        operator fun invoke(botConfig: BotConfig) = LgRelayService(lg, botConfig)
     }
 }

@@ -23,6 +23,8 @@ class LgBotPlugin : Plugin() {
 	 * Setup function that initializes the plugin.
 	 */
 	override suspend fun onSetup() {
+		// registerComponent(::VoteManager)
+		// registerComponent(::LgRelayService)
 		extension(::LG)
 	}
 }

@@ -1,5 +1,6 @@
 package fr.paralya.bot.common.plugins
 
+import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.plugins.KordExPlugin
 import dev.kordex.i18n.Key
 import fr.paralya.bot.common.GameRegistry
@@ -8,6 +9,11 @@ import fr.paralya.bot.common.config.ValidatedConfig
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.inject
+import org.koin.core.context.loadKoinModules
+import org.koin.core.module.Module
+import org.koin.core.module.dsl.createdAtStart
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.module
 import kotlin.getValue
 
 abstract class Plugin: KordExPlugin() {
@@ -16,10 +22,29 @@ abstract class Plugin: KordExPlugin() {
     @PublishedApi
     internal var configDefined = false
     open val isGame = true
+    @PublishedApi
+    internal val components = mutableListOf<Module>()
 
     override suspend fun setup() {
         prepareRegistration()
         onSetup()
+        try {
+            loadKoinModules(components)
+        } catch (_: IllegalStateException) {
+            bot.logger.info { "Koin not started, loading $name components after Koin setup" }
+            settings {
+                hooks { afterKoinSetup { loadKoinModules(components) } }
+            }
+        }
+    }
+
+    protected inline fun <reified T : KordExKoinComponent> registerComponent(noinline constructor: () -> T) {
+        val module = module {
+            singleOf<T>(constructor) {
+                createdAtStart()
+            }
+        }
+        components.add(module)
     }
 
     /**

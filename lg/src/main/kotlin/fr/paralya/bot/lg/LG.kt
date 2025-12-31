@@ -14,14 +14,19 @@ import dev.kordex.core.commands.converters.impl.string
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.publicSlashCommand
+import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.utils.dm
 import dev.kordex.core.utils.hasRole
+import dev.kordex.core.utils.loadModule
 import fr.paralya.bot.common.*
 import fr.paralya.bot.common.I18n.Messages
 import fr.paralya.bot.lg.data.*
 import fr.paralya.bot.lg.I18n as Lg
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.component.inject
+import org.koin.core.module.dsl.createdAtStart
+import org.koin.core.module.dsl.singleOf
+import org.koin.dsl.module
 
 
 /**
@@ -40,7 +45,7 @@ class LG : Extension() {
 	val logger = KotlinLogging.logger(this::class.java.name)
 	val botCache = kord.cache
 	val prefix = "lg"
-	val voteManager = VoteManager(botCache)
+	val voteManager = VoteManager()
 
 	override suspend fun setup() {
 		val gameRegistry by inject<GameRegistry>()
@@ -202,4 +207,12 @@ class LG : Extension() {
             description = Lg.Kill.Argument.Reason.description
         }
     }
+
+	inline fun <reified T : KordExKoinComponent> registerComponent(noinline constructor: () -> T) {
+		loadModule {
+			singleOf<T>(constructor) {
+				createdAtStart()
+			}
+		}
+	}
 }
