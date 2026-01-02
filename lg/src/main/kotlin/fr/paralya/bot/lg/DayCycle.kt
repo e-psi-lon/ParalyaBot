@@ -60,7 +60,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			val kill = arguments.kill
 			val botCache = lg.botCache
 			val gameData = botCache.getGameData()
-			val voteManager = lg.voteManager
+			val voteManager by inject<VoteManager>()
 
 			if (gameData.state == DAY) {
 				respond { content = Lg.Day.Response.Error.alreadyDay.contextTranslate() }
@@ -140,7 +140,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			val kill = arguments.kill
 			val botCache = lg.botCache
 			val gameData = botCache.getGameData()
-			val voteManager = lg.voteManager
+			val voteManager by inject<VoteManager>()
 			if (gameData.state == NIGHT) {
 				respond { content = Lg.Night.Response.Error.alreadyNight.contextTranslate() }
 				return@adminOnly

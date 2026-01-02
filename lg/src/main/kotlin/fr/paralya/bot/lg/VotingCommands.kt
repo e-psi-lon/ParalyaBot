@@ -21,6 +21,7 @@ import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.lg.data.LgChannelType
 import fr.paralya.bot.lg.I18n as Lg
 import fr.paralya.bot.lg.data.getGameData
+import org.koin.core.component.inject
 
 /**
  * Registers the commands related to the voting mechanism in the game
@@ -52,14 +53,15 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			description = Lg.Vote.List.Command.description
 
 			action {
+				val voteManager by inject<VoteManager>()
 				val state = validateVoteChannel(Lg.Vote.Response.Error.cantVoteHere) ?: return@action
-				val vote = lg.voteManager.getCurrentVote(state)
+				val vote = voteManager.getCurrentVote(state)
 				val isCorrectState = lg.botCache.getGameData().state == state
 				if (vote?.votes.isNullOrEmpty() || !isCorrectState) {
 					respond { content = Lg.Vote.List.Response.Error.noVotes.contextTranslate() }
 					return@action
 				}
-				val voteCount = lg.voteManager.getVoteCount(vote)
+				val voteCount = voteManager.getVoteCount(vote)
 				val votersByTarget = vote.votes.entries.groupBy({ it.value }, { it.key })
 				respond {
 					embed {
@@ -88,15 +90,16 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			name = Lg.Vote.Reset.Command.name
 			description = Lg.Vote.Reset.Command.description
 			adminOnly {
+				val voteManager by inject<VoteManager>()
 				val state = validateVoteChannel(Lg.Vote.Response.Error.cantVoteHere) ?: return@adminOnly
-				val vote = lg.voteManager.getCurrentVote(state)
+				val vote = voteManager.getCurrentVote(state)
 				val votes = vote?.votes
 				val isCorrectState = lg.botCache.getGameData().state == state
 				if (votes.isNullOrEmpty() || !isCorrectState) {
 					respond { content = Lg.Vote.Reset.Response.Error.noVotes.contextTranslate() }
 					return@adminOnly
 				}
-				lg.voteManager.resetVotes(state)
+				voteManager.resetVotes(state)
 				respond { content = Lg.Vote.Reset.Response.success.contextTranslate() }
 			}
 		}
@@ -108,7 +111,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 		action {
 			val previousId = arguments.previousId?.snowflake
 			val channelId = channel.id
-			val voteManager = lg.voteManager
+			val voteManager by inject<VoteManager>()
 			val votes = LgChannelType.VOTES.toId()!!
 			val voteLoups = LgChannelType.LOUPS_VOTE.toId()!!
 			val voteCorbeau = LgChannelType.CORBEAU.toId()!!
@@ -151,18 +154,19 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 		description = Lg.MostVoted.Command.description
 
 		adminOnly {
+			val voteManager by inject<VoteManager>()
 			val state = validateVoteChannel(Lg.MostVoted.Response.Error.cantUseHere)
 				?: return@adminOnly
 			if (state != LGState.DAY) {
 				respond { content = Lg.MostVoted.Response.Error.onlyVillageVotes.contextTranslate() }
 				return@adminOnly
 			}
-			val currentVote = lg.voteManager.getCurrentVote(state)
+			val currentVote = voteManager.getCurrentVote(state)
 			if (currentVote?.votes.isNullOrEmpty()) {
 				respond { content = Lg.MostVoted.Response.Error.noVotes.contextTranslate() }
 				return@adminOnly
 			}
-			val voteCount = lg.voteManager.getVoteCount(currentVote)
+			val voteCount = voteManager.getVoteCount(currentVote)
 			val maxVotes = voteCount.values.maxOrNull() ?: 0
 			val mostVotedPlayers = voteCount.filter { it.value == maxVotes }.keys
 			if (mostVotedPlayers.size > 1) {
@@ -219,7 +223,7 @@ private suspend fun <A : Arguments, M : ModalForm> EphemeralSlashCommandContext<
 	reason: String?,
 	handleCorbeau: Boolean = false
 ) {
-	val voteManager = lg.voteManager
+	val voteManager by lg.inject<VoteManager>()
 	val currentVote = voteManager.getCurrentVote(state)
 	if (handleCorbeau && channel.id == LgChannelType.CORBEAU.toId()) {
 		if (currentVote?.corbeau != 0.snowflake) {

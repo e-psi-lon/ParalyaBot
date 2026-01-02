@@ -50,7 +50,7 @@ private const val WEBHOOK_CUPIDON_NAME = "Cupidon"
 suspend fun LG.registerListeners() {
 	val lgConfig by inject<LgConfig>()
 	val botConfig = inject<ConfigManager>().value.botConfig
-	val relayService = LgRelayService()
+	val relayService by inject<LgRelayService>()
 
 	event<MessageCreateEvent> {
 		action {
