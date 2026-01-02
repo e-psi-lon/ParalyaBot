@@ -10,7 +10,7 @@ kordEx {
 		id = "paralya-lg"
 		version = getVersion() as String
 		description = "ParalyaBot's Werewolf game plugin"
-		pluginClass = "fr.paralya.bot.lg.LgBotPlugin"
+		pluginClass = "fr.paralya.bot.lg.LgPlugin"
 	}
 }
 

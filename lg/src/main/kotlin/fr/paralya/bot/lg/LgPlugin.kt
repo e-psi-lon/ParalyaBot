@@ -13,7 +13,7 @@ import fr.paralya.bot.lg.data.LgConfig
  *
  */
 @ApiVersion(CommonModule.API_VERSION)
-class LgBotPlugin : Plugin() {
+class LgPlugin : Plugin() {
 	override val name = "LG"
 	override val key = I18n.GameMode.lg
 
