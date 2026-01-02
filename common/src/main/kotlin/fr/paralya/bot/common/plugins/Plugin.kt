@@ -1,7 +1,9 @@
 package fr.paralya.bot.common.plugins
 
+import dev.kordex.core.koin.KordExContext.unloadKoinModules
 import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.plugins.KordExPlugin
+import dev.kordex.core.plugins.PluginManager
 import dev.kordex.i18n.Key
 import fr.paralya.bot.common.GameRegistry
 import fr.paralya.bot.common.config.ConfigManager
@@ -15,6 +17,7 @@ import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 import kotlin.getValue
+import kotlin.lazy
 
 abstract class Plugin: KordExPlugin() {
     abstract val name: String
@@ -24,6 +27,11 @@ abstract class Plugin: KordExPlugin() {
     open val isGame = true
     @PublishedApi
     internal val components = mutableListOf<Module>()
+
+    val pluginId: String? by lazy {
+        val pluginManager by inject<PluginManager>()
+        pluginManager.whichPlugin(this::class.java).pluginId
+    }
 
     override suspend fun setup() {
         prepareRegistration()
@@ -74,10 +82,11 @@ abstract class Plugin: KordExPlugin() {
     }
 
     private fun removeAllRegistration() {
-        // val configManager by inject<ConfigManager>()
-        // configManager.unregisterConfig(name) // Somehow find a way to unregister it
+        val configManager by inject<ConfigManager>()
+        configManager.unregisterConfig(name)
         val gameRegistry by inject<GameRegistry>()
         gameRegistry.unloadGameMode(name)
+        unloadKoinModules(components)
     }
 
     protected inline fun <reified T : ValidatedConfig>define() = register<T>(key).also { configDefined = true }
