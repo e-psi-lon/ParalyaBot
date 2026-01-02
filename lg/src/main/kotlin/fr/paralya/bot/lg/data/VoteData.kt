@@ -4,13 +4,14 @@ import dev.kord.cache.api.DataCache
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.cache.idEq
 import dev.kord.core.entity.User
+import fr.paralya.bot.common.cache.atomic
 import fr.paralya.bot.common.cache.idEq
 import fr.paralya.bot.common.cache.putSerialized
 import fr.paralya.bot.common.cache.querySerialized
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.lg.LGState
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.Serializable
-
 
 typealias Voter = Snowflake
 typealias Target = Snowflake
@@ -109,6 +110,9 @@ data class VoteData(
 	fun setCurrent(isCurrent: Boolean) = copy(isCurrent = isCurrent)
 }
 
+
+private val voteMutex = Mutex()
+
 /**
  * Retrieves the current active vote of the specified type from the cache.
  *
@@ -133,17 +137,26 @@ suspend fun DataCache.putVote(voteData: VoteData) {
 }
 
 /**
- * Records a vote from a player to a target in the current vote.
- *
- * @param voterId The ID of the player casting the vote
- * @param target The user being voted for
- * @return true if the vote was recorded, false if there's no current vote
+ * Updates the current vote using a transform function.
+ * @param type Optional game state to specify which vote to update
+ * @param transform Function to transform the current vote data
+ * @return true if the vote was updated, false if no current vote exists
  */
-suspend fun DataCache.vote(voterId: Voter, target: User) =
-	getCurrentVote()?.run {
-		putVote(vote(voterId, target.id))
+private suspend fun DataCache.updateCurrentVote(
+	type: LGState? = null,
+	transform: (VoteData) -> VoteData
+): Boolean = atomic(voteMutex) {
+	getCurrentVote(type)?.let { currentVote ->
+		putVote(transform(currentVote))
 		true
 	} ?: false
+}
+
+/**
+ * Records a vote from a player to a target in the current vote.
+ */
+suspend fun DataCache.vote(voterId: Voter, target: User): Boolean =
+	updateCurrentVote { it.vote(voterId, target.id) }
 
 /**
  * Removes a vote from the current vote.
@@ -151,11 +164,8 @@ suspend fun DataCache.vote(voterId: Voter, target: User) =
  * @param voterId The ID of the player removing their vote
  * @return true if the vote was removed, false if there's no current vote
  */
-suspend fun DataCache.unvote(voterId: Voter) = getCurrentVote()?.run {
-	putVote(unvote(voterId))
-	true
-} ?: false
-
+suspend fun DataCache.unvote(voterId: Voter): Boolean =
+	updateCurrentVote { it.unvote(voterId) }
 
 /**
  * Updates the list of valid choices/targets for the current vote.
@@ -163,30 +173,22 @@ suspend fun DataCache.unvote(voterId: Voter) = getCurrentVote()?.run {
  * @param choices The list of player IDs that can be voted for
  * @return true if the choices were updated, false if there's no current vote
  */
-suspend fun DataCache.setVoteChoices(choices: List<Target>) =
-	getCurrentVote()?.run {
-		putVote(setChoices(choices))
-		true
-	} ?: false
+suspend fun DataCache.setVoteChoices(choices: List<Target>): Boolean =
+	updateCurrentVote { it.setChoices(choices) }
 
 /**
- * Records a special Corbeau (Raven) vote in the current-day vote.
+ * Records a special Corbeau (Raven) vote in the current day vote.
  *
  * @param targetId The ID of the player receiving the Corbeau's vote
  * @return true if the Corbeau vote was recorded, false if there's no current-day vote
  */
-suspend fun DataCache.voteCorbeau(targetId: Target) =
-	getCurrentVote(LGState.DAY)?.run {
-		putVote(voteCorbeau(targetId))
-		true
-	} ?: false
+suspend fun DataCache.voteCorbeau(targetId: Target): Boolean =
+	updateCurrentVote(LGState.DAY) { it.voteCorbeau(targetId) }
 
 /**
  * Removes the Corbeau vote from the current-day vote.
  *
  * @return true if the Corbeau vote was removed, false if there's no current-day vote
  */
-suspend fun DataCache.unvoteCorbeau() = getCurrentVote(LGState.DAY)?.run {
-	putVote(unvoteCorbeau())
-	true
-} ?: false
+suspend fun DataCache.unvoteCorbeau(): Boolean =
+	updateCurrentVote(LGState.DAY) { it.unvoteCorbeau() }

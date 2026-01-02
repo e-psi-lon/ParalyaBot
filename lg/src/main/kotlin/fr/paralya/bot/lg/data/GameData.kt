@@ -5,12 +5,16 @@ import dev.kord.cache.api.put
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.channel.TextChannel
 import dev.kordex.core.commands.application.ApplicationCommandContext
+import dev.kordex.core.koin.KordExKoinComponent
+import fr.paralya.bot.common.cache.atomic
 import fr.paralya.bot.common.cache.putSerialized
 import fr.paralya.bot.common.cache.querySerialized
 import fr.paralya.bot.common.cache.removeSerialized
 import fr.paralya.bot.common.cache.updateSerialized
 import fr.paralya.bot.lg.LGState
+import fr.paralya.bot.lg.LgPlugin
 import kotlinx.serialization.Serializable
+import org.koin.core.component.inject
 
 /**
  * Represents the game data for the Werewolf game.
@@ -75,20 +79,29 @@ data class GameData(
 
 // Cache extension functions
 
+private val pluginNamespace: String by lazy {
+	object : KordExKoinComponent {
+		val plugin by inject<LgPlugin>()
+	}.plugin.pluginId ?: error("Plugin not initialized: plugin ID is null")
+}
+
+// Simpler - just one lazy initialization
 /**
  * Retrieves the current game data from the cache or creates a new one if none exists.
  * @return The current [GameData] instance.
  */
-suspend fun DataCache.getGameData() = querySerialized<GameData>("lg").singleOrNull() ?: GameData().also {
-	putSerialized("lg", it)
+suspend fun DataCache.getGameData(): GameData = atomic {
+	querySerialized<GameData>(pluginNamespace).singleOrNull() ?: GameData().also {
+		putSerialized(pluginNamespace, it)
+	}
 }
 
 /**
  * Resets the game data by removing existing data and adding a fresh [GameData] instance.
  */
-suspend fun DataCache.resetGameData() {
-	removeSerialized<GameData>("lg")
-	putSerialized("lg", GameData())
+suspend fun DataCache.resetGameData() = atomic {
+	removeSerialized<GameData>(pluginNamespace)
+	putSerialized(pluginNamespace, GameData())
 }
 
 /**
@@ -96,7 +109,7 @@ suspend fun DataCache.resetGameData() {
  * @param modifier A function that transforms the current [GameData] to a new [GameData].
  */
 suspend fun DataCache.updateGameData(modifier: suspend (GameData) -> GameData) {
-	updateSerialized("lg", transform = modifier)
+	updateSerialized(pluginNamespace, transform = modifier)
 }
 
 /**
