@@ -20,7 +20,6 @@ import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.extensions.event
 import fr.paralya.bot.common.*
 import fr.paralya.bot.common.config.ConfigManager
-import fr.paralya.bot.common.I18n.Common
 import fr.paralya.bot.I18n
 import fr.paralya.bot.common.adminOnly
 import fr.paralya.bot.common.cache.CachedData
@@ -65,7 +64,7 @@ class Base : Extension() {
 					) {
 						content = message.content
 						if (message.referencedMessage != null) embed {
-							title = Common.Transmission.Reference.title.contextTranslate()
+							title = I18n.Transmission.Reference.title.contextTranslate()
 							description = message.referencedMessage!!.content
 						}
 					}
@@ -89,7 +88,7 @@ class Base : Extension() {
 						) {
 							content = event.new.content.toString()
 							embed {
-								title = Common.Transmission.Update.title.contextTranslate()
+								title = I18n.Transmission.Update.title.contextTranslate()
 								description = event.new.content.toString()
 							}
 						}
