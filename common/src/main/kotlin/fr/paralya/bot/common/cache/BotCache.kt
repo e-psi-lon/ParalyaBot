@@ -11,6 +11,8 @@ import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 @JvmName("enumEq")
 fun <T : Any, E : Enum<E>> QueryBuilder<T>.idEq(property: KProperty1<T, E?>, value: E?) = property.eq(value)
@@ -100,3 +102,15 @@ suspend fun <T : Any> DataCache.updateSerialized(
 ) {
     querySerialized(namespace, itemId, typeKey, clazz, block).update { transform(it) }
 }
+
+private val defaultCacheMutex = Mutex()
+
+/**
+ * Executes a cache operation atomically using a mutex.
+ * @param mutex Optional mutex to use. If not provided, uses a default shared mutex.
+ * @param operation The cache operation to execute atomically.
+ */
+suspend fun <T> DataCache.atomic(
+    mutex: Mutex = defaultCacheMutex,
+    operation: suspend DataCache.() -> T
+): T = mutex.withLock { operation() }
