@@ -5,6 +5,14 @@ plugins {
 	`java-test-fixtures`
 }
 
+kotlin {
+	sourceSets {
+		main {
+			kotlin.srcDir(layout.buildDirectory.dir("generated/version/main/kotlin"))
+		}
+	}
+}
+
 kordEx {
 	ignoreIncompatibleKotlinVersion = true // Temporary fix for KordEx until it's updated to support Kotlin 2.2.21+
 }
@@ -39,4 +47,28 @@ dependencies {
 	// Exposed dependencies, for use in plugins
 	api(libs.konform)
 	api(libs.kordex.i18n.runtime)
+}
+
+
+
+tasks.register("generateVersion") {
+	val outputDir = layout.buildDirectory.dir("generated/version/main/kotlin/fr/paralya/bot/common")
+	outputs.dir(outputDir)
+
+	doLast {
+		val versionFile = outputDir.get().asFile.resolve("CommonModule.kt")
+		versionFile.parentFile.mkdirs()
+		versionFile.writeText("""
+            package fr.paralya.bot.common
+            
+            object CommonModule {
+                const val API_VERSION = "${project.version}"
+                const val MIN_COMPATIBLE_VERSION = "0.0.1"
+            }
+        """.trimIndent())
+	}
+}
+
+tasks.compileKotlin {
+	dependsOn("generateVersion")
 }
