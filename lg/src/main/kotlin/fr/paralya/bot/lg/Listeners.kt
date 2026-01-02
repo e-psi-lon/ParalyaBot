@@ -157,7 +157,7 @@ suspend fun LG.registerListeners() {
 
 	event<PluginReadyEvent> {
 		action {
-			handleReadyEvent(event.guilds, botConfig, lgConfig)
+			if (pluginRef.pluginId == event.pluginId) handleReadyEvent(event.guilds, botConfig, lgConfig)
 		}
 	}
 }

@@ -26,7 +26,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.component.inject
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.singleOf
-import org.koin.dsl.module
 
 
 /**
@@ -45,10 +44,11 @@ class LG : Extension() {
 	val logger = KotlinLogging.logger(this::class.java.name)
 	val botCache = kord.cache
 	val prefix = "paralya-lg"
+	val pluginRef by inject<LgPlugin>()
 
 	override suspend fun setup() {
 		val gameRegistry by inject<GameRegistry>()
-		gameRegistry.registerGameMode(Lg.GameMode.lg, "lg")
+		gameRegistry.registerGameMode(Lg.GameMode.lg, pluginRef.pluginId ?: prefix)
 
 		publicSlashCommand {
 			name = Lg.Command.name
