@@ -9,7 +9,7 @@ import fr.paralya.bot.common.cache.idEq
 import fr.paralya.bot.common.cache.putSerialized
 import fr.paralya.bot.common.cache.querySerialized
 import fr.paralya.bot.common.snowflake
-import fr.paralya.bot.lg.LGState
+import fr.paralya.bot.lg.data.GamePhase.PhaseType
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.serialization.Serializable
 
@@ -20,16 +20,16 @@ typealias Target = Snowflake
  * Represents voting data for a Loup-Garou (Werewolf) game.
  *
  * @property id The unique identifier for this vote session
- * @property type The type of vote, corresponding to a game state (e.g., DAY or NIGHT)
+ * @property type The type of vote, corresponding to a game phase (e.g., DAY or NIGHT)
  * @property isCurrent Flag indicating if this vote is the current active vote
- * @property votes Map of voter IDs to their voted target IDs
+ * @property votes Map of voterp IDs to their voted target IDs
  * @property choices List of possible choices/targets for this vote
  * @property corbeau Special "Raven" vote, used for the Corbeau role's additional vote
  */
 @Serializable
 data class VoteData(
 	val id: Snowflake,
-	val type: LGState,
+	val type: PhaseType,
 	val isCurrent: Boolean = false,
 	val votes: Map<Voter, Target> = emptyMap(),
 	val choices: List<Target> = listOf(),
@@ -44,7 +44,7 @@ data class VoteData(
 		 * @return A new VoteData instance for werewolf voting
 		 */
 		fun createWerewolfVote(id: Snowflake, isCurrent: Boolean = true) =
-			VoteData(id, LGState.NIGHT, isCurrent)
+			VoteData(id, PhaseType.NIGHT, isCurrent)
 
 		/**
 		 * Creates a new village vote for the day phase.
@@ -54,7 +54,7 @@ data class VoteData(
 		 * @return A new [VoteData] instance for village voting
 		 */
 		fun createVillageVote(id: Snowflake, isCurrent: Boolean = true) =
-			VoteData(id, LGState.DAY, isCurrent)
+			VoteData(id, PhaseType.DAY, isCurrent)
 	}
 
 	/**
@@ -83,7 +83,7 @@ data class VoteData(
 	 * @return A new [VoteData] with the updated Corbeau vote, or unchanged if not a day vote
 	 */
 	fun voteCorbeau(targetId: Target) =
-		if (type == LGState.DAY) copy(corbeau = targetId) else this
+		if (type == PhaseType.DAY) copy(corbeau = targetId) else this
 
 
     /**
@@ -116,11 +116,11 @@ private val voteMutex = Mutex()
 /**
  * Retrieves the current active vote of the specified type from the cache.
  *
- * @param type Optional game state to specify which type of vote to retrieve
+ * @param type Optional game phase to specify which type of vote to retrieve
  * @return The current VoteData matching the type, or null if none exists
  */
-suspend fun DataCache.getCurrentVote(type: LGState? = null): VoteData? {
-	val queryType = type ?: getGameData().state
+suspend fun DataCache.getCurrentVote(type: PhaseType? = null): VoteData? {
+	val queryType = type ?: getGameData().phase.type
 	return querySerialized<VoteData>("lg", VoteData::id) {
 		idEq(VoteData::type, queryType)
 		idEq(VoteData::isCurrent, true)
@@ -138,12 +138,12 @@ suspend fun DataCache.putVote(voteData: VoteData) {
 
 /**
  * Updates the current vote using a transform function.
- * @param type Optional game state to specify which vote to update
+ * @param type Optional game phase to specify which vote to update
  * @param transform Function to transform the current vote data
  * @return true if the vote was updated, false if no current vote exists
  */
 private suspend fun DataCache.updateCurrentVote(
-	type: LGState? = null,
+	type: PhaseType? = null,
 	transform: (VoteData) -> VoteData
 ): Boolean = atomic(voteMutex) {
 	getCurrentVote(type)?.let { currentVote ->
@@ -183,7 +183,7 @@ suspend fun DataCache.setVoteChoices(choices: List<Target>): Boolean =
  * @return true if the Corbeau vote was recorded, false if there's no current-day vote
  */
 suspend fun DataCache.voteCorbeau(targetId: Target): Boolean =
-	updateCurrentVote(LGState.DAY) { it.voteCorbeau(targetId) }
+	updateCurrentVote(PhaseType.DAY) { it.voteCorbeau(targetId) }
 
 /**
  * Removes the Corbeau vote from the current-day vote.
@@ -191,4 +191,4 @@ suspend fun DataCache.voteCorbeau(targetId: Target): Boolean =
  * @return true if the Corbeau vote was removed, false if there's no current-day vote
  */
 suspend fun DataCache.unvoteCorbeau(): Boolean =
-	updateCurrentVote(LGState.DAY) { it.unvoteCorbeau() }
+	updateCurrentVote(PhaseType.DAY) { it.unvoteCorbeau() }

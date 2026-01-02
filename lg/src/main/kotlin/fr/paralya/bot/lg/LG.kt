@@ -109,7 +109,7 @@ class LG : Extension() {
 				description = Lg.EndDay.Command.description
 				adminOnly {
 					val hour = arguments.hour
-					val day = arguments.day ?: botCache.getGameData().dayCount
+					val day = arguments.day ?: botCache.getGameData().phase.number
 					val config by inject<LgConfig>()
 
 					sendAsWebhook(

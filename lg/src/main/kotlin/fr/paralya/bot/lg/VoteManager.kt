@@ -4,6 +4,7 @@ import dev.kord.core.entity.User
 import dev.kordex.core.koin.KordExKoinComponent
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.lg.data.*
+import fr.paralya.bot.lg.data.GamePhase.PhaseType
 import fr.paralya.bot.lg.data.Target
 import org.koin.core.component.inject
 
@@ -17,12 +18,12 @@ class VoteManager : KordExKoinComponent {
 
 
 	/**
-	 * Gets the current vote for the specified game state
-	 * @param state The game state (DAY or NIGHT)
-	 * @return The current VoteData for the specified state, or null if none exists
+	 * Gets the current vote for the specified game phase
+	 * @param phase The game phase (DAY or NIGHT)
+	 * @return The current VoteData for the specified phase, or null if none exists
 	 */
-	suspend fun getCurrentVote(state: LGState): VoteData? {
-		return botCache.getCurrentVote(state)
+	suspend fun getCurrentVote(phase: PhaseType): VoteData? {
+		return botCache.getCurrentVote(phase)
 	}
 
 	/**
@@ -60,7 +61,7 @@ class VoteManager : KordExKoinComponent {
 	 */
 	suspend fun createVillageVote(): VoteData {
 		val newVote =
-			botCache.getCurrentVote(LGState.DAY) ?: VoteData.createVillageVote(System.currentTimeMillis().snowflake)
+			botCache.getCurrentVote(PhaseType.DAY) ?: VoteData.createVillageVote(System.currentTimeMillis().snowflake)
 				.setCurrent(true)
 		botCache.putVote(newVote)
 		return newVote
@@ -72,7 +73,7 @@ class VoteManager : KordExKoinComponent {
 	 */
 	suspend fun createWerewolfVote(): VoteData {
 		val newVote =
-			botCache.getCurrentVote(LGState.NIGHT) ?: VoteData.createWerewolfVote(System.currentTimeMillis().snowflake)
+			botCache.getCurrentVote(PhaseType.NIGHT) ?: VoteData.createWerewolfVote(System.currentTimeMillis().snowflake)
 				.setCurrent(true)
 		botCache.putVote(newVote)
 		return newVote
@@ -86,21 +87,21 @@ class VoteManager : KordExKoinComponent {
 		botCache.putVote(voteData)
 	}
 
-	suspend fun resetVotes(state: LGState) {
+	suspend fun resetVotes(phase: PhaseType) {
         botCache.putVote(
-            getCurrentVote(state)?.copy(
+            getCurrentVote(phase)?.copy(
                 votes = emptyMap()
             ) ?: return
         )
     }
 
 	/**
-	 * Finishes the current vote for a specific game state
-	 * @param state The game state (DAY or NIGHT)
+	 * Finishes the current vote for a specific game phase
+	 * @param phase The game phase (DAY or NIGHT)
 	 * @return The finished vote data with current=false
 	 */
-	suspend fun finishCurrentVote(state: LGState): VoteData? {
-		val currentVote = getCurrentVote(state) ?: return null
+	suspend fun finishCurrentVote(phase: PhaseType): VoteData? {
+		val currentVote = getCurrentVote(phase) ?: return null
 		currentVote.setCurrent(false)
 		updateVote(currentVote)
 		return currentVote
@@ -115,7 +116,7 @@ class VoteManager : KordExKoinComponent {
 		val voteCount = vote.votes.values.groupingBy { it }.eachCount().toMutableMap()
 
 		// Add corbeau vote if present (only for day votes)
-		if (vote.type == LGState.DAY && vote.corbeau != 0.snowflake) voteCount[vote.corbeau] = (voteCount[vote.corbeau] ?: 0) + 2
+		if (vote.type == PhaseType.DAY && vote.corbeau != 0.snowflake) voteCount[vote.corbeau] = (voteCount[vote.corbeau] ?: 0) + 2
 
 		return voteCount
 	}

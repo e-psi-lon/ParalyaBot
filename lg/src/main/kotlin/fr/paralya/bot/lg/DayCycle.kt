@@ -9,28 +9,11 @@ import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.i18n.Key
 import dev.kordex.core.utils.getTopChannel
 import fr.paralya.bot.common.*
-import fr.paralya.bot.lg.LGState.DAY
-import fr.paralya.bot.lg.LGState.NIGHT
 import fr.paralya.bot.lg.data.*
+import fr.paralya.bot.lg.data.GamePhase.PhaseType
 import fr.paralya.bot.lg.I18n as Lg
 import kotlinx.coroutines.flow.toList
 import org.koin.core.component.inject
-
-/**
- * Represents the state of the game, either [DAY] or [NIGHT].
- * This enum is used to manage the game cycle and determine the current phase of the game.
- *
- * @property DAY Represents the daytime phase of the game.
- * @property NIGHT Represents the nighttime phase of the game.
- */
-enum class LGState {
-	DAY, NIGHT;
-
-	fun next() = when (this) {
-		DAY -> NIGHT
-		NIGHT -> DAY
-	}
-}
 
 private val DAY_CHANNELS = listOf(
 	LgChannelType.VILLAGE,
@@ -62,12 +45,12 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			val gameData = botCache.getGameData()
 			val voteManager by inject<VoteManager>()
 
-			if (gameData.state == DAY) {
+			if (gameData.phase.isDay) {
 				respond { content = Lg.Day.Response.Error.alreadyDay.contextTranslate() }
 				return@adminOnly
 			}
 			voteManager.createVillageVote()
-			val oldWerewolfVote = voteManager.finishCurrentVote(NIGHT)
+			val oldWerewolfVote = voteManager.finishCurrentVote(PhaseType.NIGHT)
 			val newVoteWerewolf = voteManager.createWerewolfVote()
 			val config by inject<LgConfig>()
 			val aliveRole = config.aliveRole.snowflake
@@ -141,12 +124,12 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			val botCache = lg.botCache
 			val gameData = botCache.getGameData()
 			val voteManager by inject<VoteManager>()
-			if (gameData.state == NIGHT) {
+			if (gameData.phase.isNight) {
 				respond { content = Lg.Night.Response.Error.alreadyNight.contextTranslate() }
 				return@adminOnly
 			}
 			voteManager.createWerewolfVote()
-			val oldVillageVote = voteManager.finishCurrentVote(DAY)
+			val oldVillageVote = voteManager.finishCurrentVote(PhaseType.DAY)
 			val newVoteVillage = voteManager.createVillageVote()
 			val config by inject<LgConfig>()
 			val aliveRole = config.aliveRole.snowflake

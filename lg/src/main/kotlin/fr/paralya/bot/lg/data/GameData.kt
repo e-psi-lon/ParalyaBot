@@ -11,7 +11,6 @@ import fr.paralya.bot.common.cache.putSerialized
 import fr.paralya.bot.common.cache.querySerialized
 import fr.paralya.bot.common.cache.removeSerialized
 import fr.paralya.bot.common.cache.updateSerialized
-import fr.paralya.bot.lg.LGState
 import fr.paralya.bot.lg.LgPlugin
 import kotlinx.serialization.Serializable
 import org.koin.core.component.inject
@@ -19,37 +18,32 @@ import org.koin.core.component.inject
 /**
  * Represents the game data for the Werewolf game.
  *
- * @property id The unique identifier for the game.
- * @property state The current state of the game (day or night).
- * @property dayCount Counter for the number of days passed in the game.
+ * @property phase The current phase of the game (day or night).
  * @property lastWereWolfMessageSender ID of the last player who sent a message in the werewolf channel.
  * @property currentProfilePicture Used to select which variant of the profile picture to use.
- * @property nightCount Counter for the number of nights passed in the game.
  * @property channels Map of channel types/name to their respective [Snowflake] IDs.
  * @property interviews List of interview channel IDs.
  */
 @Serializable
 data class GameData(
-	val state: LGState = LGState.NIGHT,
-	val dayCount: Int = 0,
+	val phase: GamePhase = GamePhase.Night(0),
 	val lastWereWolfMessageSender: Snowflake = Snowflake(0),
 	val currentProfilePicture: Boolean = false,
-	val nightCount: Int = 0,
 	val channels: Map<String, Snowflake> = mapOf(),
 	val interviews: List<Snowflake> = listOf()
 ) {
 
 	/**
 	 * Creates a copy of the current game data, advancing to the next day.
-	 * @return A new [GameData] instance with a state set to DAY and dayCount incremented.
+	 * @return A new [GameData] instance with a phase set to DAY and dayCount incremented.
 	 */
-	fun nextDay() = copy(state = LGState.DAY, dayCount = dayCount + 1)
+	fun nextDay() = copy(phase = phase.next())
 
 	/**
 	 * Creates a copy of the current game data, advancing to the next night.
-	 * @return A new [GameData] instance with a state set to NIGHT and nightCount incremented.
+	 * @return A new [GameData] instance with a phase set to NIGHT and nightCount incremented.
 	 */
-	fun nextNight() = copy(state = LGState.NIGHT, nightCount = nightCount + 1)
+	fun nextNight() = copy(phase = phase.next())
 
 	/**
 	 * Registers a channel in the game.

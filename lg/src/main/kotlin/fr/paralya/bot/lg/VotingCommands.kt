@@ -18,6 +18,7 @@ import fr.paralya.bot.common.adminOnly
 import fr.paralya.bot.common.contextTranslate
 import fr.paralya.bot.common.sendAsWebhook
 import fr.paralya.bot.common.snowflake
+import fr.paralya.bot.lg.data.GamePhase.PhaseType
 import fr.paralya.bot.lg.data.LgChannelType
 import fr.paralya.bot.lg.I18n as Lg
 import fr.paralya.bot.lg.data.getGameData
@@ -38,14 +39,14 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			name = Lg.Vote.Village.Command.name
 			description = Lg.Vote.Village.Command.description
 			action {
-				handleVote(LGState.DAY, LgChannelType.VOTES, arguments.target, arguments.reason, true)
+				handleVote(PhaseType.DAY, LgChannelType.VOTES, arguments.target, arguments.reason, true)
 			}
 		}
 		ephemeralSubCommand(::VoteArguments) {
 			name = Lg.Vote.Werewolf.Command.name
 			description = Lg.Vote.Werewolf.Command.description
 			action {
-				handleVote(LGState.NIGHT, LgChannelType.LOUPS_VOTE, arguments.target, arguments.reason)
+				handleVote(PhaseType.NIGHT, LgChannelType.LOUPS_VOTE, arguments.target, arguments.reason)
 			}
 		}
 		ephemeralSubCommand {
@@ -54,10 +55,10 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 
 			action {
 				val voteManager by inject<VoteManager>()
-				val state = validateVoteChannel(Lg.Vote.Response.Error.cantVoteHere) ?: return@action
-				val vote = voteManager.getCurrentVote(state)
-				val isCorrectState = lg.botCache.getGameData().state == state
-				if (vote?.votes.isNullOrEmpty() || !isCorrectState) {
+				val phase = validateVoteChannel(Lg.Vote.Response.Error.cantVoteHere) ?: return@action
+				val vote = voteManager.getCurrentVote(phase)
+				val isCorrectPhase = lg.botCache.getGameData().phase.type == phase
+				if (vote?.votes.isNullOrEmpty() || !isCorrectPhase) {
 					respond { content = Lg.Vote.List.Response.Error.noVotes.contextTranslate() }
 					return@action
 				}
@@ -66,7 +67,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 				respond {
 					embed {
 						title = Lg.Vote.List.Response.Success.Embed.title.contextTranslate()
-						description = if (state == LGState.DAY)
+						description = if (phase == PhaseType.DAY)
 							Lg.Vote.List.Response.Success.Embed.Description.day.contextTranslate()
 						else Lg.Vote.List.Response.Success.Embed.Description.night.contextTranslate()
 						voteCount.entries.sortedByDescending { it.value }.forEach { (target, count) ->
@@ -91,15 +92,15 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			description = Lg.Vote.Reset.Command.description
 			adminOnly {
 				val voteManager by inject<VoteManager>()
-				val state = validateVoteChannel(Lg.Vote.Response.Error.cantVoteHere) ?: return@adminOnly
-				val vote = voteManager.getCurrentVote(state)
+				val phase = validateVoteChannel(Lg.Vote.Response.Error.cantVoteHere) ?: return@adminOnly
+				val vote = voteManager.getCurrentVote(phase)
 				val votes = vote?.votes
-				val isCorrectState = lg.botCache.getGameData().state == state
-				if (votes.isNullOrEmpty() || !isCorrectState) {
+				val isCorrectPhase = lg.botCache.getGameData().phase.type == phase
+				if (votes.isNullOrEmpty() || !isCorrectPhase) {
 					respond { content = Lg.Vote.Reset.Response.Error.noVotes.contextTranslate() }
 					return@adminOnly
 				}
-				voteManager.resetVotes(state)
+				voteManager.resetVotes(phase)
 				respond { content = Lg.Vote.Reset.Response.success.contextTranslate() }
 			}
 		}
@@ -123,10 +124,10 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			} else {
 				when (channelId) {
 					votes, voteLoups -> {
-						val state = if (channelId == votes) LGState.DAY else LGState.NIGHT
-						val currentVote = voteManager.getCurrentVote(state)
-						val isCorrectState = lg.botCache.getGameData().state == state
-						if (currentVote == null || !currentVote.votes.containsKey(user.id) || !isCorrectState) {
+						val phase = if (channelId == votes) PhaseType.DAY else PhaseType.NIGHT
+						val currentVote = voteManager.getCurrentVote(phase)
+						val isCorrectPhase = lg.botCache.getGameData().phase.type == phase
+						if (currentVote == null || !currentVote.votes.containsKey(user.id) || !isCorrectPhase) {
 							respond { content = Lg.Unvote.Response.Error.noVote.contextTranslate() }
 							return@action
 						}
@@ -134,9 +135,9 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 						respond { content = Lg.Unvote.Response.success.contextTranslate() }
 					}
 					voteCorbeau -> {
-						val currentVote = voteManager.getCurrentVote(LGState.DAY)
-						val isCorrectState = lg.botCache.getGameData().state == LGState.NIGHT
-						if (currentVote == null || currentVote.corbeau == 0.snowflake || !isCorrectState) {
+						val currentVote = voteManager.getCurrentVote(PhaseType.DAY)
+						val isCorrectPhase = lg.botCache.getGameData().phase.type == PhaseType.NIGHT
+						if (currentVote == null || currentVote.corbeau == 0.snowflake || !isCorrectPhase) {
 							respond { content = Lg.Unvote.Response.Error.noVote.contextTranslate() }
 							return@action
 						}
@@ -155,13 +156,13 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 
 		adminOnly {
 			val voteManager by inject<VoteManager>()
-			val state = validateVoteChannel(Lg.MostVoted.Response.Error.cantUseHere)
+			val phase = validateVoteChannel(Lg.MostVoted.Response.Error.cantUseHere)
 				?: return@adminOnly
-			if (state != LGState.DAY) {
+			if (phase != PhaseType.DAY) {
 				respond { content = Lg.MostVoted.Response.Error.onlyVillageVotes.contextTranslate() }
 				return@adminOnly
 			}
-			val currentVote = voteManager.getCurrentVote(state)
+			val currentVote = voteManager.getCurrentVote(phase)
 			if (currentVote?.votes.isNullOrEmpty()) {
 				respond { content = Lg.MostVoted.Response.Error.noVotes.contextTranslate() }
 				return@adminOnly
@@ -197,7 +198,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 }
 
 context(lg: LG)
-suspend fun <C : EphemeralSlashCommandContext<*, *>> C.validateVoteChannel(errorMessage: Key): LGState? {
+suspend fun <C : EphemeralSlashCommandContext<*, *>> C.validateVoteChannel(errorMessage: Key): PhaseType? {
 	val village = LgChannelType.VILLAGE.toId()!!
 	val votes = LgChannelType.VOTES.toId()!!
 	val loups = LgChannelType.LOUPS_CHAT.toId()!!
@@ -206,8 +207,8 @@ suspend fun <C : EphemeralSlashCommandContext<*, *>> C.validateVoteChannel(error
 	val nightChannels = setOf(loups, loupsVotes)
 
 	return when (channel.id) {
-		in dayChannels -> LGState.DAY
-		in nightChannels -> LGState.NIGHT
+		in dayChannels -> PhaseType.DAY
+		in nightChannels -> PhaseType.NIGHT
 		else -> {
 			respond { content = errorMessage.contextTranslate() }
 			null
@@ -217,14 +218,14 @@ suspend fun <C : EphemeralSlashCommandContext<*, *>> C.validateVoteChannel(error
 
 context(lg: LG)
 private suspend fun <A : Arguments, M : ModalForm> EphemeralSlashCommandContext<A, M>.handleVote(
-	state: LGState,
+	phase: PhaseType,
 	voteChannelType: LgChannelType,
 	target: User,
 	reason: String?,
 	handleCorbeau: Boolean = false
 ) {
 	val voteManager by lg.inject<VoteManager>()
-	val currentVote = voteManager.getCurrentVote(state)
+	val currentVote = voteManager.getCurrentVote(phase)
 	if (handleCorbeau && channel.id == LgChannelType.CORBEAU.toId()) {
 		if (currentVote?.corbeau != 0.snowflake) {
 			respond { content = Lg.Vote.Response.Error.Corbeau.alreadyVoted.contextTranslate() }
