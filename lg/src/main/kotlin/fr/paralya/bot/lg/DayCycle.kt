@@ -198,13 +198,13 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 						}
 					}
 				}
-			if (oldVillageVote?.corbeau != 0.snowflake) sendAsWebhook(
+			if (oldVillageVote?.corbeau != null) sendAsWebhook(
 				lg.bot,
 				LgChannelType.VOTES.toId()!!,
 				"Corbeau",
 				getAsset("\"\uD83D\uDC26\u200D⬛ Corbeau\"", lg.prefix)
 			) {
-				content = Lg.Night.Response.Other.corbeau.contextTranslate(oldVillageVote?.corbeau?.value ?: 0)
+				content = Lg.Night.Response.Other.corbeau.contextTranslate(oldVillageVote.corbeau.value)
 			}
 			respond { content = Lg.Night.Response.success.contextTranslate() }
 		}

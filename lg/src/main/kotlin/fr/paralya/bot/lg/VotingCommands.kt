@@ -137,7 +137,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 					voteCorbeau -> {
 						val currentVote = voteManager.getCurrentVote(PhaseType.DAY)
 						val isCorrectPhase = lg.botCache.getGameData().phase.type == PhaseType.NIGHT
-						if (currentVote == null || currentVote.corbeau == 0.snowflake || !isCorrectPhase) {
+						if (currentVote == null || currentVote.corbeau == null || !isCorrectPhase) {
 							respond { content = Lg.Unvote.Response.Error.noVote.contextTranslate() }
 							return@action
 						}
@@ -227,7 +227,7 @@ private suspend fun <A : Arguments, M : ModalForm> EphemeralSlashCommandContext<
 	val voteManager by lg.inject<VoteManager>()
 	val currentVote = voteManager.getCurrentVote(phase)
 	if (handleCorbeau && channel.id == LgChannelType.CORBEAU.toId()) {
-		if (currentVote?.corbeau != 0.snowflake) {
+		if (currentVote?.corbeau != null) {
 			respond { content = Lg.Vote.Response.Error.Corbeau.alreadyVoted.contextTranslate() }
 			return
 		}

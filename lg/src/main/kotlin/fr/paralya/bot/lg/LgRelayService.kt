@@ -229,7 +229,7 @@ class LgRelayService : KordExKoinComponent {
     ) = if (isAnonymous) {
         if (updateExisting && author?.id != botCache.getLastWerewolfMessageSender()) {
             botCache.setLastWerewolfMessageSender(author!!.id)
-            botCache.updateProfilePicture()
+            botCache.toggleProfilePicture()
         }
         (if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme") to (if (botCache.getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1")
     } else (author?.username ?: "Message Author") to (author?.avatar?.cdnUrl?.toUrl() ?: "")

@@ -22,7 +22,7 @@ typealias Target = Snowflake
  * @property id The unique identifier for this vote session
  * @property type The type of vote, corresponding to a game phase (e.g., DAY or NIGHT)
  * @property isCurrent Flag indicating if this vote is the current active vote
- * @property votes Map of voterp IDs to their voted target IDs
+ * @property votes Map of voter IDs to their voted target IDs
  * @property choices List of possible choices/targets for this vote
  * @property corbeau Special "Raven" vote, used for the Corbeau role's additional vote
  */
@@ -33,7 +33,7 @@ data class VoteData(
 	val isCurrent: Boolean = false,
 	val votes: Map<Voter, Target> = emptyMap(),
 	val choices: List<Target> = listOf(),
-	val corbeau: Target = 0.snowflake,
+	val corbeau: Target? = null,
 ) {
 	companion object {
 		/**
@@ -91,7 +91,7 @@ data class VoteData(
      *
      * @return A new [VoteData] with the Corbeau vote removed
      */
-    fun unvoteCorbeau() = copy(corbeau = 0.snowflake)
+    fun unvoteCorbeau() = copy(corbeau = null)
 
 	/**
 	 * Updates the list of valid voting choices/targets.

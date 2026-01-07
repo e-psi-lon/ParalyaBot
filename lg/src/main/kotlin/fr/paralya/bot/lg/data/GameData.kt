@@ -19,7 +19,7 @@ import org.koin.core.component.inject
  * Represents the game data for the Werewolf game.
  *
  * @property phase The current phase of the game (day or night).
- * @property lastWereWolfMessageSender ID of the last player who sent a message in the werewolf channel.
+ * @property lastWerewolfMessageSender ID of the last player who sent a message in the werewolf channel.
  * @property currentProfilePicture Used to select which variant of the profile picture to use.
  * @property channels Map of channel types/name to their respective [Snowflake] IDs.
  * @property interviews List of interview channel IDs.
@@ -27,7 +27,7 @@ import org.koin.core.component.inject
 @Serializable
 data class GameData(
 	val phase: GamePhase = GamePhase.Night(0),
-	val lastWereWolfMessageSender: Snowflake = Snowflake(0),
+	val lastWerewolfMessageSender: Snowflake? = null,
 	val currentProfilePicture: Boolean = false,
 	val channels: Map<String, Snowflake> = mapOf(),
 	val interviews: List<Snowflake> = listOf()
@@ -168,19 +168,19 @@ suspend fun DataCache.resetGame() = put(GameData())
  * @return [Snowflake] ID of the last werewolf message sender.
  */
 suspend fun DataCache.getLastWerewolfMessageSender() =
-	getGameData().lastWereWolfMessageSender
+	getGameData().lastWerewolfMessageSender
 
 /**
  * Sets the ID of the last player who sent a message in the werewolf channel.
  * @param senderId The [Snowflake] ID of the sender.
  */
 suspend fun DataCache.setLastWerewolfMessageSender(senderId: Snowflake) =
-	updateGameData { it.copy(lastWereWolfMessageSender = senderId) }
+	updateGameData { it.copy(lastWerewolfMessageSender = senderId) }
 
 /**
  * Toggles the profile picture state in the game data.
  */
-suspend fun DataCache.updateProfilePicture() =
+suspend fun DataCache.toggleProfilePicture() =
 	updateGameData { it.copy(currentProfilePicture = !it.currentProfilePicture) }
 
 /**
