@@ -92,7 +92,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				setChoices(emptyList())
 				voteManager.putVote(this)
 			}
-			botCache.nextDay()
+			botCache.nextPhase()
 			DAY_CHANNELS.forEach { channelName ->
 				botCache.getChannel(channelName)
 					?.getTopChannel()
@@ -172,7 +172,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				setChoices(emptyList())
 				voteManager.putVote(this)
 			}
-			botCache.nextNight()
+			botCache.nextPhase()
 			DAY_CHANNELS.forEach { channelName ->
 				botCache.getChannel(channelName)
 					?.getTopChannel()

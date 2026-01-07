@@ -1,19 +1,17 @@
 package fr.paralya.bot.lg.data
 
 import dev.kord.cache.api.DataCache
-import dev.kord.cache.api.put
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.channel.TextChannel
 import dev.kordex.core.commands.application.ApplicationCommandContext
-import dev.kordex.core.koin.KordExKoinComponent
 import fr.paralya.bot.common.cache.atomic
 import fr.paralya.bot.common.cache.putSerialized
 import fr.paralya.bot.common.cache.querySerialized
 import fr.paralya.bot.common.cache.removeSerialized
 import fr.paralya.bot.common.cache.updateSerialized
+import fr.paralya.bot.common.plugins.getPluginInstance
 import fr.paralya.bot.lg.LgPlugin
 import kotlinx.serialization.Serializable
-import org.koin.core.component.inject
 
 /**
  * Represents the game data for the Werewolf game.
@@ -37,13 +35,7 @@ data class GameData(
 	 * Creates a copy of the current game data, advancing to the next day.
 	 * @return A new [GameData] instance with a phase set to DAY and dayCount incremented.
 	 */
-	fun nextDay() = copy(phase = phase.next())
-
-	/**
-	 * Creates a copy of the current game data, advancing to the next night.
-	 * @return A new [GameData] instance with a phase set to NIGHT and nightCount incremented.
-	 */
-	fun nextNight() = copy(phase = phase.next())
+	fun nextPhase() = copy(phase = phase.next())
 
 	/**
 	 * Registers a channel in the game.
@@ -74,9 +66,7 @@ data class GameData(
 // Cache extension functions
 
 private val pluginNamespace: String by lazy {
-	object : KordExKoinComponent {
-		val plugin by inject<LgPlugin>()
-	}.plugin.pluginId
+	getPluginInstance<LgPlugin>().pluginId
 }
 
 // Simpler - just one lazy initialization
@@ -107,14 +97,9 @@ suspend fun DataCache.updateGameData(modifier: suspend (GameData) -> GameData) {
 }
 
 /**
- * Advances the game to the next day.
+ * Advances the game to the next phase.
  */
-suspend fun DataCache.nextDay() = updateGameData { it.nextDay() }
-
-/**
- * Advances the game to the next night.
- */
-suspend fun DataCache.nextNight() = updateGameData { it.nextNight() }
+suspend fun DataCache.nextPhase() = updateGameData { it.nextPhase() }
 
 /**
  * Registers a channel in the game data.
@@ -157,11 +142,6 @@ suspend fun DataCache.getInterviews() = getGameData().interviews
  */
 suspend fun DataCache.removeInterview(interviewId: Snowflake) =
 	updateGameData { it.removeInterview(interviewId) }
-
-/**
- * Resets the entire game by replacing the game data with a fresh instance.
- */
-suspend fun DataCache.resetGame() = put(GameData())
 
 /**
  * Gets the ID of the last player who sent a message in the werewolf channel.
