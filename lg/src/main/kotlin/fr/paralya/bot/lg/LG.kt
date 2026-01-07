@@ -48,7 +48,7 @@ class LG : Extension() {
 
 	override suspend fun setup() {
 		val gameRegistry by inject<GameRegistry>()
-		gameRegistry.registerGameMode(Lg.GameMode.lg, pluginRef.pluginId ?: prefix)
+		gameRegistry.registerGameMode(Lg.GameMode.lg, pluginRef.pluginId)
 
 		publicSlashCommand {
 			name = Lg.Command.name

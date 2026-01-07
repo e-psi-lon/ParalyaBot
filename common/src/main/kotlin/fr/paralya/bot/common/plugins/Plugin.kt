@@ -16,6 +16,7 @@ import org.koin.core.module.Module
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
+import org.pf4j.PluginWrapper
 import kotlin.getValue
 import kotlin.lazy
 
@@ -28,9 +29,13 @@ abstract class Plugin: KordExPlugin() {
     @PublishedApi
     internal val components = mutableListOf<Module>()
 
-    val pluginId: String? by lazy {
+    val plugin: PluginWrapper? by lazy {
         val pluginManager by inject<PluginManager>()
-        pluginManager.whichPlugin(this::class.java).pluginId
+        pluginManager.whichPlugin(this::class.java)
+    }
+
+    val pluginId: String by lazy {
+        plugin?.pluginId ?: error("Plugin ${this::class.simpleName} identifier couldn't be found.")
     }
 
     override suspend fun setup() {

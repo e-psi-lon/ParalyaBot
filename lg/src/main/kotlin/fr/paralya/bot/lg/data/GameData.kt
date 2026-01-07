@@ -76,7 +76,7 @@ data class GameData(
 private val pluginNamespace: String by lazy {
 	object : KordExKoinComponent {
 		val plugin by inject<LgPlugin>()
-	}.plugin.pluginId ?: error("Plugin not initialized: plugin ID is null")
+	}.plugin.pluginId
 }
 
 // Simpler - just one lazy initialization
