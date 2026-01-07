@@ -28,7 +28,7 @@ import fr.paralya.bot.common.sendTemporaryMessage
 import fr.paralya.bot.lg.data.getLastWerewolfMessageSender
 import fr.paralya.bot.lg.data.getProfilePictureState
 import fr.paralya.bot.lg.data.setLastWerewolfMessageSender
-import fr.paralya.bot.lg.data.updateProfilePicture
+import fr.paralya.bot.lg.data.toggleProfilePicture
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.minutes
 import fr.paralya.bot.lg.I18n as Lg

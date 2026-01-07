@@ -118,12 +118,7 @@ class LG : Extension() {
 						"ParalyaLG",
 						getAsset("paralya_lg", prefix)
 					) {
-						content = """
-							━━━━━━━━━━━━━━━━━━━━━
-							⏲ | Fin du Jour $day à $hour
-							<@${config.aliveRole}>
-							━━━━━━━━━━━━━━━━━━━━━
-						""".trimIndent()
+						content = Lg.EndDay.Response.infoMessage.contextTranslate(day, hour, config.aliveRole)
 					}
 					respond {
 						content = Lg.EndDay.Response.success.contextTranslate(
