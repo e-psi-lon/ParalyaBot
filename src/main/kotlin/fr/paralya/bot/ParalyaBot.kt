@@ -93,10 +93,10 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 		presence { gameMode(GameRegistry.NONE) }
 
 		errorResponse { message, type ->
-			// TODO: The message should be translated based on the current locale instead of being hardcoded in French
+			val locale = KI18n.defaultLocale
 			embed {
-				title = "Erreur"
-				description = "Une erreur est survenue: ${message.translate()}, de type: $type"
+				title = I18n.Error.title.translateLocale(locale)
+				description = I18n.Error.description.translateLocale(locale, message, type.error::class.simpleName)
 				color = Color(0xFF0000)
 			}
 		}
