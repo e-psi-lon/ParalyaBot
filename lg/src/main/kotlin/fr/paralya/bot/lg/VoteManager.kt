@@ -1,11 +1,18 @@
 package fr.paralya.bot.lg
 
+import dev.kord.core.cache.idEq
 import dev.kord.core.entity.User
 import dev.kordex.core.koin.KordExKoinComponent
+import fr.paralya.bot.common.cache.atomic
+import fr.paralya.bot.common.cache.idEq
+import fr.paralya.bot.common.cache.putSerialized
+import fr.paralya.bot.common.cache.querySerialized
+import fr.paralya.bot.common.cache.updateSerialized
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.lg.data.*
 import fr.paralya.bot.lg.data.GamePhase.PhaseType
 import fr.paralya.bot.lg.data.Target
+import kotlinx.coroutines.sync.Mutex
 import org.koin.core.component.inject
 
 /**
@@ -15,6 +22,8 @@ import org.koin.core.component.inject
 class VoteManager : KordExKoinComponent {
 	private val lg by inject<LG>()
 	private val botCache by lazy { lg.botCache }
+	private val pluginNamespace by lazy { lg.pluginRef.pluginId }
+	private val voteMutex = Mutex()
 
 
 	/**
@@ -22,76 +31,77 @@ class VoteManager : KordExKoinComponent {
 	 * @param phase The game phase (DAY or NIGHT)
 	 * @return The current VoteData for the specified phase, or null if none exists
 	 */
-	suspend fun getCurrentVote(phase: PhaseType): VoteData? {
-		return botCache.getCurrentVote(phase)
+	suspend fun getCurrentVote(phase: PhaseType?): VoteData? {
+		val queryType = phase ?: botCache.getGameData().phase.type
+		return botCache.querySerialized<VoteData>(pluginNamespace, VoteData::id) {
+			idEq(VoteData::type, queryType)
+			idEq(VoteData::isCurrent, true)
+		}.singleOrNull()
 	}
+
+	private suspend fun updateCurrentVote(
+		type: PhaseType? = null,
+		transform: (VoteData) -> VoteData
+	) = botCache.atomic(voteMutex) {
+		val queryType = type ?: getGameData().phase.type
+		updateSerialized(pluginNamespace, VoteData::id, block = {
+			idEq(VoteData::type, queryType)
+			idEq(VoteData::isCurrent, true)
+		}, transform = transform)
+	}
+
+	suspend fun putVote(voteData: VoteData) =
+		botCache.putSerialized(pluginNamespace, voteData, VoteData::id)
 
 	/**
 	 * Registers a vote from a user for a target
 	 * @param voterId The ID of the voter
 	 * @param target The user being voted for
 	 */
-	suspend fun vote(voterId: Voter, target: User) {
-		botCache.vote(voterId, target)
-	}
+	suspend fun vote(voterId: Voter, target: User)  = updateCurrentVote { it.vote(voterId, target.id) }
 
-    suspend fun unvote(voterId: Voter) {
-        botCache.unvote(voterId)
-    }
+    suspend fun unvote(voterId: Voter) = updateCurrentVote { it.unvote(voterId) }
+
+	suspend fun setVoteChoices(choices: List<Target>) = updateCurrentVote { it.setChoices(choices) }
 
 	/**
 	 * Registers a vote from the Corbeau role
 	 * @param targetId The ID of the player being marked by the Corbeau
 	 */
-	suspend fun voteCorbeau(targetId: Target) {
-		botCache.voteCorbeau(targetId)
-	}
+	suspend fun voteCorbeau(targetId: Target) = updateCurrentVote { it.voteCorbeau(targetId) }
 
     /**
      * Removes the Corbeau's vote
      */
-	suspend fun unvoteCorbeau() {
-		botCache.unvoteCorbeau()
-	}
+	suspend fun unvoteCorbeau() = updateCurrentVote { it.unvoteCorbeau() }
 
 
 	/**
 	 * Creates a new vote for the village (day phase)
 	 * @return The newly created vote data
 	 */
-	suspend fun createVillageVote(): VoteData {
-		val newVote =
-			botCache.getCurrentVote(PhaseType.DAY) ?: VoteData.createVillageVote(System.currentTimeMillis().snowflake)
-				.setCurrent(true)
-		botCache.putVote(newVote)
-		return newVote
-	}
+	suspend fun createVillageVote(): VoteData = createVote(PhaseType.DAY)
 
 	/**
 	 * Creates a new vote for the werewolves (night phase)
 	 * @return The newly created vote data
 	 */
-	suspend fun createWerewolfVote(): VoteData {
-		val newVote =
-			botCache.getCurrentVote(PhaseType.NIGHT) ?: VoteData.createWerewolfVote(System.currentTimeMillis().snowflake)
-				.setCurrent(true)
-		botCache.putVote(newVote)
-		return newVote
+	suspend fun createWerewolfVote(): VoteData = createVote(PhaseType.NIGHT)
+
+	private suspend fun createVote(phase: PhaseType)  = botCache.atomic(voteMutex) {
+		val newVote = (
+			getCurrentVote(phase) ?:
+			VoteData.createVote(phase, System.currentTimeMillis().snowflake, true)
+		).setCurrent(true)
+		putVote(newVote)
+		newVote
 	}
 
-	/**
-	 * Updates an existing vote with new data
-	 * @param voteData The vote data to update
-	 */
-	suspend fun updateVote(voteData: VoteData) {
-		botCache.putVote(voteData)
-	}
-
-	suspend fun resetVotes(phase: PhaseType) {
-        botCache.putVote(
+	suspend fun resetVotes(phase: PhaseType) = botCache.atomic(voteMutex) {
+        putVote(
             getCurrentVote(phase)?.copy(
                 votes = emptyMap()
-            ) ?: return
+            ) ?: return@atomic
         )
     }
 
@@ -100,11 +110,9 @@ class VoteManager : KordExKoinComponent {
 	 * @param phase The game phase (DAY or NIGHT)
 	 * @return The finished vote data with current=false
 	 */
-	suspend fun finishCurrentVote(phase: PhaseType): VoteData? {
-		val currentVote = getCurrentVote(phase) ?: return null
-		currentVote.setCurrent(false)
-		updateVote(currentVote)
-		return currentVote
+	suspend fun finishCurrentVote(phase: PhaseType): VoteData? = botCache.atomic(voteMutex) {
+		val currentVote = getCurrentVote(phase) ?: return@atomic null
+		currentVote.setCurrent(false).also { putVote(it) }
 	}
 
 	/**
@@ -116,7 +124,7 @@ class VoteManager : KordExKoinComponent {
 		val voteCount = vote.votes.values.groupingBy { it }.eachCount().toMutableMap()
 
 		// Add corbeau vote if present (only for day votes)
-		if (vote.type == PhaseType.DAY && vote.corbeau != 0.snowflake) voteCount[vote.corbeau] = (voteCount[vote.corbeau] ?: 0) + 2
+		if (vote.type == PhaseType.DAY && vote.corbeau != null) voteCount[vote.corbeau] = (voteCount[vote.corbeau] ?: 0) + 2
 
 		return voteCount
 	}
