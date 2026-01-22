@@ -75,16 +75,14 @@ abstract class Plugin: KordExPlugin() {
             removeAllRegistration()
             onDelete()
         }.join()
-        super.delete()
-    }
+    }.also { super.delete() }
 
     override fun stop() = runBlocking {
         kord.launch {
             removeAllRegistration()
             onStop()
         }.join()
-        super.stop()
-    }
+    }.also { super.stop() }
 
     private fun removeAllRegistration() {
         val configManager by inject<ConfigManager>()

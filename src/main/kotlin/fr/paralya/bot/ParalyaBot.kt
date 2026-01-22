@@ -72,6 +72,8 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 			}
 		}
 
+		plugins { manager = ::PluginManager }
+
 		// Some privileged intents are required for the bot to function properly
 		@OptIn(PrivilegedIntent::class)
 		intents {
