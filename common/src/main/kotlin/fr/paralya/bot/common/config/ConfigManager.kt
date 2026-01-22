@@ -11,6 +11,8 @@ import io.konform.validation.onEach
 import kotlinx.serialization.*
 import kotlinx.serialization.hocon.Hocon
 import kotlinx.serialization.hocon.decodeFromConfig
+import org.koin.core.context.unloadKoinModules
+import org.koin.core.module.Module
 import org.koin.core.module.dsl.withOptions
 import org.koin.core.qualifier.named
 import java.nio.file.Path
@@ -37,6 +39,9 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 
 	constructor() : this(Path(System.getenv("PARALYA_BOT_CONFIG_FILE") ?: "config.conf"))
 
+	@PublishedApi
+	internal val modules = mutableMapOf<String, Module>()
+
 
 	// Core bot configuration, directly integrated into the ConfigManager
 	var botConfig: BotConfig
@@ -60,6 +65,13 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 		} catch (e: Exception) {
 			logger.error(e) { "Failed to load config file" }
 		}
+	}
+
+	fun reload() {
+		val fileExistedBeforeLoad = configFile.exists()
+		loadFile()
+		botConfig = Hocon.decodeFromConfig(getSubConfig("bot"))
+		if (fileExistedBeforeLoad) validateConfig(botConfig)
 	}
 
 	/**
@@ -93,10 +105,17 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 	 */
 	inline fun <reified T : ValidatedConfig> registerConfig(name: String) {
         val configObject = getConfigObject(T::class, name) ?: return
-        loadModule(true) {
+        modules[name] = loadModule(true) {
 			single<T> { configObject } withOptions { named(name) }
 		}
 		logger.debug { "Config for $name registered successfully" }
+	}
+
+	fun unregisterConfig(name: String) {
+		modules.remove(name)?.let {
+			unloadKoinModules(it)
+			logger.debug { "Koin module for $name unloaded successfully" }
+		} ?: logger.warn { "No Koin module found for $name" }
 	}
 
 	@PublishedApi
@@ -141,10 +160,10 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
  */
 @Serializable
 data class BotConfig(
-	var token: String = "",
-	var admins: List<ULong> = emptyList(),
-	var dmLogChannelId: ULong = ULong.MIN_VALUE,
-	var paralyaId: ULong = ULong.MIN_VALUE
+	val token: String = "",
+	val admins: List<ULong> = emptyList(),
+	val dmLogChannelId: ULong = ULong.MIN_VALUE,
+	val paralyaId: ULong = ULong.MIN_VALUE
 ) : ValidatedConfig {
 	@Transient
 	private val validator = Validation {
