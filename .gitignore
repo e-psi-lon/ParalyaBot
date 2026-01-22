@@ -50,6 +50,10 @@ bin/
 data/**
 logs/**
 games/**
+.direnv
 config.conf
-monitor.*
-
+todo.md
+result
+*.html
+*.cshtml
+*.py
