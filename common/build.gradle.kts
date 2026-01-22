@@ -24,7 +24,7 @@ i18n {
 }
 
 group = "fr.paralya.bot"
-version = "1.0-SNAPSHOT"
+version = property("paralyabot.version")!!
 
 fun DependencyHandlerScope.bothTestScopes(dependencyNotation: Any) {
 	testImplementation(dependencyNotation)

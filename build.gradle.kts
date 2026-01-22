@@ -21,7 +21,7 @@ plugins {
 }
 
 group = "fr.paralya.bot"
-version = "1.0-SNAPSHOT"
+version = property("paralyabot.version")!!
 
 kordEx {
 	ignoreIncompatibleKotlinVersion = true // Temporary fix for KordEx until it's updated to support Kotlin 2.2.21+
