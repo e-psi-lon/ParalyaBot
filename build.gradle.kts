@@ -61,8 +61,6 @@ dependencies {
     implementation(libs.kotlinx.html)
 	implementation(libraries.kordex.i18n.runtime)
 	implementation(projects.common)
-	implementation(projects.lg)
-    implementation(projects.sta)
 }
 
 tasks {

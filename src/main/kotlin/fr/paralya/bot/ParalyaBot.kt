@@ -6,20 +6,16 @@ import dev.kord.gateway.PrivilegedIntent
 import dev.kord.rest.builder.message.embed
 import dev.kordex.core.ExtensibleBot
 import dev.kordex.i18n.I18n as KI18n
-import dev.kordex.core.utils.getKoin
 import dev.kordex.core.utils.loadModule
 import fr.paralya.bot.common.GameRegistry
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.gameMode
 import fr.paralya.bot.extensions.base.Base
-import fr.paralya.bot.lg.LG
-import fr.paralya.bot.lg.data.LgConfig
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.named
 import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.withOptions
-import org.koin.core.qualifier.named
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import dev.kordex.core.annotations.warnings.ReplacingDefaultErrorResponseBuilder
@@ -66,13 +62,15 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 				enable = false
 			}
 			add(::Base)
-			add(::LG) // Loaded manually until plugin system implementation is complete
 			help {
 				enableBundledExtension = false
 			}
 		}
 
-		plugins { manager = ::PluginManager }
+		plugins {
+			manager = ::PluginManager
+			pluginPath(System.getenv("PARALYA_BOT_CONFIG_FILE") ?: "./plugins")
+		}
 
 		// Some privileged intents are required for the bot to function properly
 		@OptIn(PrivilegedIntent::class)
@@ -115,11 +113,6 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 						createdAtStart()
 					}
 				}
-
-				// Register game-specific configs manually until the plugin system is implemented
-				// In the future, plugins will register their own config
-				val configManager = getKoin().get<ConfigManager>(named("configManager"))
-				configManager.registerConfig<LgConfig>("LG")
 			}
 		}
 	}
