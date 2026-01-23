@@ -72,11 +72,11 @@
                         Entrypoint = [ "${jre21}/bin/java" "-jar" "/app/paralyabot.jar" ];
                         WorkingDir = "/app";
                         Env = [
-                            "PARALYA_BOT_CONFIG_FILE=/app/config/config.conf"
+                            "PARALYA_BOT_CONFIG_FILE=/app/external/config.conf"
+                            "PARALYA_BOT_PLUGINS_DIR=/app/external/plugins"
                         ];
                         Volumes = {
-                            "/app/config" = {};
-                            "/app/plugins" = {};
+                            "/app/external" = {};
                         };
                     };
                     

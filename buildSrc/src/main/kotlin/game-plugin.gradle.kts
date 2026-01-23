@@ -7,12 +7,12 @@ plugins {
 group = "fr.paralya.bot"
 version = "0.1.0"
 
-tasks.register("exportToGames") {
+tasks.register("exportToPluginsDir") {
 	dependsOn(":${project.name}:distZip")
 	doLast {
 		val distZipTask = tasks.getByName("distZip") as Zip
 		val zip = distZipTask.outputs.files.singleFile
-		val gamesDir = projectDir.resolve("../games/")
+		val gamesDir = projectDir.resolve("../container/plugins")
 		gamesDir.mkdirs()
 		zip.copyTo(gamesDir.resolve(zip.name), true)
 		val extractedDir = gamesDir.resolve(zip.nameWithoutExtension)
