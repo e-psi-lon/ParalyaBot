@@ -51,7 +51,7 @@
                 };
 
 
-                paralyabot-image = pkgs.dockerTools.buildLayeredImage {
+                paralyabot-image = pkgs.dockerTools.streamLayeredImage {
                     name = "paralyabot";
                     tag = "latest";
                     created = builtins.readFile (pkgs.runCommand "created-timestamp" {} ''
@@ -72,7 +72,7 @@
                         Entrypoint = [ "${jre21}/bin/java" "-jar" "/app/paralyabot.jar" ];
                         WorkingDir = "/app";
                         Env = [
-                            "PARALYABOT_CONFIG_FILE=/app/config/config.conf"
+                            "PARALYA_BOT_CONFIG_FILE=/app/config/config.conf"
                         ];
                         Volumes = {
                             "/app/config" = {};

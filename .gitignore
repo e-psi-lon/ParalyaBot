@@ -57,3 +57,4 @@ result
 *.html
 *.cshtml
 *.py
+container/
