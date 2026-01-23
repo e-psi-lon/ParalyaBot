@@ -24,6 +24,10 @@
                 jdkOnBuild = headlessJdk;
                 modules = [ "java.base" "java.xml" "java.naming" "java.logging" "jdk.crypto.ec" ];
             };
+            # TODO: Add myself to trusted users to avoid the sudo call everytime
+            build-bot = pkgs.writeShellScriptBin "build-bot" ''
+                sudo nix build .#paralyabot-image --no-sandbox && ./result | podman load
+            '';
 
             mkGradleBuild = { task, version, output, name, extension ? "jar" }:
                 pkgs.stdenv.mkDerivation {
@@ -87,6 +91,7 @@
             devShells.${system}.default = pkgs.mkShell {
                 buildInputs = with pkgs; [
                     jdk21
+                    build-bot
                 ];
             };
         };
