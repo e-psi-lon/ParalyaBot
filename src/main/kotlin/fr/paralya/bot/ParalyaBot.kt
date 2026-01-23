@@ -70,7 +70,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 
 		plugins {
 			manager = ::PluginManager
-			pluginPath(System.getenv("PARALYA_BOT_CONFIG_FILE") ?: "./plugins")
+			pluginPath(System.getenv("PARALYA_BOT_PLUGINS_DIR") ?: "./plugins")
 		}
 
 		// Some privileged intents are required for the bot to function properly
