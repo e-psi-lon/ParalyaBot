@@ -8,6 +8,7 @@ import dev.kordex.core.ExtensibleBot
 import dev.kordex.i18n.I18n as KI18n
 import dev.kordex.core.utils.loadModule
 import fr.paralya.bot.common.GameRegistry
+import fr.paralya.bot.common.plugins.PluginManager
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.gameMode
 import fr.paralya.bot.extensions.base.Base
