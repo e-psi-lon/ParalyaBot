@@ -14,6 +14,9 @@ kotlin {
 		freeCompilerArgs.add("-Xcontext-parameters")
 	}
 }
+dependencies {
+	compileOnly(kotlin("stdlib"))
+}
 
 tasks.withType<Test> {
 	useJUnitPlatform()
