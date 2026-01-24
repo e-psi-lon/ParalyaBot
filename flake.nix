@@ -11,7 +11,7 @@
             pkgs = nixpkgs.legacyPackages.${system};
 
             gradlePropsContent = builtins.readFile ./gradle.properties;
-            versionMatch = builtins.match ".*paralyabot\.version=([^\n]+)" gradlePropsContent;
+            versionMatch = builtins.match ".*paralyabot\\.version=([^\\n]+).*" gradlePropsContent;
             globalVersion = builtins.elemAt versionMatch 0;
             jarName = "paralya-bot-${globalVersion}.jar";
             headlessJdk = pkgs.jdk21.override {
@@ -24,9 +24,27 @@
                 jdkOnBuild = headlessJdk;
                 modules = [ "java.base" "java.xml" "java.naming" "java.logging" "jdk.crypto.ec" ];
             };
-            # TODO: Add myself to trusted users to avoid the sudo call everytime
             build-bot = pkgs.writeShellScriptBin "build-bot" ''
-                sudo nix build .#paralyabot-image --no-sandbox && ./result | podman load
+                IMAGE_PATH=$(nix build .#paralyabot-image --no-sandbox --print-out-paths)
+                if [ -n "$IMAGE_PATH" ]; then
+                    "$IMAGE_PATH" | podman load
+                fi
+            '';
+            run-bot = pkgs.writeShellScriptBin "run-bot" ''
+              CONTAINER_NAME="''${1:-ParalyaBot}"
+
+              echo "Starting container: $CONTAINER_NAME..."
+              podman run \
+                --name "$CONTAINER_NAME" \
+                --replace \
+                --detach \
+                --volume "$PWD/container:/app/external:Z" \
+                localhost/paralyabot:latest
+              echo "Container $CONTAINER_NAME started successfully."
+            '';
+
+            build-and-run-bot = pkgs.writeShellScriptBin "build-and-run-bot" ''
+                ${build-bot} && ${run-bot} ''${1:-ParalyaBot}
             '';
 
             mkGradleBuild = { task, version, output, name, extension ? "jar" }:
@@ -92,6 +110,8 @@
                 buildInputs = with pkgs; [
                     jdk21
                     build-bot
+                    run-bot
+                    build-and-run-bot
                 ];
             };
         };
