@@ -8,7 +8,6 @@ import fr.paralya.bot.common.cache.atomic
 import fr.paralya.bot.common.cache.putSerialized
 import fr.paralya.bot.common.cache.querySerialized
 import fr.paralya.bot.common.cache.removeSerialized
-import fr.paralya.bot.common.cache.updateSerialized
 import fr.paralya.bot.common.plugins.getPluginInstance
 import fr.paralya.bot.lg.LgPlugin
 import kotlinx.serialization.Serializable
@@ -90,10 +89,14 @@ suspend fun DataCache.resetGameData() = atomic {
 
 /**
  * Updates the game data using the provided modifier function.
+ * Automatically creates new GameData if none exists, or updates existing data.
  * @param modifier A function that transforms the current [GameData] to a new [GameData].
  */
-suspend fun DataCache.updateGameData(modifier: suspend (GameData) -> GameData) {
-	updateSerialized(pluginNamespace, transform = modifier)
+suspend fun DataCache.updateGameData(modifier: suspend (GameData) -> GameData) = atomic {
+	putSerialized(
+		pluginNamespace,
+		modifier(querySerialized<GameData>(pluginNamespace).singleOrNull() ?: GameData())
+	)
 }
 
 /**
