@@ -58,7 +58,7 @@ suspend fun LG.registerListeners() {
 			when (message.channelId) {
 				LgChannelType.LOUPS_CHAT.toId() ->
 					relayService.onMessageSent(WEBHOOK_PF_NAME,
-						LgChannelType.PETITE_FILLE.toId()!!, false
+						LgChannelType.PETITE_FILLE.toId(), false
 					)
 				LgChannelType.INTERVIEW.toId() -> {
 					if (message.author?.id in botCache.getInterviews()) {
@@ -70,7 +70,7 @@ suspend fun LG.registerListeners() {
 
 				LgChannelType.DATE_MYSTERE.toId() ->
 					relayService.onMessageSent(WEBHOOK_CUPIDON_NAME,
-						LgChannelType.CUPIDON.toId()!!, false
+						LgChannelType.CUPIDON.toId(), false
 					)
 
 				LgChannelType.SUJETS.toId() -> {
@@ -94,11 +94,11 @@ suspend fun LG.registerListeners() {
 			when (event.message.channelId) {
 				LgChannelType.LOUPS_CHAT.toId() ->
 					relayService.onMessageUpdate(WEBHOOK_PF_NAME,
-						LgChannelType.PETITE_FILLE.toId()!!, false
+						LgChannelType.PETITE_FILLE.toId(), false
 					)
 				LgChannelType.DATE_MYSTERE.toId() ->
 					relayService.onMessageUpdate(WEBHOOK_CUPIDON_NAME,
-						LgChannelType.CUPIDON.toId()!!, false
+						LgChannelType.CUPIDON.toId(), false
 					)
 			}
 		}
@@ -122,12 +122,12 @@ suspend fun LG.registerListeners() {
 				LgChannelType.LOUPS_CHAT.toId() ->
 					relayService.onReactionAdd(
 						WEBHOOK_PF_NAME,
-						LgChannelType.PETITE_FILLE.toId()!!, false
+						LgChannelType.PETITE_FILLE.toId(), false
 					)
 				LgChannelType.DATE_MYSTERE.toId() ->
 					relayService.onReactionAdd(
 						WEBHOOK_CUPIDON_NAME,
-						LgChannelType.CUPIDON.toId()!!, false
+						LgChannelType.CUPIDON.toId(), false
 					)
 				else -> return@action
 			}
@@ -138,11 +138,11 @@ suspend fun LG.registerListeners() {
 			when (event.message.channelId) {
 				LgChannelType.LOUPS_CHAT.toId() ->
 					relayService.onReactionRemove(WEBHOOK_PF_NAME,
-						LgChannelType.PETITE_FILLE.toId()!!, isAnonymous = false
+						LgChannelType.PETITE_FILLE.toId(), isAnonymous = false
 					)
 				LgChannelType.DATE_MYSTERE.toId() ->
 					relayService.onReactionRemove(WEBHOOK_CUPIDON_NAME,
-						LgChannelType.CUPIDON.toId()!!, isAnonymous = false
+						LgChannelType.CUPIDON.toId(), isAnonymous = false
 					)
 				else -> return@action
 			}

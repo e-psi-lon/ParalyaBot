@@ -42,7 +42,7 @@ import org.koin.core.module.dsl.singleOf
 class LG : Extension() {
 	override val name = "LG"
 	val logger = KotlinLogging.logger(this::class.java.name)
-	val botCache = kord.cache
+	val botCache by lazy { kord.cache }
 	val prefix = "paralya-lg"
 	val pluginRef by inject<LgPlugin>()
 
@@ -96,7 +96,7 @@ class LG : Extension() {
 				description = Lg.Interview.Command.description
 				action {
 					val interviewChannel =
-						guild?.getChannel(LgChannelType.INTERVIEW.toId()!!) as TopGuildChannel
+						guild?.getChannel(LgChannelType.INTERVIEW.toId()) as TopGuildChannel
 					val user = arguments.user
 					interviewChannel.addOverwrite(
 						PermissionOverwrite.forMember(user.id, Permissions(Permission.SendMessages))
@@ -114,7 +114,7 @@ class LG : Extension() {
 
 					sendAsWebhook(
 						bot,
-						LgChannelType.ANNONCES_VILLAGE.toId()!!,
+						LgChannelType.ANNONCES_VILLAGE.toId(),
 						"ParalyaLG",
 						getAsset("paralya_lg", prefix)
 					) {

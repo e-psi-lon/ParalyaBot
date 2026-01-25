@@ -60,7 +60,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					is VoteResult.Tie -> {
 						sendAsWebhook(
 							lg.bot,
-							LgChannelType.LOUPS_VOTE.toId()!!,
+							LgChannelType.LOUPS_VOTE.toId(),
 							"ParalyaLG",
 							getAsset("paralya_lg", lg.prefix)	) {
 							content = Lg.DayCycle.Response.Other.equality.contextTranslate(
@@ -139,7 +139,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					is VoteResult.Tie -> {
 						sendAsWebhook(
 							lg.bot,
-							LgChannelType.VOTES.toId()!!,
+							LgChannelType.VOTES.toId(),
 							"ParalyaLG",
 							getAsset("paralya_lg", lg.prefix),
 						) {
@@ -200,7 +200,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				}
 			if (oldVillageVote?.corbeau != null) sendAsWebhook(
 				lg.bot,
-				LgChannelType.VOTES.toId()!!,
+				LgChannelType.VOTES.toId(),
 				"Corbeau",
 				getAsset("\"\uD83D\uDC26\u200D⬛ Corbeau\"", lg.prefix)
 			) {

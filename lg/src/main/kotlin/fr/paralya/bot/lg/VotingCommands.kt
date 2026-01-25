@@ -113,9 +113,9 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			val previousId = arguments.previousId?.snowflake
 			val channelId = channel.id
 			val voteManager by inject<VoteManager>()
-			val votes = LgChannelType.VOTES.toId()!!
-			val voteLoups = LgChannelType.LOUPS_VOTE.toId()!!
-			val voteCorbeau = LgChannelType.CORBEAU.toId()!!
+			val votes = LgChannelType.VOTES.toId()
+			val voteLoups = LgChannelType.LOUPS_VOTE.toId()
+			val voteCorbeau = LgChannelType.CORBEAU.toId()
 			val voteChannels = listOf(votes, voteLoups, voteCorbeau)
 
 			if (channelId !in voteChannels) {
@@ -199,10 +199,10 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 
 context(lg: LG)
 suspend fun <C : EphemeralSlashCommandContext<*, *>> C.validateVoteChannel(errorMessage: Key): PhaseType? {
-	val village = LgChannelType.VILLAGE.toId()!!
-	val votes = LgChannelType.VOTES.toId()!!
-	val loups = LgChannelType.LOUPS_CHAT.toId()!!
-	val loupsVotes = LgChannelType.LOUPS_VOTE.toId()!!
+	val village = LgChannelType.VILLAGE.toId()
+	val votes = LgChannelType.VOTES.toId()
+	val loups = LgChannelType.LOUPS_CHAT.toId()
+	val loupsVotes = LgChannelType.LOUPS_VOTE.toId()
 	val dayChannels = setOf(village, votes)
 	val nightChannels = setOf(loups, loupsVotes)
 
@@ -252,7 +252,7 @@ private suspend fun <A : Arguments, M : ModalForm> EphemeralSlashCommandContext<
 	respond { content = Lg.Vote.Response.Success.vote.contextTranslate(target.mention) }
 	sendAsWebhook(
 		lg.bot,
-		voteChannelType.toId()!!,
+		voteChannelType.toId(),
 		member?.asMember()?.effectiveName ?: "Inconnu",
 		member?.asMember()?.avatar?.cdnUrl?.toUrl(),
 		"votes"
