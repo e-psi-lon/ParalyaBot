@@ -1,5 +1,7 @@
 package fr.paralya.bot.common.plugins
 
-open class PluginException(message: String) : Exception(message)
+import fr.paralya.bot.common.ParalyaBotException
+
+open class PluginException(message: String) : ParalyaBotException(message)
 
 class PluginConfigurationException(message: String) : PluginException(message)
