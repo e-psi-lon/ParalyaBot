@@ -42,11 +42,11 @@ abstract class Plugin: KordExPlugin() {
         prepareRegistration()
         onSetup()
         try {
-            loadKoinModules(components)
+            getKoin().loadModules(components)
         } catch (_: IllegalStateException) {
             bot.logger.info { "Koin not started, loading $name components after Koin setup" }
             settings {
-                hooks { afterKoinSetup { loadKoinModules(components) } }
+                hooks { afterKoinSetup { getKoin().loadModules(components) } }
             }
         }
     }
@@ -89,7 +89,7 @@ abstract class Plugin: KordExPlugin() {
         configManager.unregisterConfig(name)
         val gameRegistry by inject<GameRegistry>()
         gameRegistry.unloadGameMode(name)
-        unloadKoinModules(components)
+        getKoin().unloadModules(components)
     }
 
     protected inline fun <reified T : ValidatedConfig>define() = register<T>(key).also { configDefined = true }

@@ -113,7 +113,7 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 
 	fun unregisterConfig(name: String) {
 		modules.remove(name)?.let {
-			unloadKoinModules(it)
+			getKoin().unloadModules(listOf(it))
 			logger.debug { "Koin module for $name unloaded successfully" }
 		} ?: logger.warn { "No Koin module found for $name" }
 	}
