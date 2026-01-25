@@ -1,6 +1,5 @@
 package fr.paralya.bot.common.plugins
 
-import dev.kordex.core.koin.KordExContext.unloadKoinModules
 import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.plugins.KordExPlugin
 import dev.kordex.core.plugins.PluginManager
@@ -56,6 +55,13 @@ abstract class Plugin: KordExPlugin() {
             singleOf<T>(constructor) {
                 createdAtStart()
             }
+        }
+        components.add(module)
+    }
+
+    protected inline fun <reified T: KordExKoinComponent> registerComponent(component: T) {
+        val module = module {
+            single<T> { component }
         }
         components.add(module)
     }

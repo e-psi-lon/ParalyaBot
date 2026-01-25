@@ -23,6 +23,7 @@ class LgPlugin : Plugin() {
 	 * Setup function that initializes the plugin.
 	 */
 	override suspend fun onSetup() {
+		registerComponent(this)
 		registerComponent(::VoteManager)
 		registerComponent(::LgRelayService)
 		extension(::LG)
