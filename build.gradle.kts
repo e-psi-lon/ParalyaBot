@@ -121,3 +121,31 @@ tasks {
 		mergeServiceFiles()
 	}
 }
+
+// Clean plugins directory first, before any exports
+tasks.register("cleanPlugins") {
+	doLast {
+		val pluginsDir = file("./container/plugins")
+		if (pluginsDir.exists()) {
+			pluginsDir.deleteRecursively()
+		}
+		pluginsDir.mkdirs()
+	}
+}
+
+tasks.register<JavaExec>("runFull") {
+	// Clean plugins first
+	dependsOn("cleanPlugins")
+
+	// Then export plugins
+	dependsOn(subprojects
+		.filter { it.name !in listOf("sta") }
+		.mapNotNull { it.tasks.findByName("exportToPluginsDir") }
+	)
+
+	// Copy configuration from :run task
+	val runTask = tasks.getByName<JavaExec>("run")
+	mainClass = runTask.mainClass
+	classpath = runTask.classpath
+	jvmArgs = runTask.jvmArgs
+}
