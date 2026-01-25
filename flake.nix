@@ -44,7 +44,7 @@
             '';
 
             build-and-run-bot = pkgs.writeShellScriptBin "build-and-run-bot" ''
-                ${build-bot} && ${run-bot} ''${1:-ParalyaBot}
+                ${build-bot}/bin/build-bot && ${run-bot}/bin/run-bot ''${1:-ParalyaBot}
             '';
 
             mkGradleBuild = { task, version, output, name, extension ? "jar" }:
