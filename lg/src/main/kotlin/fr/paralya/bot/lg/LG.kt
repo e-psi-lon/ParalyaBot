@@ -13,20 +13,18 @@ import dev.kordex.core.commands.converters.impl.role
 import dev.kordex.core.commands.converters.impl.string
 import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.extensions.Extension
+import dev.kordex.core.extensions.ExtensionState
 import dev.kordex.core.extensions.publicSlashCommand
-import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.utils.dm
 import dev.kordex.core.utils.hasRole
-import dev.kordex.core.utils.loadModule
 import fr.paralya.bot.common.*
 import fr.paralya.bot.common.I18n.Messages
 import fr.paralya.bot.lg.data.*
 import fr.paralya.bot.lg.I18n as Lg
 import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.withTimeout
 import org.koin.core.component.inject
-import org.koin.core.module.dsl.createdAtStart
-import org.koin.core.module.dsl.singleOf
-
 
 /**
  * The main extension class for the Werewolf (Loup-Garou) game.
@@ -46,10 +44,19 @@ class LG : Extension() {
 	val prefix = "paralya-lg"
 	val pluginRef by inject<LgPlugin>()
 
-	override suspend fun setup() {
-		val gameRegistry by inject<GameRegistry>()
-		gameRegistry.registerGameMode(Lg.GameMode.lg, pluginRef.pluginId)
+	// TODO: Add this to a parent class to avoid repetition with other extensions
+	override suspend fun setState(state: ExtensionState) {
+		try {
+			withTimeout(1000) {
+				super.setState(state)
+			}
+		} catch (timeout: TimeoutCancellationException) {
+			logger.warn(timeout) { "The default implementation timed out probably at the bot.send(). The even wasn't sent" }
+			this.state = state
+		}
+	}
 
+	override suspend fun setup() {
 		publicSlashCommand {
 			name = Lg.Command.name
 			description = Lg.Command.description
@@ -201,12 +208,4 @@ class LG : Extension() {
             description = Lg.Kill.Argument.Reason.description
         }
     }
-
-	inline fun <reified T : KordExKoinComponent> registerComponent(noinline constructor: () -> T) {
-		loadModule {
-			singleOf<T>(constructor) {
-				createdAtStart()
-			}
-		}
-	}
 }

@@ -10,7 +10,6 @@ import fr.paralya.bot.common.config.ValidatedConfig
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.koin.core.component.inject
-import org.koin.core.context.loadKoinModules
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.singleOf
