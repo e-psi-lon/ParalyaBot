@@ -27,12 +27,8 @@ class DeserializedQuery<T : Any>(
     }
 
     override suspend fun update(mapper: suspend (T) -> T) {
-        items.collect { (item, cachedData) ->
-            val newItem = mapper(item)
-            cache.putSerialized(namespace, newItem, clazz, itemIdProperty)
-            cache.query {
-                idEq(CachedData::id, cachedData.id)
-            }.remove()
+        items.collect { (item, _) ->
+            cache.putSerialized(namespace, mapper(item), clazz, itemIdProperty)
         }
     }
 }

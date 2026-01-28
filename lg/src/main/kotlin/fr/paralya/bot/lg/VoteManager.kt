@@ -33,7 +33,7 @@ class VoteManager : KordExKoinComponent {
 	 */
 	suspend fun getCurrentVote(phase: PhaseType?): VoteData? {
 		val queryType = phase ?: botCache.getGameData().phase.type
-		return botCache.querySerialized<VoteData>(pluginNamespace, VoteData::id) {
+		return botCache.querySerialized<VoteData>(pluginNamespace) {
 			idEq(VoteData::type, queryType)
 			idEq(VoteData::isCurrent, true)
 		}.singleOrNull()
@@ -92,7 +92,7 @@ class VoteManager : KordExKoinComponent {
 		val newVote = (
 			getCurrentVote(phase) ?:
 			VoteData.createVote(phase, System.currentTimeMillis().snowflake, true)
-		).setCurrent(true)
+		)
 		putVote(newVote)
 		newVote
 	}
