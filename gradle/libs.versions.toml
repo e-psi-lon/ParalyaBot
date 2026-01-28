@@ -5,7 +5,6 @@ kordex-plugin = "1.9.0"
 kordex-i18n = "1.1.1"
 logback = "1.5.23"
 shadow = "9.3.0"
-typesafe-config = "1.4.4"
 koin-test = "4.1.1"
 mockk = "1.14.7"
 kotlinx-serialization-format = "1.9.0"
@@ -16,7 +15,6 @@ junit = "6.0.1"
 
 [libraries]
 logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
-typesafe-config = { group = "com.typesafe", name = "config", version.ref = "typesafe-config" }
 koin-test = { group = "io.insert-koin", name = "koin-test", version.ref = "koin-test" }
 mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 kotlinx-serialization-hocon = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-hocon", version.ref = "kotlinx-serialization-format" }

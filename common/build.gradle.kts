@@ -40,7 +40,6 @@ dependencies {
 	bothTestScopes(libs.junit)
 
 	// Main dependencies (used internally by the common module)
-	implementation(libs.typesafe.config)
 	implementation(libs.kotlinx.serialization.hocon)
 	implementation(libs.kotlinx.serialization.cbor)
 
