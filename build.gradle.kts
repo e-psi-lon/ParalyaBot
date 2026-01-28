@@ -12,6 +12,7 @@ configurations.all {
 		exclude(group = group, module = module)
 	}
 }
+
 plugins {
 	id("kotlin-common")
 	alias(libs.plugins.kordex.gradle)
@@ -54,6 +55,18 @@ subprojects {
 	}
 }
 
+allprojects {
+	dependencyLocking {
+		lockAllConfigurations()
+	}
+}
+
+
+buildscript {
+	configurations.classpath {
+		resolutionStrategy.activateDependencyLocking()
+	}
+}
 
 dependencies {
 	testImplementation(kotlin("test"))
@@ -134,16 +147,11 @@ tasks.register("cleanPlugins") {
 }
 
 tasks.register<JavaExec>("runFull") {
-	// Clean plugins first
 	dependsOn("cleanPlugins")
-
-	// Then export plugins
 	dependsOn(subprojects
 		.filter { it.name !in listOf("sta") }
 		.mapNotNull { it.tasks.findByName("exportToPluginsDir") }
 	)
-
-	// Copy configuration from :run task
 	val runTask = tasks.getByName<JavaExec>("run")
 	mainClass = runTask.mainClass
 	classpath = runTask.classpath
