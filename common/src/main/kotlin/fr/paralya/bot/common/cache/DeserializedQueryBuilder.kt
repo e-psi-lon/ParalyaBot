@@ -30,12 +30,6 @@ internal class DeserializedQueryBuilder<T : Any>(
         throw UnsupportedOperationException("DeserializedQueryBuilder requires to know type at runtime. Use buildDeserialized<R>() instead.")
     }
 
-    @OptIn(ExperimentalSerializationApi::class)
-    @Suppress("UNCHECKED_CAST")
-    inline fun <reified R : Any>buildDeserialized(): Query<R> {
-        return buildDeserialized(R::class as KClass<T>) as Query<R>
-    }
-
     @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
     @PublishedApi
     internal fun buildDeserialized(clazz: KClass<T>): Query<T> {
@@ -54,5 +48,4 @@ internal class DeserializedQueryBuilder<T : Any>(
             .filter { (item, _) -> predicates.all { it(item) } }
         return DeserializedQuery(cache, namespace, items, clazz, itemIdProperty)
     }
-
 }
