@@ -20,6 +20,7 @@ data class CachedData(
                 append(it)
             }
         }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -28,6 +29,7 @@ data class CachedData(
 
         if (namespace != other.namespace) return false
         if (key != other.key) return false
+        if (itemId != other.itemId) return false
         if (!data.contentEquals(other.data)) return false
 
         return true
@@ -37,6 +39,7 @@ data class CachedData(
         var result = namespace.hashCode()
         result = 31 * result + key.hashCode()
         result = 31 * result + data.contentHashCode()
+        result = 31 * result + (itemId?.hashCode() ?: 0)
         return result
     }
     companion object {
