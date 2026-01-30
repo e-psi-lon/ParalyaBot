@@ -50,7 +50,7 @@ subprojects {
 
 	dependencies {
 		if (name != "common") {
-			compileOnly(typesafeProjects.common) // The common subproject serve as a base for all other subprojects
+			compileOnly(typesafeProjects.common) // The common subproject serves as a base for all other subprojects
 			testImplementation(testFixtures(typesafeProjects.common)) // The common subproject also includes test dependencies
 		}
 	}
@@ -82,6 +82,8 @@ tasks {
 		archiveBaseName.set("paralya-bot")
 		archiveClassifier.set("")
 		archiveVersion.set(version as String)
+		isPreserveFileTimestamps = false
+		isReproducibleFileOrder = true
 
 		listOf("brkitr", "translit", "rbnf").forEach { category ->
 			exclude("com/ibm/icu/impl/data/icudata/$category/**")
@@ -134,27 +136,26 @@ tasks {
 
 		mergeServiceFiles()
 	}
-}
 
-// Clean plugins directory first, before any exports
-tasks.register("cleanPlugins") {
-	doLast {
-		val pluginsDir = file("./container/plugins")
-		if (pluginsDir.exists()) {
-			pluginsDir.deleteRecursively()
+	register("cleanPlugins") {
+		doLast {
+			val pluginsDir = file("./container/plugins")
+			if (pluginsDir.exists()) {
+				pluginsDir.deleteRecursively()
+			}
+			pluginsDir.mkdirs()
 		}
-		pluginsDir.mkdirs()
 	}
-}
 
-tasks.register<JavaExec>("runFull") {
-	dependsOn("cleanPlugins")
-	dependsOn(subprojects
-		.filter { it.name !in listOf("sta") }
-		.mapNotNull { it.tasks.findByName("exportToPluginsDir") }
-	)
-	val runTask = tasks.getByName<JavaExec>("run")
-	mainClass = runTask.mainClass
-	classpath = runTask.classpath
-	jvmArgs = runTask.jvmArgs
+	register<JavaExec>("runFull") {
+		dependsOn("cleanPlugins")
+		dependsOn(subprojects
+			.filter { it.name !in listOf("sta") }
+			.mapNotNull { it.tasks.findByName("exportToPluginsDir") }
+		)
+		val runTask = getByName<JavaExec>("run")
+		mainClass = runTask.mainClass
+		classpath = runTask.classpath
+		jvmArgs = runTask.jvmArgs
+	}
 }

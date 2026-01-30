@@ -60,8 +60,20 @@
 
                     buildPhase = ''
                         export GRADLE_USER_HOME=$(mktemp -d)
-                        ./gradlew ${task} --no-daemon --no-configuration-cache
+                        export JAVA_HOME=${pkgs.jdk21}
+                        export TZ=UTC
+                        export LANG=C.UTF-8
+                        export LC_ALL=C.UTF-8
+                        export SOURCE_DATE_EPOCH=${toString self.lastModified}
+                        export JAVA_TOOL_OPTIONS="-Djava.properties.date=${lastCommitAsTimestamp}"
+
+                        ./gradlew ${task} \
+                            --no-daemon \
+                            --no-configuration-cache \
+                            --info \
+                            --stacktrace \
                     '';
+
                     installPhase = ''
                         mkdir -p $out
                         cp ${output} $out/${name}.${extension}
