@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "fr.paralya.bot"
-version = "0.1.0"
+version = providers.gradleProperty("plugin.${project.name}.version").get()
 
 tasks.register("exportToPluginsDir") {
 	dependsOn(":${project.name}:distZip")
