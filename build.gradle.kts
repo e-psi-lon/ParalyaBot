@@ -27,6 +27,7 @@ version = property("paralyabot.version")!!
 kordEx {
 	ignoreIncompatibleKotlinVersion = true // Temporary fix for KordEx until it's updated to support Kotlin 2.2.21+
 	bot {
+		voice = false
 		dataCollection(DataCollection.None)
 		mainClass = "fr.paralya.bot.ParalyaBotKt"
 	}
