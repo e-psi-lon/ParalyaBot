@@ -9,6 +9,9 @@
         let
             system = "x86_64-linux";
             pkgs = nixpkgs.legacyPackages.${system};
+            lastCommitAsTimestamp = builtins.readFile (pkgs.runCommand "created-timestamp" {} ''
+                printf '%s' "$(date -u -d @${toString self.lastModified} +'%Y-%m-%dT%H:%M:%SZ')" > $out
+            '');
 
             gradlePropsContent = builtins.readFile ./gradle.properties;
             versionMatch = builtins.match ".*paralyabot\\.version=([^\\n]+).*" gradlePropsContent;
@@ -54,6 +57,7 @@
                     src = ./.;
                     buildInputs = [ pkgs.jdk21 pkgs.cacert ];
                     dontConfigure = true;
+
                     buildPhase = ''
                         export GRADLE_USER_HOME=$(mktemp -d)
                         ./gradlew ${task} --no-daemon --no-configuration-cache
@@ -76,9 +80,7 @@
                 paralyabot-image = pkgs.dockerTools.streamLayeredImage {
                     name = "paralyabot";
                     tag = "latest";
-                    created = builtins.readFile (pkgs.runCommand "created-timestamp" {} ''
-                        printf '%s' "$(date -u -d @${toString self.lastModified} +'%Y-%m-%dT%H:%M:%SZ')" > $out
-                    '');
+                    created = lastCommitAsTimestamp;
                     
                     contents = [
                         jre21
