@@ -163,6 +163,47 @@
                     build-and-run-bot = pkgs.writeShellScriptBin "build-and-run-bot" ''
                         ${build-bot}/bin/build-bot && ${run-bot}/bin/run-bot ''${1:-ParalyaBot}
                     '';
+
+                    build-plugin = pkgs.writeShellScriptBin "build-plugin" ''
+                        PLUGIN=$1
+                        KEEP_RESULT=''${2:-false}
+                        
+                        if [ -z "$PLUGIN" ]; then
+                            echo "Usage: build-plugin <plugin-name> [keep-result]"
+                            exit 1
+                        fi
+                        
+                        nix build .#$PLUGIN-plugin \
+                            --print-out-paths \
+                            ''${KEEP_RESULT:+--no-link} \
+                            --no-sandbox
+                    '';
+
+                    deploy-plugin = pkgs.writeShellScriptBin "deploy-plugin" ''
+                        PLUGIN=$1
+                        if [ -z "$PLUGIN" ]; then
+                            echo "Usage: deploy-plugin <plugin-name>"
+                            exit 1
+                        fi
+
+                        echo "Building $PLUGIN-plugin..."
+                        OUT_PATH=$(${build-plugin}/bin/build-plugin "$PLUGIN" true)
+                        
+                        PLUGIN_DIR="$PWD/container/plugins"
+                        mkdir -p "$PLUGIN_DIR"
+                        
+                        cp -f "$OUT_PATH"/*.zip "$PLUGIN_DIR/"
+
+                        for zip in "$OUT_PATH"/*.zip; do
+                            FILENAME=$(basename "$zip")
+                            DIRNAME="''${FILENAME%.zip}"
+                            if [ -d "$PLUGIN_DIR/$DIRNAME" ]; then
+                                rm -rf "$PLUGIN_DIR/$DIRNAME"
+                            fi
+                        done
+                        
+                        echo "$PLUGIN deployed successfully."
+                    '';
                 in
                 pkgs.mkShell {
                     buildInputs = with pkgs; [
@@ -170,6 +211,8 @@
                         build-bot
                         run-bot
                         build-and-run-bot
+                        build-plugin
+                        deploy-plugin
                     ];
                 };
         };
