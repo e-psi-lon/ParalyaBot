@@ -40,13 +40,16 @@
 
                     extractPluginVersion = pluginName: extractVersion "plugin.${pluginName}.version";
 
-                    mkGradleBuild = { task, version, output, name, extension ? "jar", extraArgs ? "" }:
+                    mkGradleBuild = { task, version, output, name, extension ? "jar", extraArgs ? "", outputHash }:
                         pkgs.stdenv.mkDerivation {
                             pname = name;
                             version = version;
                             src = ./.;
                             buildInputs = with pkgs; [ jdk21 cacert ];
                             dontConfigure = true;
+                            outputHash = outputHash;
+                            outputHashMode = "recursive";
+                            outputHashAlgo = "sha256";
 
                             buildPhase = ''
                                 export GRADLE_USER_HOME=$(mktemp -d)
@@ -73,13 +76,14 @@
                 in {
                     paralyabot-jar = 
                         let
-                            version = extractVersion "paralyabot\\.version";
+                            version = extractVersion "paralyabot.version";
                         in
                         mkGradleBuild {
                             task = "shadowJar";
                             version = version;
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
+                            outputHash = "sha256-dNN+n+AMIuCcNOm9VUK4aBO6/TpzM5W4pusaKhZNmvQ=";
                         };
 
                     lg-plugin = 
@@ -92,6 +96,7 @@
                             output = "lg/build/distributions/lg-${version}.zip";
                             name = "lg-plugin-${version}";
                             extension = "zip";
+                            outputHash = "sha256-ilVClqaW66m/fROj6MEOsUlVGYa177NnAMnCWPwWFWA=";
                         };
 
                     sta-plugin = 
@@ -104,6 +109,7 @@
                             output = "sta/build/distributions/sta-${version}.zip";
                             name = "sta-plugin-${version}";
                             extension = "zip";
+                            outputHash = "sha256-NrxEpEzwQvUUwtMtwKfLPyULVqNuniYfyajfyVQcOsE=";
                         };
 
                     paralyabot-image = 
@@ -153,7 +159,7 @@
             devShells.${system}.default =
                 let 
                     build-bot = pkgs.writeShellScriptBin "build-bot" ''
-                        IMAGE_PATH=$(nix build .#paralyabot-image --no-sandbox --print-out-paths)
+                        IMAGE_PATH=$(nix build .#paralyabot-image --print-out-paths)
                         if [ -n "$IMAGE_PATH" ]; then
                             "$IMAGE_PATH" | podman load
                         fi
@@ -187,7 +193,6 @@
                         nix build .#$PLUGIN-plugin \
                             --print-out-paths \
                             ''${KEEP_RESULT:+--no-link} \
-                            --no-sandbox
                     '';
 
                     deploy-plugin = pkgs.writeShellScriptBin "deploy-plugin" ''
@@ -215,6 +220,36 @@
                         
                         echo "$PLUGIN deployed successfully."
                     '';
+
+                    update-hash = pkgs.writeShellScriptBin "update-hash" ''
+                        PACKAGE="''${1:-paralyabot-jar}"
+                        echo "Building .#$PACKAGE to check for hash mismatch..."
+                        LOG=$(mktemp)
+                        nix build ".#$PACKAGE" > "$LOG" 2>&1 || true
+                        
+                        if grep -q "hash mismatch" "$LOG"; then
+                            echo "Hash mismatch detected."
+                            
+                            OLD_HASH=$(grep "specified:" "$LOG" | grep -oP 'sha256-\S+')
+                            NEW_HASH=$(grep "got:" "$LOG" | grep -oP 'sha256-\S+')
+                            
+                            if [ -n "$OLD_HASH" ] && [ -n "$NEW_HASH" ]; then
+                            echo "Updating flake.nix..."
+                            echo "Replacing: $OLD_HASH"
+                            echo "With:      $NEW_HASH"
+                            
+                            sed -i "s|$OLD_HASH|$NEW_HASH|" flake.nix
+                            echo "Success. You can now build."
+                            else
+                            echo "Could not parse hashes from output. See log:"
+                            cat "$LOG"
+                            fi
+                        else
+                            echo "No hash mismatch found. Last build log:"
+                            cat "$LOG"
+                        fi
+                        rm "$LOG"
+                    '';
                 in
                 pkgs.mkShell {
                     buildInputs = with pkgs; [
@@ -224,6 +259,7 @@
                         build-and-run-bot
                         build-plugin
                         deploy-plugin
+                        update-hash
                     ];
                 };
         };
