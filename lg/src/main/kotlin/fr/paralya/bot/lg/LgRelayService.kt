@@ -39,6 +39,7 @@ class LgRelayService : KordExKoinComponent {
     private val botCache by lazy { lg.botCache }
     private val bot by lazy { lg.bot }
 
+    fun User?.shouldIgnore(botConfig: BotConfig) = this.isAdmin(botConfig) || this?.isBot == true || this?.isSelf == true
 
     context(context: EventContext<MessageCreateEvent>)
     suspend fun onMessageSent(
@@ -48,8 +49,7 @@ class LgRelayService : KordExKoinComponent {
     ) {
         val botConfig by this.inject<BotConfig>()
         val message = context.event.message
-        if (message.author.isAdmin(botConfig) || message.author?.isBot == true || message.author?.isSelf == true)
-            return
+        if (message.author.shouldIgnore(botConfig)) return
 
         if (message.content.length > 2000) {
             val channel = message.channel
@@ -93,8 +93,7 @@ class LgRelayService : KordExKoinComponent {
     ) {
         val botConfig by this.inject<BotConfig>()
         val event = context.event
-        if (event.message?.author.isAdmin(botConfig) || event.message?.author?.isBot == true || event.message?.author?.isSelf == true)
-            return
+        if (event.message?.author.shouldIgnore(botConfig)) return
         val oldMessage = outChannel?.let { MessageChannelBehavior(outChannel, bot.kordRef).getCorrespondingMessage(event.message!!) }
         if (oldMessage != null) {
             val webhook = getWebhook(outChannel, bot, webhookName)
@@ -114,8 +113,7 @@ class LgRelayService : KordExKoinComponent {
     ) {
         val botConfig by this.inject<BotConfig>()
         val event = context.event
-        if (event.old?.author.isAdmin(botConfig) || event.old?.author?.isBot == true || event.old?.author?.isSelf == true)
-            return
+        if (event.old?.author.shouldIgnore(botConfig)) return
         val oldMessage = event.old?.let { MessageChannelBehavior(outChannel, bot.kordRef).getCorrespondingMessage(it) }
         val webhook = getWebhook(outChannel, bot, webhookName)
         val newMessage = event.message.asMessage()
@@ -199,10 +197,8 @@ class LgRelayService : KordExKoinComponent {
         isAdd: Boolean
     ) {
         val botConfig by this.inject<BotConfig>()
-        if (message.author.isAdmin(botConfig) || message.author?.isBot == true || message.author?.isSelf == true)
-            return
-        if (author?.isAdmin(botConfig) == true || author?.isBot == true || author?.isSelf == true)
-            return
+        if (message.author.shouldIgnore(botConfig)) return
+        if (author.shouldIgnore(botConfig)) return
         val (userName, userAvatar) = getMessageIdentity(author, isAnonymous)
         val content = buildRelayReactionContent(emoji, message, isAdd)
         if (isAnonymous) sendAsWebhook(
