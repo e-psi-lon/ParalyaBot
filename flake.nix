@@ -94,7 +94,7 @@
                             version = version;
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-Fgdo9Zi0D6hTMk9+eqpyP1UtLMOTZi2MiHRmL6Y/5yk=";
+                            outputHash = "sha256-auwafWBi49nycWOm2DFEsp4PJD5szJpvexIIUmKA4gU=";
                         };
 
                     lg-plugin = 
@@ -234,21 +234,29 @@
 
                     update-hash = pkgs.writeShellScriptBin "update-hash" ''
                         PACKAGE="''${1:-paralyabot-jar}"
+                        FORCE_REBUILD=""
+                        if [[ "$1" == "--force" ]] || [[ "$2" == "--force" ]]; then
+                            FORCE_REBUILD="--rebuild"
+                            if [[ "$1" == "--force" ]]; then
+                                PACKAGE="''${2:-paralyabot-jar}"
+                            fi
+                        fi
+
                         echo "Building .#$PACKAGE to check for hash mismatch..."
                         LOG=$(mktemp)
-                        nix build ".#$PACKAGE" > "$LOG" 2>&1 || true
-                        
+                        nix build ".#$PACKAGE" $FORCE_REBUILD > "$LOG" 2>&1 || true
+
                         if grep -q "hash mismatch" "$LOG"; then
                             echo "Hash mismatch detected."
-                            
+
                             OLD_HASH=$(grep "specified:" "$LOG" | grep -oP 'sha256-\S+')
                             NEW_HASH=$(grep "got:" "$LOG" | grep -oP 'sha256-\S+')
-                            
+
                             if [ -n "$OLD_HASH" ] && [ -n "$NEW_HASH" ]; then
                             echo "Updating flake.nix..."
                             echo "Replacing: $OLD_HASH"
                             echo "With:      $NEW_HASH"
-                            
+
                             sed -i "s|$OLD_HASH|$NEW_HASH|" flake.nix
                             echo "Success. You can now build."
                             else
