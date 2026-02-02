@@ -23,20 +23,21 @@
         in {
             packages.${system} = 
                 let 
-                    gradleProperties = let
-                        lines = pkgs.lib.splitString "\n" (builtins.readFile ./gradle.properties);
+                    parseProperties = path: let
+                        lines = pkgs.lib.splitString "\n" (builtins.readFile path);
                         toPair = line: let
                            match = builtins.match "([^=]+)=(.*)$" line;
-                        in if match == null then builtins.trace "Failed to parse line: '${line}'" null else {
+                        in if match == null then null else {
                             name = builtins.elemAt match 0;
                             value = builtins.elemAt match 1;
                         };
                     in builtins.listToAttrs (builtins.filter (x: x != null) (map toPair lines));
 
+                    gradleProperties = parseProperties ./gradle.properties;
                     extractVersion = propertyName: 
                         if builtins.hasAttr propertyName gradleProperties 
                         then gradleProperties.${propertyName}
-                        else builtins.trace "Available keys: ${builtins.toJSON (builtins.attrNames gradleProperties)}" (throw "Property ${propertyName} not found");
+                        else throw "Property ${propertyName} not found";
 
                     extractPluginVersion = pluginName: extractVersion "plugin.${pluginName}.version";
 
