@@ -46,7 +46,7 @@
                         url = wrapperProperties.distributionUrl;
                         match = builtins.match ".*gradle-([0-9.]+)-bin\\.zip" url;
                     in builtins.elemAt match 0;
-                    gradle = (pkgs.gradle-packages.mkGradle {
+                    gradle-wrapper = (pkgs.gradle-packages.mkGradle {
                         version = gradleVersion;
                         hash = "sha256-oX3dhaJran9d23H/iwX8UQTAICxuZHgkKXkMkzaGyAY=";
                         defaultJava = pkgs.jdk21;
@@ -57,7 +57,7 @@
                             pname = name;
                             inherit version;
                             src = ./.;
-                            buildInputs = with pkgs; [ jdk21 cacert] ++ [ gradle ];
+                            buildInputs = with pkgs; [ jdk21 cacert gradle-wrapper ];
                             dontConfigure = true;
                             outputHash = outputHash;
                             outputHashMode = "recursive";
