@@ -41,12 +41,23 @@
 
                     extractPluginVersion = pluginName: extractVersion "plugin.${pluginName}.version";
 
+                    wrapperProperties = parseProperties ./gradle/wrapper/gradle-wrapper.properties;
+                    gradleVersion = let
+                        url = wrapperProperties.distributionUrl;
+                        match = builtins.match ".*gradle-([0-9.]+)-bin\\.zip" url;
+                    in builtins.elemAt match 0;
+                    gradle = (pkgs.gradle-packages.mkGradle {
+                        version = gradleVersion;
+                        hash = "sha256-oX3dhaJran9d23H/iwX8UQTAICxuZHgkKXkMkzaGyAY=";
+                        defaultJava = pkgs.jdk21;
+                    }).wrapped;
+
                     mkGradleBuild = { task, version, output, name, extension ? "jar", extraArgs ? "", outputHash }:
                         pkgs.stdenv.mkDerivation {
                             pname = name;
-                            version = version;
+                            inherit version;
                             src = ./.;
-                            buildInputs = with pkgs; [ jdk21 cacert ];
+                            buildInputs = with pkgs; [ jdk21 cacert] ++ [ gradle ];
                             dontConfigure = true;
                             outputHash = outputHash;
                             outputHashMode = "recursive";
@@ -61,10 +72,10 @@
                                 export SOURCE_DATE_EPOCH=${toString self.lastModified}
                                 export JAVA_TOOL_OPTIONS="-Djava.properties.date=${lastCommitAsTimestamp}"
 
-                                ./gradlew ${task} \
+                                gradle ${task} \
                                     --no-daemon \
                                     --no-configuration-cache \
-                                    --info \
+                                    --console=plain \
                                     --stacktrace \
                                     ${extraArgs}
                             '';
@@ -184,7 +195,7 @@
 
                     build-plugin = pkgs.writeShellScriptBin "build-plugin" ''
                         PLUGIN=$1
-                        KEEP_RESULT=''${2:-false}
+                        NO_SYMLINK=''${2:-false}
                         
                         if [ -z "$PLUGIN" ]; then
                             echo "Usage: build-plugin <plugin-name> [keep-result]"
@@ -193,7 +204,7 @@
                         
                         nix build .#$PLUGIN-plugin \
                             --print-out-paths \
-                            ''${KEEP_RESULT:+--no-link} \
+                            ''${NO_SYMLINK:+--no-link} \
                     '';
 
                     deploy-plugin = pkgs.writeShellScriptBin "deploy-plugin" ''
