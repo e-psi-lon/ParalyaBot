@@ -66,7 +66,7 @@ suspend fun LG.registerListeners() {
 	event<MessageCreateEvent> {
 		check {
 			inChannel(LgChannelType.INTERVIEW.toId())
-			passIf { event.message.author?.id in botCache.getInterviews() }
+			failIf { event.message.author?.id !in botCache.getInterviews() }
 		}
 		action {
 			botCache.removeInterview(event.message.author!!.id)
@@ -144,7 +144,7 @@ suspend fun LG.registerListeners() {
 	}
 
 	event<PluginReadyEvent> {
-		check { passIf { pluginRef.pluginId == event.pluginId } }
+		check { failIf { pluginRef.pluginId != event.pluginId } }
 		action {
 			if (pluginRef.pluginId == event.pluginId) handleReadyEvent(event.guilds, botConfig, lgConfig)
 		}
