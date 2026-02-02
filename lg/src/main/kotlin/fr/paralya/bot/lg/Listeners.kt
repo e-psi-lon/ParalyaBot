@@ -7,6 +7,7 @@ import dev.kord.core.behavior.channel.TopGuildChannelBehavior
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.core.event.gateway.ReadyEvent
 import dev.kord.core.event.message.*
+import dev.kordex.core.checks.inChannel
 import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
 import dev.kordex.core.utils.toReaction
@@ -53,100 +54,87 @@ suspend fun LG.registerListeners() {
 	val relayService by inject<LgRelayService>()
 
 	event<MessageCreateEvent> {
-		action {
-			val message = event.message
-			when (message.channelId) {
-				LgChannelType.LOUPS_CHAT.toId() ->
-					relayService.onMessageSent(WEBHOOK_PF_NAME,
-						LgChannelType.PETITE_FILLE.toId(), false
-					)
-				LgChannelType.INTERVIEW.toId() -> {
-					if (message.author?.id in botCache.getInterviews()) {
-						botCache.removeInterview(message.author!!.id)
-						(message.channel as TopGuildChannelBehavior)
-							.removeMemberPermission(message.author!!.id, Permission.SendMessages)
-					}
-				}
+		check { inChannel(LgChannelType.LOUPS_CHAT.toId()) }
+		action { relayService.onMessageSent(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId(), true) }
+	}
 
-				LgChannelType.DATE_MYSTERE.toId() ->
-					relayService.onMessageSent(WEBHOOK_CUPIDON_NAME,
-						LgChannelType.CUPIDON.toId(), false
-					)
+	event<MessageCreateEvent> {
+		check { inChannel(LgChannelType.DATE_MYSTERE.toId()) }
+		action { relayService.onMessageSent(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId(), false) }
+	}
 
-				LgChannelType.SUJETS.toId() -> {
-					val reasonText = I18n.System.Topics.creation.contextTranslate()
-					(message.channel as TextChannel).startPublicThreadWithMessage(message.id, message.content.truncate(100)) {
-						reason = reasonText
-					}
-					message.addReactions(
-						"🟢".toReaction(),
-						"🤔".toReaction(),
-						"🔴".toReaction()
-					)
-				}
-			}
+	event<MessageCreateEvent> {
+		check {
+			inChannel(LgChannelType.INTERVIEW.toId())
+			passIf { event.message.author?.id in botCache.getInterviews() }
 		}
+		action {
+			botCache.removeInterview(event.message.author!!.id)
+			(event.message.channel as TopGuildChannelBehavior)
+				.removeMemberPermission(event.message.author!!.id, Permission.SendMessages)
+		}
+	}
 
+	event<MessageCreateEvent> {
+		check { inChannel(LgChannelType.SUJETS.toId()) }
+		action {
+			val reasonText = I18n.System.Topics.creation.contextTranslate()
+			(event.message.channel as TextChannel).startPublicThreadWithMessage(event.message.id, event.message.content.truncate(100)) {
+				reason = reasonText
+			}
+			event.message.addReactions(
+				"🟢".toReaction(),
+				"🤔".toReaction(),
+				"🔴".toReaction()
+			)
+		}
 	}
 
 	event<MessageUpdateEvent> {
-		action {
-			when (event.message.channelId) {
-				LgChannelType.LOUPS_CHAT.toId() ->
-					relayService.onMessageUpdate(WEBHOOK_PF_NAME,
-						LgChannelType.PETITE_FILLE.toId(), false
-					)
-				LgChannelType.DATE_MYSTERE.toId() ->
-					relayService.onMessageUpdate(WEBHOOK_CUPIDON_NAME,
-						LgChannelType.CUPIDON.toId(), false
-					)
-			}
-		}
+		check { inChannel(LgChannelType.LOUPS_CHAT.toId()) }
+		action { relayService.onMessageUpdate(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId(), true) }
+	}
+
+	event<MessageUpdateEvent> {
+		check { inChannel(LgChannelType.DATE_MYSTERE.toId()) }
+		action { relayService.onMessageUpdate(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId(), false) }
 	}
 
 	event<MessageDeleteEvent> {
-		action {
-			when (event.message?.channelId) {
-				LgChannelType.LOUPS_CHAT.toId() ->
-					relayService.onMessageDelete(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId())
-				LgChannelType.DATE_MYSTERE.toId() ->
-					relayService.onMessageDelete(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId())
-				else -> return@action
-			}
-		}
+		check { inChannel(LgChannelType.LOUPS_CHAT.toId()) }
+		action { relayService.onMessageDelete(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId()) }
+	}
+
+	event<MessageDeleteEvent> {
+		check { inChannel(LgChannelType.DATE_MYSTERE.toId()) }
+		action { relayService.onMessageDelete(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId()) }
 	}
 
 	event<ReactionAddEvent> {
-		action {
-			when (event.message.channelId) {
-				LgChannelType.LOUPS_CHAT.toId() ->
-					relayService.onReactionAdd(
-						WEBHOOK_PF_NAME,
-						LgChannelType.PETITE_FILLE.toId(), false
-					)
-				LgChannelType.DATE_MYSTERE.toId() ->
-					relayService.onReactionAdd(
-						WEBHOOK_CUPIDON_NAME,
-						LgChannelType.CUPIDON.toId(), false
-					)
-				else -> return@action
-			}
-		}
+		check { inChannel(LgChannelType.LOUPS_CHAT.toId()) }
+		action { relayService.onReactionAdd(WEBHOOK_PF_NAME,
+			LgChannelType.PETITE_FILLE.toId(), isAnonymous = true
+		) }
+	}
+
+	event<ReactionAddEvent> {
+		check { inChannel(LgChannelType.DATE_MYSTERE.toId()) }
+		action { relayService.onReactionAdd(WEBHOOK_CUPIDON_NAME,
+			LgChannelType.CUPIDON.toId(), isAnonymous = false
+		) }
+	}
+
+	event<ReactionRemoveEvent> {
+		check { inChannel(LgChannelType.LOUPS_CHAT.toId()) }
+		action { relayService.onReactionRemove(WEBHOOK_PF_NAME,
+			LgChannelType.PETITE_FILLE.toId(), isAnonymous = true
+		) }
 	}
 	event<ReactionRemoveEvent> {
-		action {
-			when (event.message.channelId) {
-				LgChannelType.LOUPS_CHAT.toId() ->
-					relayService.onReactionRemove(WEBHOOK_PF_NAME,
-						LgChannelType.PETITE_FILLE.toId(), isAnonymous = false
-					)
-				LgChannelType.DATE_MYSTERE.toId() ->
-					relayService.onReactionRemove(WEBHOOK_CUPIDON_NAME,
-						LgChannelType.CUPIDON.toId(), isAnonymous = false
-					)
-				else -> return@action
-			}
-		}
+		check { inChannel(LgChannelType.DATE_MYSTERE.toId()) }
+		action { relayService.onReactionRemove(WEBHOOK_CUPIDON_NAME,
+			LgChannelType.CUPIDON.toId(), isAnonymous = false
+		) }
 	}
 
 	event<ReadyEvent> {
@@ -156,6 +144,7 @@ suspend fun LG.registerListeners() {
 	}
 
 	event<PluginReadyEvent> {
+		check { passIf { pluginRef.pluginId == event.pluginId } }
 		action {
 			if (pluginRef.pluginId == event.pluginId) handleReadyEvent(event.guilds, botConfig, lgConfig)
 		}
