@@ -7,6 +7,8 @@ import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.event.message.MessageDeleteEvent
 import dev.kord.core.event.message.MessageUpdateEvent
 import dev.kord.rest.builder.message.embed
+import dev.kordex.core.checks.isNotBot
+import dev.kordex.core.checks.noGuild
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.converters.ChoiceEnum
 import dev.kordex.core.commands.application.slash.converters.impl.defaultingEnumChoice
@@ -51,46 +53,49 @@ class Base : Extension() {
 		}
 
 		event<MessageCreateEvent> {
+			check {
+				noGuild()
+				isNotBot()
+				failIf { message?.isNotEmpty() == false }
+			}
 			action {
 				val message = event.message
-
-				if (message.getGuildOrNull() == null && message.author?.isSelf != true && message.content.isNotEmpty()) {
-					sendAsWebhook(
-						bot,
-						dmChannelId,
-						message.author?.tag ?: "Inconnu",
-						message.author?.avatar?.cdnUrl?.toUrl(),
-						"DM"
-					) {
-						content = message.content
-						if (message.referencedMessage != null) embed {
-							title = I18n.Transmission.Reference.title.contextTranslate()
-							description = message.referencedMessage!!.content
-						}
+				sendAsWebhook(
+					bot,
+					dmChannelId,
+					message.author?.tag ?: "Inconnu",
+					message.author?.avatar?.cdnUrl?.toUrl(),
+					"DM"
+				) {
+					content = message.content
+					if (message.referencedMessage != null) embed {
+						title = I18n.Transmission.Reference.title.contextTranslate()
+						description = message.referencedMessage!!.content
 					}
 				}
-
 			}
 		}
 		event<MessageUpdateEvent> {
-			action {
-				if (event.old?.getGuildOrNull() == null && event.old?.author?.isSelf != true) {
-					val oldMessage =
-						event.old?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
+			check {
+				noGuild()
+				isNotBot()
+			}
 
-					if (oldMessage != null) {
-						sendAsWebhook(
-							bot,
-							dmChannelId,
-							event.new.author.value?.asUser(kord)?.tag ?: "Inconnu",
-							event.new.author.value.asUser(kord)?.avatar?.cdnUrl?.toUrl(),
-							"DM"
-						) {
-							content = event.new.content.toString()
-							embed {
-								title = I18n.Transmission.Update.title.contextTranslate()
-								description = event.new.content.toString()
-							}
+			action {
+				val oldMessage =
+					event.old?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
+				if (oldMessage != null) {
+					sendAsWebhook(
+						bot,
+						dmChannelId,
+						event.new.author.value?.asUser(kord)?.tag ?: "Inconnu",
+						event.new.author.value.asUser(kord)?.avatar?.cdnUrl?.toUrl(),
+						"DM"
+					) {
+						content = event.new.content.toString()
+						embed {
+							title = I18n.Transmission.Update.title.contextTranslate()
+							description = event.new.content.toString()
 						}
 					}
 				}
@@ -98,16 +103,17 @@ class Base : Extension() {
 		}
 
 		event<MessageDeleteEvent> {
+			check {
+				noGuild()
+				isNotBot()
+				failIf { event.message != null }
+			}
 			action {
-				if (event.getGuildOrNull() == null && event.message?.author?.isSelf != true) {
-					val oldMessage =
-						event.message?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
-
-					if (oldMessage != null && event.message != null) {
-						val webhook = getWebhook(dmChannelId, bot, "DM")
-						webhook.deleteMessage(webhook.token!!, event.message!!.id)
-					}
-
+				val oldMessage =
+					event.message?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
+				if (oldMessage != null) {
+					val webhook = getWebhook(dmChannelId, bot, "DM")
+					webhook.deleteMessage(webhook.token!!, oldMessage.id)
 				}
 			}
 		}

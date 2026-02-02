@@ -94,7 +94,7 @@
                             version = version;
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-auwafWBi49nycWOm2DFEsp4PJD5szJpvexIIUmKA4gU=";
+                            outputHash = "sha256-ewa8Oiz5FMaU5jwl4Avzx62CQ/iGcK8wQ+qtI1EZUbc=";
                         };
 
                     lg-plugin = 
