@@ -69,7 +69,9 @@
                                 export TZ=UTC
                                 export LANG=C.UTF-8
                                 export LC_ALL=C.UTF-8
-                                export SOURCE_DATE_EPOCH=0
+                                export SOURCE_DATE_EPOCH=1730143059
+                                export JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF8 -Djava.properties.date=$(date -u +"%Y-%m-%dT%H:%M:%SZ" -d "@$SOURCE_DATE_EPOCH")"
+
 
                                 gradle ${task} \
                                     --no-daemon \
@@ -94,7 +96,7 @@
                             version = version;
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-ewa8Oiz5FMaU5jwl4Avzx62CQ/iGcK8wQ+qtI1EZUbc=";
+                            outputHash = "sha256-TrsOk0Y32DM4p5WguH2swxwf9L9HALOTip6oSWCEylU=";
                         };
 
                     lg-plugin = 
