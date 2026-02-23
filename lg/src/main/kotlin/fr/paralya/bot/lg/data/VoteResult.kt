@@ -2,11 +2,13 @@ package fr.paralya.bot.lg.data
 
 import dev.kord.common.entity.Snowflake
 
-sealed class VoteResult {
-	data object NoVotes : VoteResult()
-	data class Tie(val players: List<Snowflake>) : VoteResult() {
+sealed interface VoteResult {
+	data object NoVotes : VoteResult
+	@JvmInline
+    value class Tie(val players: List<Snowflake>) : VoteResult {
 		fun toList() = players
 	}
 
-	data class Killed(val player: Snowflake) : VoteResult()
+	@JvmInline
+    value class Killed(val player: Snowflake) : VoteResult
 }
