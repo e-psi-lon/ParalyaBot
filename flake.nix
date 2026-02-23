@@ -9,6 +9,7 @@
         let
             system = "x86_64-linux";
             pkgs = nixpkgs.legacyPackages.${system};
+            lib = pkgs.lib;
 
 
             lastCommitAsTimestamp = let
@@ -21,8 +22,8 @@
                 second = builtins.substring 12 2 d;
             in "${year}-${month}-${day}T${hour}:${minute}:${second}Z";
         in {
-            packages.${system} = 
-                let 
+            packages.${system} =
+                let
                     parseProperties = path: let
                         lines = pkgs.lib.splitString "\n" (builtins.readFile path);
                         toPair = line: let
@@ -34,8 +35,8 @@
                     in builtins.listToAttrs (builtins.filter (x: x != null) (map toPair lines));
 
                     gradleProperties = parseProperties ./gradle.properties;
-                    extractVersion = propertyName: 
-                        if builtins.hasAttr propertyName gradleProperties 
+                    extractVersion = propertyName:
+                        if builtins.hasAttr propertyName gradleProperties
                         then gradleProperties.${propertyName}
                         else throw "Property ${propertyName} not found";
 
@@ -73,7 +74,7 @@
                                 export JAVA_TOOL_OPTIONS="-Dfile.encoding=UTF8 -Djava.properties.date=$(date -u +"%Y-%m-%dT%H:%M:%SZ" -d "@$SOURCE_DATE_EPOCH")"
 
 
-                                gradle ${task} \
+                                ${lib.getExe gradle-wrapper} ${task} \
                                     --no-daemon \
                                     --no-configuration-cache \
                                     --console=plain \
@@ -87,7 +88,7 @@
                             '';
                         };
                 in {
-                    paralyabot-jar = 
+                    paralyabot-jar =
                         let
                             version = extractVersion "paralyabot.version";
                         in
@@ -99,7 +100,7 @@
                             outputHash = "sha256-TrsOk0Y32DM4p5WguH2swxwf9L9HALOTip6oSWCEylU=";
                         };
 
-                    lg-plugin = 
+                    lg-plugin =
                         let
                             version = extractPluginVersion "lg";
                         in
@@ -112,7 +113,7 @@
                             outputHash = "sha256-ilVClqaW66m/fROj6MEOsUlVGYa177NnAMnCWPwWFWA=";
                         };
 
-                    sta-plugin = 
+                    sta-plugin =
                         let
                             version = extractPluginVersion "sta";
                         in
@@ -125,8 +126,8 @@
                             outputHash = "sha256-NrxEpEzwQvUUwtMtwKfLPyULVqNuniYfyajfyVQcOsE=";
                         };
 
-                    paralyabot-image = 
-                        let 
+                    paralyabot-image =
+                        let
                             headlessJdk = pkgs.jdk21.override {
                                 headless = true;
                                 enableGtk = false;
@@ -142,19 +143,19 @@
                             name = "paralyabot";
                             tag = "latest";
                             created = lastCommitAsTimestamp;
-                            
+
                             contents = [
                                 jre21
                                 pkgs.cacert
                             ];
-                            
+
                             extraCommands = ''
                                 mkdir -p app/config app/plugins
                                 cp ${self.packages.${system}.paralyabot-jar}/paralyabot.jar app/paralyabot.jar
                             '';
-                            
+
                             config = {
-                                Entrypoint = [ "${jre21}/bin/java" "-jar" "/app/paralyabot.jar" ];
+                                Entrypoint = [ (lib.getExe jre21) "-jar" "/app/paralyabot.jar" ];
                                 WorkingDir = "/app";
                                 Env = [
                                     "PARALYA_BOT_CONFIG_FILE=/app/external/config.conf"
@@ -164,13 +165,13 @@
                                     "/app/external" = {};
                                 };
                             };
-                            
+
                             maxLayers = 25;
                         };
                 };
 
             devShells.${system}.default =
-                let 
+                let
                     build-bot = pkgs.writeShellScriptBin "build-bot" ''
                         IMAGE_PATH=$(nix build .#paralyabot-image --print-out-paths)
                         if [ -n "$IMAGE_PATH" ]; then
@@ -191,18 +192,18 @@
                     '';
 
                     build-and-run-bot = pkgs.writeShellScriptBin "build-and-run-bot" ''
-                        ${build-bot}/bin/build-bot && ${run-bot}/bin/run-bot ''${1:-ParalyaBot}
+                        ${lib.getExe build-bot} && ${lib.getExe run-bot} ''${1:-ParalyaBot}
                     '';
 
                     build-plugin = pkgs.writeShellScriptBin "build-plugin" ''
                         PLUGIN=$1
                         NO_SYMLINK=''${2:-false}
-                        
+
                         if [ -z "$PLUGIN" ]; then
                             echo "Usage: build-plugin <plugin-name> [keep-result]"
                             exit 1
                         fi
-                        
+
                         nix build .#$PLUGIN-plugin \
                             --print-out-paths \
                             ''${NO_SYMLINK:+--no-link} \
@@ -216,11 +217,11 @@
                         fi
 
                         echo "Building $PLUGIN-plugin..."
-                        OUT_PATH=$(${build-plugin}/bin/build-plugin "$PLUGIN" true)
-                        
+                        OUT_PATH=$(${lib.getExe build-plugin}"$PLUGIN" true)
+
                         PLUGIN_DIR="$PWD/container/plugins"
                         mkdir -p "$PLUGIN_DIR"
-                        
+
                         cp -f "$OUT_PATH"/*.zip "$PLUGIN_DIR/"
 
                         for zip in "$OUT_PATH"/*.zip; do
@@ -230,7 +231,7 @@
                                 rm -rf "$PLUGIN_DIR/$DIRNAME"
                             fi
                         done
-                        
+
                         echo "$PLUGIN deployed successfully."
                     '';
 
