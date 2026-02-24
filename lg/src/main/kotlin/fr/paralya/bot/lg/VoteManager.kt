@@ -9,9 +9,12 @@ import fr.paralya.bot.common.cache.putSerialized
 import fr.paralya.bot.common.cache.querySerialized
 import fr.paralya.bot.common.cache.updateSerialized
 import fr.paralya.bot.common.snowflake
-import fr.paralya.bot.lg.data.*
 import fr.paralya.bot.lg.data.GamePhase.PhaseType
 import fr.paralya.bot.lg.data.Target
+import fr.paralya.bot.lg.data.VoteData
+import fr.paralya.bot.lg.data.VoteResult
+import fr.paralya.bot.lg.data.Voter
+import fr.paralya.bot.lg.data.getGameData
 import kotlinx.coroutines.sync.Mutex
 import org.koin.core.component.inject
 

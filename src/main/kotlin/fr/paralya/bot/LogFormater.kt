@@ -9,12 +9,15 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.LinkedHashMap
 
+private const val CACHE_SIZE = 100
+
 class LogFormater : LayoutWrappingEncoder<ILoggingEvent>() {
 	init {
 		layout = object : LayoutBase<ILoggingEvent>() {
 			private val format = "[%d{dd/MM/yyyy HH:mm:ss}] %highlight(%-5level) [%logger] - %msg%ex\n"
 			private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
-			override fun doLayout(event: ILoggingEvent) = buildString(format.length + 100) {
+
+			override fun doLayout(event: ILoggingEvent) = @Suppress("MagicNumber") buildString(format.length + 100) {
 				append("[")
 				append(dateFormat.format(Date(event.timeStamp)))
 				append("] ")
@@ -29,15 +32,17 @@ class LogFormater : LayoutWrappingEncoder<ILoggingEvent>() {
 
 
 			private val loggerNameCache = object : LinkedHashMap<String, String>() {
-				override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?) = size > 100
+				override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, String>?) = size > CACHE_SIZE
 			}
 			private fun formatLoggerName(log: ILoggingEvent): String {
 				val loggerName = log.loggerName
 				if (log.level.isGreaterOrEqual(Level.ERROR)) return loggerName
 
 				return loggerNameCache.getOrPut(loggerName) {
+					@Suppress("MagicNumber")
 					if (loggerName.length < 20) return@getOrPut loggerName
 					val parts = loggerName.split(".")
+					@Suppress("MagicNumber")
 					if (parts.size <= 2) loggerName else parts.last()
 				}
 			}
@@ -58,7 +63,7 @@ class LogFormater : LayoutWrappingEncoder<ILoggingEvent>() {
 			 * @param throwableProxy The throwable proxy to format.
 			 * @return The formatted stack trace.
 			 */
-			private fun formatException(throwableProxy: IThrowableProxy) = buildString(256) {
+			private fun formatException(throwableProxy: IThrowableProxy) = @Suppress("MagicNumber") buildString(256) {
 				append("\n\t").append(throwableProxy.className)
 				if (throwableProxy.message != null)
 					append(": ").append(throwableProxy.message)

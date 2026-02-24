@@ -14,9 +14,12 @@ import dev.kord.rest.builder.message.create.WebhookMessageCreateBuilder
 import dev.kord.rest.request.RestRequestException
 import dev.kordex.core.ExtensibleBot
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.ExperimentalTime
@@ -76,6 +79,7 @@ fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
 	return attachments1 == attachments2
 }
 
+const val MESSAGE_SEARCH_RANGE = 20
 /**
  * Retrieves the corresponding message in the channel based on the timestamp of the provided message.
  *
@@ -86,14 +90,14 @@ fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
 suspend fun MessageChannelBehavior.getCorrespondingMessage(message: Message): Message? {
 	val date = message.timestamp
 
-	val beforeMessage = getMessagesBefore(Snowflake.max, 20)
+	val beforeMessage = getMessagesBefore(Snowflake.max, MESSAGE_SEARCH_RANGE)
 		.filter { it.timestamp >= date }
 		.toList()
 		.sortedBy { it.timestamp }
 		.firstOrNull { areMessagesSimilar(message, it) }
 
 	if (beforeMessage != null) return beforeMessage
-	return getMessagesAfter(Snowflake.min, 20)
+	return getMessagesAfter(Snowflake.min, MESSAGE_SEARCH_RANGE)
 		.filter { it.timestamp <= date }
 		.toList()
 		.sortedByDescending { it.timestamp }

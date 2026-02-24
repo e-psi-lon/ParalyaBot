@@ -1,6 +1,7 @@
 package fr.paralya.bot.common.config
 
 import com.typesafe.config.Config
+import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.utils.loadModule
@@ -8,10 +9,12 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import io.konform.validation.Validation
 import io.konform.validation.ValidationResult
 import io.konform.validation.onEach
-import kotlinx.serialization.*
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.hocon.Hocon
 import kotlinx.serialization.hocon.decodeFromConfig
-import org.koin.core.context.unloadKoinModules
+import kotlinx.serialization.serializer
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.withOptions
 import org.koin.core.qualifier.named
@@ -62,8 +65,13 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 
 		try {
 			config = ConfigFactory.parseFile(configFile.toFile())
-		} catch (e: Exception) {
-			logger.error(e) { "Failed to load config file" }
+		} catch (e: ConfigException) {
+			if (::config.isInitialized) logger.warn(e) {
+				"Failed to reload config file, keeping previous configuration"
+			} else {
+				logger.error(e) { "Failed to load config file on startup, cannot continue" }
+				throw e
+			}
 		}
 	}
 

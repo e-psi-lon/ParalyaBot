@@ -25,6 +25,7 @@ interface ValidatedConfig {
  * For more information, see the [Discord Snowflake](https://discord.com/developers/docs/reference#snowflakes)
  * documentation.
  */
+@Suppress("MagicNumber")
 fun ValidationBuilder<ULong>.appearsToBeSnowflake(displayName: String) =
 	constrain("$displayName must be a valid Discord snowflake and it appears not to be") {
 		it > (1UL shl 21) && it < ULong.MAX_VALUE

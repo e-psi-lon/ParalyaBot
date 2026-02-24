@@ -117,7 +117,12 @@ private fun formatEmbed(embed: Embed): String {
 }
 
 @OptIn(ExperimentalTime::class)
-suspend fun FollowupMessageCreateBuilder.addHtmlExport(channel: MessageChannelBehavior, guild: GuildBehavior?, messages: Flow<Message>, arguments: Base.ExportArguments) {
+suspend fun FollowupMessageCreateBuilder.addHtmlExport(
+    channel: MessageChannelBehavior,
+    guild: GuildBehavior?,
+    messages: Flow<Message>,
+    arguments: Base.ExportArguments
+) {
     val css = getResource("style.css").decodeToString()
     val icons = getResource("icons.svg").decodeToString()
     val guildName = guild?.asGuildOrNull()?.name ?: "Pas de nom de serveur"

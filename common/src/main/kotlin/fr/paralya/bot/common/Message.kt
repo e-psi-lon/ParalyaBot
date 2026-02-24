@@ -4,7 +4,7 @@ import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.i18n.Key
 import fr.paralya.bot.common.I18n.Modal
 
-
+const val MAX_MESSAGE_LENGTH = 2000
 /**
  * Message is a modal form used to ask for input from the user.
  *
@@ -20,6 +20,6 @@ open class Message : ModalForm() {
 	val message = paragraphText {
 		label = Modal.Message.label
 		placeholder = Modal.Message.placeholder
-		maxLength = 2000
+		maxLength = MAX_MESSAGE_LENGTH
 	}
 }

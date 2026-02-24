@@ -27,5 +27,6 @@ suspend fun Member.swapRoles(
 	removeRole(removeRoleId, reason)
 }
 
+@Suppress("MagicNumber")
 fun String.truncate(maxLength: Int): String =
 	if (length <= maxLength) this else take(maxLength - 3) + "..."

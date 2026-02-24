@@ -10,7 +10,7 @@ class CustomValidationRulesTest {
 
 	companion object {
 		// Fixed Discord snowflakes for testing
-		private val snowflake = 661720242585600000UL  // 01/01/2020
+		private const val SNOWFLAKE = 661720242585600000UL  // 01/01/2020
 	}
 	data class StringConfig(val value: String = "") : ValidatedConfig {
 		override fun validate(): ValidationResult<ValidatedConfig> {
@@ -80,7 +80,7 @@ class CustomValidationRulesTest {
 
 	@Test
 	fun `appearsToBeSnowflake validates valid Discord snowflake`() {
-		val config = SnowflakeConfig(id = snowflake)
+		val config = SnowflakeConfig(id = SNOWFLAKE)
 		assertTrue(config.validate().isValid)
 	}
 
@@ -96,7 +96,7 @@ class CustomValidationRulesTest {
 			value = "test",
 			count = 10,
 			items = listOf("item1", "item2"),
-			snowflakeId = snowflake
+			snowflakeId = SNOWFLAKE
 		)
 		assertTrue(config.validate().isValid)
 	}

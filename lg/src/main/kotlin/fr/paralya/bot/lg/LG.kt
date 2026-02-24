@@ -17,9 +17,16 @@ import dev.kordex.core.extensions.ExtensionState
 import dev.kordex.core.extensions.publicSlashCommand
 import dev.kordex.core.utils.dm
 import dev.kordex.core.utils.hasRole
-import fr.paralya.bot.common.*
 import fr.paralya.bot.common.I18n.Messages
-import fr.paralya.bot.lg.data.*
+import fr.paralya.bot.common.adminOnly
+import fr.paralya.bot.common.contextTranslate
+import fr.paralya.bot.common.getAsset
+import fr.paralya.bot.common.sendAsWebhook
+import fr.paralya.bot.common.snowflake
+import fr.paralya.bot.common.Message
+import fr.paralya.bot.lg.data.LgChannelType
+import fr.paralya.bot.lg.data.LgConfig
+import fr.paralya.bot.lg.data.getGameData
 import fr.paralya.bot.lg.I18n as Lg
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.TimeoutCancellationException
@@ -47,6 +54,7 @@ class LG : Extension() {
 	// TODO: Add this to a parent class to avoid repetition with other extensions
 	override suspend fun setState(state: ExtensionState) {
 		try {
+			@Suppress("MagicNumber")
 			withTimeout(1000) {
 				super.setState(state)
 			}

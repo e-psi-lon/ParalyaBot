@@ -25,5 +25,6 @@ enum class LgChannelType {
 	LOUPS_VOTE;
 
 	context(extension: Extension)
-    internal suspend fun toId() = extension.kord.cache.getChannelId(this) ?: throw CacheException("Channel ID for $this not found in cache", this.name)
+    internal suspend fun toId() = extension.kord.cache.getChannelId(this) ?:
+		throw CacheException("Channel ID for $this not found in cache", this.name)
 }

@@ -15,10 +15,10 @@ class AdminTest {
 
 	companion object {
 		// Fixed Discord snowflakes for testing
-		private val snowflake1 = 661720242585600000UL  // 01/01/2020
-		private val snowflake2 = 794354201395200000UL  // 01/01/2021
-		private val snowflake3 = 926625772339200000UL  // 01/01/2022
-		private val snowflake4 = 1058897343283200000UL // 01/01/2023
+		private const val SNOWFLAKE1 = 661720242585600000UL  // 01/01/2020
+		private const val SNOWFLAKE2 = 794354201395200000UL  // 01/01/2021
+		private const val SNOWFLAKE3 = 926625772339200000UL  // 01/01/2022
+		private const val SNOWFLAKE4 = 1058897343283200000UL // 01/01/2023
 	}
 
 	@AfterEach
@@ -31,12 +31,12 @@ class AdminTest {
 		// Arrange
 		val config = BotConfig(
 			token = "token",
-			admins = listOf(snowflake1, snowflake2),
-			dmLogChannelId = snowflake3,
-			paralyaId = snowflake4
+			admins = listOf(SNOWFLAKE1, SNOWFLAKE2),
+			dmLogChannelId = SNOWFLAKE3,
+			paralyaId = SNOWFLAKE4
 		)
 		val user = mockk<User> {
-			every { id } returns snowflake1.snowflake
+			every { id } returns SNOWFLAKE1.snowflake
 		}
 
 		// Act
@@ -51,12 +51,12 @@ class AdminTest {
 		// Arrange
 		val config = BotConfig(
 			token = "token",
-			admins = listOf(snowflake1),
-			dmLogChannelId = snowflake2,
-			paralyaId = snowflake3
+			admins = listOf(SNOWFLAKE1),
+			dmLogChannelId = SNOWFLAKE2,
+			paralyaId = SNOWFLAKE3
 		)
 		val user = mockk<User> {
-			every { id } returns snowflake4.snowflake
+			every { id } returns SNOWFLAKE4.snowflake
 		}
 
 		// Act
@@ -71,9 +71,9 @@ class AdminTest {
 		// Arrange
 		val config = BotConfig(
 			token = "token",
-			admins = listOf(snowflake1),
-			dmLogChannelId = snowflake2,
-			paralyaId = snowflake3
+			admins = listOf(SNOWFLAKE1),
+			dmLogChannelId = SNOWFLAKE2,
+			paralyaId = SNOWFLAKE3
 		)
 		val user: User? = null
 
@@ -89,12 +89,12 @@ class AdminTest {
 		// Arrange
 		val config = BotConfig(
 			token = "token",
-			admins = listOf(snowflake1, snowflake2),
-			dmLogChannelId = snowflake3,
-			paralyaId = snowflake4
+			admins = listOf(SNOWFLAKE1, SNOWFLAKE2),
+			dmLogChannelId = SNOWFLAKE3,
+			paralyaId = SNOWFLAKE4
 		)
 		val member = mockk<Member> {
-			every { id } returns snowflake2.snowflake
+			every { id } returns SNOWFLAKE2.snowflake
 		}
 
 		// Act
@@ -109,12 +109,12 @@ class AdminTest {
 		// Arrange
 		val config = BotConfig(
 			token = "token",
-			admins = listOf(snowflake1),
-			dmLogChannelId = snowflake2,
-			paralyaId = snowflake3
+			admins = listOf(SNOWFLAKE1),
+			dmLogChannelId = SNOWFLAKE2,
+			paralyaId = SNOWFLAKE3
 		)
 		val member = mockk<Member> {
-			every { id } returns snowflake4.snowflake
+			every { id } returns SNOWFLAKE4.snowflake
 		}
 
 		// Act
@@ -129,9 +129,9 @@ class AdminTest {
 		// Arrange
 		val config = BotConfig(
 			token = "token",
-			admins = listOf(snowflake1),
-			dmLogChannelId = snowflake2,
-			paralyaId = snowflake3
+			admins = listOf(SNOWFLAKE1),
+			dmLogChannelId = SNOWFLAKE2,
+			paralyaId = SNOWFLAKE3
 		)
 		val member: Member? = null
 
@@ -147,12 +147,12 @@ class AdminTest {
 		// Arrange
 		val config = BotConfig(
 			token = "token",
-			admins = listOf(snowflake1, snowflake2, snowflake3, snowflake4),
-			dmLogChannelId = snowflake1,
-			paralyaId = snowflake2
+			admins = listOf(SNOWFLAKE1, SNOWFLAKE2, SNOWFLAKE3, SNOWFLAKE4),
+			dmLogChannelId = SNOWFLAKE1,
+			paralyaId = SNOWFLAKE2
 		)
 		val user = mockk<User> {
-			every { id } returns snowflake3.snowflake
+			every { id } returns SNOWFLAKE3.snowflake
 		}
 
 		// Act
@@ -167,12 +167,12 @@ class AdminTest {
 		// Arrange
 		val config = BotConfig(
 			token = "token",
-			admins = listOf(snowflake1),
-			dmLogChannelId = snowflake2,
-			paralyaId = snowflake3
+			admins = listOf(SNOWFLAKE1),
+			dmLogChannelId = SNOWFLAKE2,
+			paralyaId = SNOWFLAKE3
 		)
 		val user = mockk<User> {
-			every { id } returns (snowflake1 - 1UL).snowflake // Off by one
+			every { id } returns (SNOWFLAKE1 - 1UL).snowflake // Off by one
 		}
 
 		// Act

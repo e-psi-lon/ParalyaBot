@@ -7,10 +7,10 @@ import kotlin.test.assertTrue
 class BotConfigTest {
 	companion object {
 		// Fixed Discord snowflakes for testing
-		private val snowflake1 = 661720242585600000UL // 01/01/2020
-		private val snowflake2 = 794354201395200000UL // 01/01/2021
-		private val snowflake3 = 926625772339200000UL // 01/01/2022
-		private val snowflake4 = 1058897343283200000UL // 01/01/2023
+		private const val SNOWFLAKE1 = 661720242585600000UL // 01/01/2020
+		private const val SNOWFLAKE2 = 794354201395200000UL // 01/01/2021
+		private const val SNOWFLAKE3 = 926625772339200000UL // 01/01/2022
+		private const val SNOWFLAKE4 = 1058897343283200000UL // 01/01/2023
 	}
 
 	@Test
@@ -18,9 +18,9 @@ class BotConfigTest {
 		// Arrange
 		val config = BotConfig(
 			token = "valid-token",
-			admins = listOf(snowflake1),
-			dmLogChannelId = snowflake2,
-			paralyaId = snowflake3
+			admins = listOf(SNOWFLAKE1),
+			dmLogChannelId = SNOWFLAKE2,
+			paralyaId = SNOWFLAKE3
 		)
 
 		// Act
@@ -35,9 +35,9 @@ class BotConfigTest {
 		// Arrange
 		val config = BotConfig(
 			token = "",
-			admins = listOf(snowflake1),
-			dmLogChannelId = snowflake2,
-			paralyaId = snowflake3
+			admins = listOf(SNOWFLAKE1),
+			dmLogChannelId = SNOWFLAKE2,
+			paralyaId = SNOWFLAKE3
 		)
 
 		// Act
@@ -53,8 +53,8 @@ class BotConfigTest {
 		val config = BotConfig(
 			token = "valid-token",
 			admins = emptyList(),
-			dmLogChannelId = snowflake2,
-			paralyaId = snowflake3
+			dmLogChannelId = SNOWFLAKE2,
+			paralyaId = SNOWFLAKE3
 		)
 
 		// Act
@@ -69,9 +69,9 @@ class BotConfigTest {
 		// Arrange
 		val config = BotConfig(
 			token = "valid-token",
-			admins = listOf(snowflake1, snowflake2, snowflake3),
-			dmLogChannelId = snowflake4,
-			paralyaId = snowflake4
+			admins = listOf(SNOWFLAKE1, SNOWFLAKE2, SNOWFLAKE3),
+			dmLogChannelId = SNOWFLAKE4,
+			paralyaId = SNOWFLAKE4
 		)
 
 		// Act

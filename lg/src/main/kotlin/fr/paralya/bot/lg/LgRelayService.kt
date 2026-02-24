@@ -39,7 +39,8 @@ class LgRelayService : KordExKoinComponent {
     private val botCache by lazy { lg.botCache }
     private val bot by lazy { lg.bot }
 
-    fun User?.shouldIgnore(botConfig: BotConfig) = this.isAdmin(botConfig) || this?.isBot == true || this?.isSelf == true
+    fun User?.shouldIgnore(botConfig: BotConfig) =
+        this.isAdmin(botConfig) || this?.isBot == true || this?.isSelf == true
 
     context(context: EventContext<MessageCreateEvent>)
     suspend fun onMessageSent(
@@ -66,7 +67,7 @@ class LgRelayService : KordExKoinComponent {
 
         logger.debug { "Message sender is ${message.author?.id?.value}" }
         val (userName, userAvatar) = getMessageIdentity(message.author, isAnonymous, true)
-        logger.debug { "Avatar is $userName and name is $userAvatar" }
+        logger.debug { "Avatar is $userAvatar and name is $userName" }
         val content = buildRelayContent(message)
         if (isAnonymous) sendAsWebhook(
             bot,
@@ -94,7 +95,9 @@ class LgRelayService : KordExKoinComponent {
         val botConfig by this.inject<BotConfig>()
         val event = context.event
         if (event.message?.author.shouldIgnore(botConfig)) return
-        val oldMessage = outChannel?.let { MessageChannelBehavior(outChannel, bot.kordRef).getCorrespondingMessage(event.message!!) }
+        val oldMessage = outChannel?.let {
+            MessageChannelBehavior(outChannel, bot.kordRef).getCorrespondingMessage(event.message!!)
+        }
         if (oldMessage != null) {
             val webhook = getWebhook(outChannel, bot, webhookName)
             try {
@@ -131,7 +134,7 @@ class LgRelayService : KordExKoinComponent {
             } catch (_: Exception) {
                 logger.debug { "Message sender is ${event.old?.author?.id?.value}" }
                 val (userName, userAvatar) = getMessageIdentity(event.old?.author, isAnonymous)
-                logger.debug { "Avatar is $userName and name is $userAvatar" }
+                logger.debug { "Avatar is $userAvatar and name is $userName" }
                 val content = buildRelayContent(newMessage) {
                     embed {
                         title = Lg.Transmission.Update.title.contextTranslate()

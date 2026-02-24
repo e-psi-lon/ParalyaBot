@@ -6,16 +6,27 @@ import dev.kord.core.behavior.GuildBehavior
 import dev.kord.core.behavior.channel.TopGuildChannelBehavior
 import dev.kord.core.entity.channel.TextChannel
 import dev.kord.core.event.gateway.ReadyEvent
-import dev.kord.core.event.message.*
+import dev.kord.core.event.message.MessageCreateEvent
+import dev.kord.core.event.message.MessageDeleteEvent
+import dev.kord.core.event.message.MessageUpdateEvent
+import dev.kord.core.event.message.ReactionAddEvent
+import dev.kord.core.event.message.ReactionRemoveEvent
 import dev.kordex.core.checks.inChannel
 import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
 import dev.kordex.core.utils.toReaction
-import fr.paralya.bot.common.*
+import fr.paralya.bot.common.addReactions
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.config.BotConfig
+import fr.paralya.bot.common.contextTranslate
 import fr.paralya.bot.common.plugins.PluginReadyEvent
-import fr.paralya.bot.lg.data.*
+import fr.paralya.bot.common.removeMemberPermission
+import fr.paralya.bot.common.snowflake
+import fr.paralya.bot.lg.data.LgChannelType
+import fr.paralya.bot.lg.data.LgConfig
+import fr.paralya.bot.lg.data.getInterviews
+import fr.paralya.bot.lg.data.registerChannel
+import fr.paralya.bot.lg.data.removeInterview
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -146,7 +157,7 @@ suspend fun LG.registerListeners() {
 	event<PluginReadyEvent> {
 		check { failIf { pluginRef.pluginId != event.pluginId } }
 		action {
-			if (pluginRef.pluginId == event.pluginId) handleReadyEvent(event.guilds, botConfig, lgConfig)
+			handleReadyEvent(event.guilds, botConfig, lgConfig)
 		}
 	}
 }

@@ -52,8 +52,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 	// We need to define a first instance of ConfigManager to access the bot token.
 	// Then the bot will be configured, and the ConfigManager will be replaced by the one defined in the Koin module
 	val firstConfigManager = ConfigManager()
-	val token = firstConfigManager.botConfig.token
-	val bot = ExtensibleBot(token) {
+	return ExtensibleBot(firstConfigManager.botConfig.token) {
 		val logger = KotlinLogging.logger("ParalyaBot")
 		devMode = if (!devMode) args.contains("--dev") else true
 		configureLogging(devMode)
@@ -98,6 +97,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 			embed {
 				title = I18n.Error.title.translateLocale(locale)
 				description = I18n.Error.description.translateLocale(locale, message, type.error::class.simpleName)
+				@Suppress("MagicNumber")
 				color = Color(0xFF0000)
 			}
 		}
@@ -117,5 +117,4 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 			}
 		}
 	}
-	return bot
 }
