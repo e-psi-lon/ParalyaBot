@@ -174,7 +174,7 @@ class LG : Extension() {
 	 *
 	 * @property role The role to notify.
 	 */
-	inner class NotifArguments : Arguments() {
+	class NotifArguments : Arguments() {
 		val role by role {
 			name = Lg.Notif.Argument.Role.name
 			description = Lg.Notif.Argument.Role.description
@@ -186,14 +186,14 @@ class LG : Extension() {
 	 *
 	 * @property user The user to be interviewed.
 	 */
-	inner class InterviewArguments : Arguments() {
+	class InterviewArguments : Arguments() {
 		val user by user {
 			name = Lg.Interview.Argument.User.name
 			description = Lg.Interview.Argument.User.description
 		}
 	}
 
-	inner class EndDayArguments : Arguments() {
+	class EndDayArguments : Arguments() {
 		val hour by string {
 			name = Lg.EndDay.Argument.Hour.name
 			description = Lg.EndDay.Argument.Hour.description
@@ -205,7 +205,7 @@ class LG : Extension() {
 		}
 	}
 
-    inner class KillArguments : Arguments() {
+    class KillArguments : Arguments() {
         val target by user {
             name = Lg.Kill.Argument.Target.name
             description = Lg.Kill.Argument.Target.description

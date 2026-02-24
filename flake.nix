@@ -97,7 +97,7 @@
                             version = version;
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-TrsOk0Y32DM4p5WguH2swxwf9L9HALOTip6oSWCEylU=";
+                            outputHash = "sha256-ZOnjFQNxOTfNfCzjbwT/fTIYN5kEpQaFMlJC0U2W/lU=";
                         };
 
                     lg-plugin =
@@ -110,7 +110,7 @@
                             output = "lg/build/distributions/lg-${version}.zip";
                             name = "lg-plugin-${version}";
                             extension = "zip";
-                            outputHash = "sha256-ilVClqaW66m/fROj6MEOsUlVGYa177NnAMnCWPwWFWA=";
+                            outputHash = "sha256-tZb0u8/eSiCtK+4nyLXwoOAoiUGX1V1PQK9JeTWqc/A=";
                         };
 
                     sta-plugin =
@@ -123,7 +123,7 @@
                             output = "sta/build/distributions/sta-${version}.zip";
                             name = "sta-plugin-${version}";
                             extension = "zip";
-                            outputHash = "sha256-NrxEpEzwQvUUwtMtwKfLPyULVqNuniYfyajfyVQcOsE=";
+                            outputHash = "sha256-ldka+45f/2+di/DHmsv4poVpZWpnVY+s0VPiv/KLWsQ=";
                         };
 
                     paralyabot-image =
