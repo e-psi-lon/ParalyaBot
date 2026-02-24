@@ -97,16 +97,26 @@ abstract class Plugin: KordExPlugin() {
         getKoin().unloadModules(components)
     }
 
-    protected inline fun <reified T : ValidatedConfig>define() = register<T>(key).also { configDefined = true }
-
-    private fun executeDefine() {
-        defineConfig()
-        if (!configDefined) throw PluginConfigurationException(
-            "Config for plugin $name not defined. Please call define<T>() in your plugin's defineConfig() method."
-        )
+    protected inline fun <reified T : ValidatedConfig> define() {
+        // This function is seemingly doing a lot of work, but
+        // It is necessary to avoid too many indirections
+        val configManager by inject<ConfigManager>()
+        configManager.registerConfig<T>(name)
+        if (isGame) {
+            val gameRegistry by inject<GameRegistry>()
+            gameRegistry.registerGameMode(key, name)
+        }
+        configDefined = true
     }
 
+
     private fun prepareRegistration() {
+        val executeDefine = {
+            defineConfig()
+            if (!configDefined) throw PluginConfigurationException(
+                "Config for plugin $name not defined. Please call define<T>() in your plugin's defineConfig() method."
+            )
+        }
         try {
             getKoin()
         } catch (_: IllegalStateException) {
@@ -119,24 +129,4 @@ abstract class Plugin: KordExPlugin() {
         bot.logger.info { "Koin already started, registering $name config and game" }
         executeDefine()
     }
-
-    @PublishedApi
-    internal inline fun <reified T : ValidatedConfig>register(key: Key) {
-        registerConfig<T>()
-        if (isGame) registerGame(key)
-    }
-
-    @PublishedApi
-    internal inline fun <reified T : ValidatedConfig>registerConfig() {
-        val configManager by inject<ConfigManager>()
-        configManager.registerConfig<T>(name)
-    }
-
-    @PublishedApi
-    internal fun registerGame(key: Key) {
-        val gameRegistry by inject<GameRegistry>()
-        gameRegistry.registerGameMode(key, name)
-
-    }
-
 }
