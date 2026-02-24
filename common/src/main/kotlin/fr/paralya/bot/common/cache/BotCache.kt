@@ -39,9 +39,9 @@ fun <T : Any> DataCache.querySerialized(
     typeKey: String = clazz.simpleName ?: "unknown",
     block: QueryBuilder<T>.() -> Unit = {}
 ): Query<T> {
-    val builder = DeserializedQueryBuilder("$namespace:$typeKey", this, itemIdProperty)
+    val builder = DeserializedQueryBuilder("$namespace:$typeKey", clazz, this, itemIdProperty)
     builder.block()
-    return builder.buildDeserialized(clazz)
+    return builder.build()
 }
 
 suspend inline fun <reified T : Any> DataCache.putSerialized(namespace: String, item: T, itemId: KProperty1<T, Any>? = null) {
