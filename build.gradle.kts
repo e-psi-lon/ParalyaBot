@@ -19,6 +19,7 @@ plugins {
 	alias(libs.plugins.kordex.i18n)
 	alias(libs.plugins.kotlinx.serialization)
 	alias(libs.plugins.shadow)
+	alias(libs.plugins.detekt)
 }
 
 group = "fr.paralya.bot"
@@ -48,6 +49,7 @@ val typesafeProjects = projects
 subprojects {
 	apply(plugin = "kotlinx-serialization")
 	apply(plugin = "kotlin")
+	apply(plugin = "dev.detekt")
 
 	dependencies {
 		if (name != "common") {
