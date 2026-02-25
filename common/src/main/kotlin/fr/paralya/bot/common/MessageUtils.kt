@@ -34,7 +34,10 @@ private val logger = KotlinLogging.logger("MessageUtils")
  * @param messageBuilder A lambda to build the message content.
  * @return The sent message.
  */
-suspend fun MessageChannelBehavior.sendTemporaryMessage(delay: Duration = 10.seconds, messageBuilder: UserMessageCreateBuilder.() -> Unit): Message {
+suspend fun MessageChannelBehavior.sendTemporaryMessage
+			(delay: Duration = 10.seconds,
+			 messageBuilder: UserMessageCreateBuilder.() -> Unit
+): Message {
 	return createMessage(messageBuilder).also {
 		it.kord.launch(
 			context = Dispatchers.IO + CoroutineName("TemporaryMessageDeletion-${it.id}"),
@@ -102,7 +105,9 @@ suspend fun MessageChannelBehavior.getCorrespondingMessage(message: Message): Me
 		.toList()
 		.sortedByDescending { it.timestamp }
 		.firstOrNull { areMessagesSimilar(message, it) } ?: run {
-			logger.warn { "No corresponding similar message found for message ${message.id} when searching in channel $id" }
+			logger.warn {
+				"No corresponding similar message found for message ${message.id} when searching in channel $id"
+			}
 			null
 		}
 }
@@ -115,6 +120,7 @@ suspend fun MessageChannelBehavior.getCorrespondingMessage(message: Message): Me
 suspend fun Message.addReactions(emojis: List<ReactionEmoji>) {
 	for (emoji in emojis) {
 		addReaction(emoji)
+		@Suppress("MagicNumber")
 		delay(250) // Add small delay to avoid rate limiting
 	}
 }

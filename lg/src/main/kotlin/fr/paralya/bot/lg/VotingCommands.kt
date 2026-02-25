@@ -216,6 +216,7 @@ suspend fun <C : EphemeralSlashCommandContext<*, *>> C.validateVoteChannel(error
 	}
 }
 
+@Suppress("ReturnCount")
 context(lg: LG)
 private suspend fun <A : Arguments, M : ModalForm> EphemeralSlashCommandContext<A, M>.handleVote(
 	phase: PhaseType,

@@ -1,6 +1,5 @@
 package fr.paralya.bot
 
-import dev.kord.common.Color
 import dev.kord.gateway.Intent
 import dev.kord.gateway.PrivilegedIntent
 import dev.kord.rest.builder.message.embed
@@ -19,6 +18,7 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.withOptions
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
+import dev.kordex.core.DISCORD_RED
 import dev.kordex.core.annotations.warnings.ReplacingDefaultErrorResponseBuilder
 import org.slf4j.LoggerFactory
 import java.util.Locale
@@ -97,8 +97,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 			embed {
 				title = I18n.Error.title.translateLocale(locale)
 				description = I18n.Error.description.translateLocale(locale, message, type.error::class.simpleName)
-				@Suppress("MagicNumber")
-				color = Color(0xFF0000)
+				color = DISCORD_RED
 			}
 		}
 

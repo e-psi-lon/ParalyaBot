@@ -6,7 +6,7 @@ import ch.qos.logback.classic.spi.IThrowableProxy
 import ch.qos.logback.core.LayoutBase
 import ch.qos.logback.core.encoder.LayoutWrappingEncoder
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 import kotlin.collections.LinkedHashMap
 
 private const val CACHE_SIZE = 100

@@ -14,6 +14,7 @@ import dev.kord.core.event.message.ReactionRemoveEvent
 import dev.kord.core.exception.EntityNotFoundException
 import dev.kord.rest.builder.message.MessageBuilder
 import dev.kord.rest.builder.message.embed
+import dev.kord.rest.request.RestRequestException
 import dev.kordex.core.events.EventContext
 import dev.kordex.core.koin.KordExKoinComponent
 import fr.paralya.bot.common.config.BotConfig
@@ -33,6 +34,8 @@ import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.minutes
 import fr.paralya.bot.lg.I18n as Lg
 
+
+private const val MESSAGE_MAX_LENGTH = 2000
 class LgRelayService : KordExKoinComponent {
     private val lg by inject<LG>()
     private val logger by lazy { lg.logger }
@@ -52,14 +55,17 @@ class LgRelayService : KordExKoinComponent {
         val message = context.event.message
         if (message.author.shouldIgnore(botConfig)) return
 
-        if (message.content.length > 2000) {
+        if (message.content.length > MESSAGE_MAX_LENGTH) {
             val channel = message.channel
-            logger.warn { "Received a message too long (${message.content.length} characters). It'll be deleted and the user will be alerted." }
+            logger.warn {
+                "Received a message too long (${message.content.length} characters). " +
+                        "It'll be deleted and the user will be alerted."
+            }
             channel.sendTemporaryMessage(
                 Lg.Transmission.Error.messageTooLong.contextTranslate(message.content.length),
                 1.minutes
             )
-            message.content.chunked(2000).forEach {
+            message.content.chunked(MESSAGE_MAX_LENGTH).forEach {
                 channel.sendTemporaryMessage(it, 1.minutes)
             }
             message.delete(Lg.Transmission.Error.Reason.messageTooLong.contextTranslate())
@@ -102,7 +108,7 @@ class LgRelayService : KordExKoinComponent {
             val webhook = getWebhook(outChannel, bot, webhookName)
             try {
                 webhook.token?.let { webhook.deleteMessage(it, oldMessage.id) }
-            } catch (e: Exception) {
+            } catch (e: RestRequestException) {
                 logger.error(e) { "Error while deleting message" }
             }
         }
@@ -230,7 +236,8 @@ class LgRelayService : KordExKoinComponent {
             botCache.setLastWerewolfMessageSender(author!!.id)
             botCache.toggleProfilePicture()
         }
-        (if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme") to (if (botCache.getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1")
+        (if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme") to
+                (if (botCache.getProfilePictureState()) "wolf_variant_2" else "wolf_variant_1")
     } else (author?.username ?: "Message Author") to (author?.avatar?.cdnUrl?.toUrl() ?: "")
 
     context(ctx: EventContext<*>)
@@ -256,7 +263,9 @@ class LgRelayService : KordExKoinComponent {
         isAdd: Boolean,
         additionalElements: (suspend MessageBuilder.() -> Unit)? = null
     ): suspend MessageBuilder.() -> Unit = {
-        content = (if (isAdd) Lg.Transmission.Reaction.add else Lg.Transmission.Reaction.remove).contextTranslate(reaction.format())
+        content = (if (isAdd) Lg.Transmission.Reaction.add
+            else Lg.Transmission.Reaction.remove).contextTranslate(reaction.format()
+        )
 
         embed {
             title = Lg.Transmission.Reaction.Content.title.contextTranslate()

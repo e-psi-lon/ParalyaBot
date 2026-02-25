@@ -20,11 +20,18 @@ import dev.kordex.core.commands.converters.impl.optionalSnowflake
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.extensions.event
-import fr.paralya.bot.common.*
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.I18n
+import fr.paralya.bot.common.GameRegistry
 import fr.paralya.bot.common.adminOnly
+import fr.paralya.bot.common.asUser
 import fr.paralya.bot.common.cache.CachedData
+import fr.paralya.bot.common.contextTranslate
+import fr.paralya.bot.common.gameMode
+import fr.paralya.bot.common.getCorrespondingMessage
+import fr.paralya.bot.common.getWebhook
+import fr.paralya.bot.common.sendAsWebhook
+import fr.paralya.bot.common.snowflake
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.takeWhile
@@ -82,21 +89,20 @@ class Base : Extension() {
 			}
 
 			action {
-				val oldMessage =
-					event.old?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
-				if (oldMessage != null) {
-					sendAsWebhook(
-						bot,
-						dmChannelId,
-						event.new.author.value?.asUser(kord)?.tag ?: "Inconnu",
-						event.new.author.value.asUser(kord)?.avatar?.cdnUrl?.toUrl(),
-						"DM"
-					) {
-						content = event.new.content.toString()
-						embed {
-							title = I18n.Transmission.Update.title.contextTranslate()
-							description = event.new.content.toString()
-						}
+				val oldMessage = event.old?.let {
+					MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it)
+				}
+				if (oldMessage != null) sendAsWebhook(
+					bot,
+					dmChannelId,
+					event.new.author.value?.asUser(kord)?.tag ?: "Inconnu",
+					event.new.author.value.asUser(kord)?.avatar?.cdnUrl?.toUrl(),
+					"DM"
+				) {
+					content = event.new.content.toString()
+					embed {
+						title = I18n.Transmission.Update.title.contextTranslate()
+						description = event.new.content.toString()
 					}
 				}
 			}
@@ -109,8 +115,9 @@ class Base : Extension() {
 				failIf { event.message != null }
 			}
 			action {
-				val oldMessage =
-					event.message?.let { MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it) }
+				val oldMessage = event.message?.let {
+					MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it)
+				}
 				if (oldMessage != null) {
 					val webhook = getWebhook(dmChannelId, bot, "DM")
 					webhook.deleteMessage(webhook.token!!, oldMessage.id)
@@ -153,12 +160,16 @@ class Base : Extension() {
             adminOnly {
                 val channel = arguments.channel as MessageChannelBehavior? ?: channel
                 val messages = when {
-                arguments.start != null && arguments.end != null ->
-                    channel.getMessagesAfter(arguments.start!!).takeWhile { it.id != arguments.end!! }
-                arguments.start != null && arguments.count != null ->
-                    channel.getMessagesAfter(arguments.start!!).take(arguments.count!!)
-                else ->
-                    channel.getMessagesBefore(channel.asChannel().lastMessageId ?: Snowflake.max, arguments.count!!)
+                arguments.start != null && arguments.end != null -> channel
+					.getMessagesAfter(arguments.start!!)
+					.takeWhile { it.id != arguments.end!! }
+                arguments.start != null && arguments.count != null -> channel
+					.getMessagesAfter(arguments.start!!)
+					.take(arguments.count!!)
+                else -> channel.getMessagesBefore(
+					channel.asChannel().lastMessageId ?: Snowflake.max,
+					arguments.count!!
+				)
             }
                 respond {
                     content = I18n.ChatExport.Response.Success.txt.contextTranslate()

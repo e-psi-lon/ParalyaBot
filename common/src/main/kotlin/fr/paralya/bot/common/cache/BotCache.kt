@@ -44,12 +44,21 @@ fun <T : Any> DataCache.querySerialized(
     return builder.build()
 }
 
-suspend inline fun <reified T : Any> DataCache.putSerialized(namespace: String, item: T, itemId: KProperty1<T, Any>? = null) {
+suspend inline fun <reified T : Any> DataCache.putSerialized(
+    namespace: String,
+    item: T,
+    itemId: KProperty1<T, Any>? = null
+) {
     putSerialized(namespace, item, T::class, itemId)
 }
 
 @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
-suspend fun <T : Any>DataCache.putSerialized(namespace: String, item: T, clazz: KClass<T>, itemId: KProperty1<T, Any>? = null) {
+suspend fun <T : Any>DataCache.putSerialized(
+    namespace: String,
+    item: T,
+    clazz: KClass<T>,
+    itemId: KProperty1<T, Any>? = null
+) {
     val data = cbor.encodeToByteArray(clazz.serializer(), item)
     val cachedData = CachedData(
         namespace = namespace,
@@ -60,7 +69,8 @@ suspend fun <T : Any>DataCache.putSerialized(namespace: String, item: T, clazz: 
     put(cachedData)
 }
 
-suspend inline fun <reified T : Any> DataCache.putSerializedAll(namespace: String, items: Flow<T>) = putSerializedAll(namespace, items, T::class)
+suspend inline fun <reified T : Any> DataCache.putSerializedAll(namespace: String, items: Flow<T>) =
+    putSerializedAll(namespace, items, T::class)
 
 suspend fun <T : Any>DataCache.putSerializedAll(namespace: String, items: Flow<T>, clazz: KClass<T>) =
     items.collect { putSerialized(namespace, it, clazz) }

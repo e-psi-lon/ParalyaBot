@@ -84,16 +84,17 @@ class LG : Extension() {
 					val failed = mutableListOf<String>()
 					try {
 						guild?.members?.collect { member ->
-							if (member.hasRole(arguments.role)) {
+							if (member.hasRole(arguments.role)) runCatching {
 								member.dm(
 									Lg.Notif.Content.main.contextTranslate(
 										modal?.message?.value ?: Lg.Notif.Content.error
 									)
-								) ?: failed.add(member.username)
-							}
+								)
+							}.onFailure { failed.add(member.username) }
+								.onSuccess { if (it == null) failed.add(member.username) }
 						}
-					} catch (e: Exception) {
-						respond { content = Lg.Notif.Response.success.contextTranslate(e.message) }
+					} catch (e: IllegalStateException) {
+						respond { content = Lg.Notif.Response.failed.contextTranslate(e.message) }
 					}
 
 					respond {

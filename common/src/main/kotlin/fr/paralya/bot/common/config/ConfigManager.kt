@@ -49,6 +49,7 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 
 	// Core bot configuration, directly integrated into the ConfigManager
 	var botConfig: BotConfig
+		private set
 
 	init {
 		val fileExistedBeforeLoad = configFile.exists()
@@ -135,7 +136,8 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
             Hocon.decodeFromConfig(clazz.serializer(), getSubConfig("games.$actualName"))
         } catch (e: IllegalArgumentException) {
             logger.error(e) {
-                "Failed to find the configuration for name $name at path games.$actualName. Please ensure it exists in the config file."
+                "Failed to find the configuration for name $name at path games.$actualName. " +
+						"Please ensure it exists in the config file."
             }
             return null
         }
@@ -151,11 +153,11 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 
 	private fun validateConfig(config: ValidatedConfig) {
 		val result = config.validate()
-		if (result.isValid) {
-			logger.info { "Configuration for ${config::class.simpleName} is valid." }
-		} else {
-			throw IllegalStateException("Configuration for ${config::class.simpleName} is invalid due to the following errors: ${result.errors.joinToString("\n")}")
-		}
+		if (result.isValid) logger.info { "Configuration for ${config::class.simpleName} is valid." }
+		else throw IllegalStateException(
+			"Configuration for ${config::class.simpleName} is invalid due to the following errors: " +
+					result.errors.joinToString("\n")
+		)
 	}
 }
 

@@ -90,7 +90,12 @@ suspend fun LG.registerListeners() {
 		check { inChannel(LgChannelType.SUJETS.toId()) }
 		action {
 			val reasonText = I18n.System.Topics.creation.contextTranslate()
-			(event.message.channel as TextChannel).startPublicThreadWithMessage(event.message.id, event.message.content.truncate(100)) {
+			val textChannel = event.message.channel as TextChannel
+			@Suppress("MagicNumber")
+			textChannel.startPublicThreadWithMessage(
+					event.message.id,
+					event.message.content.truncate(100)
+			) {
 				reason = reasonText
 			}
 			event.message.addReactions(
@@ -162,6 +167,7 @@ suspend fun LG.registerListeners() {
 	}
 }
 
+@Suppress("ThrowsCount")
 private suspend fun LG.handleReadyEvent(guilds: Set<GuildBehavior>, botConfig: BotConfig, lgConfig: LgConfig) {
 	logger.debug { "Fetching channels from werewolf related categories" }
 	val paralya = guilds.firstOrNull { it.id.value == botConfig.paralyaId }

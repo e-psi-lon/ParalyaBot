@@ -17,7 +17,7 @@ interface ValidatedConfig {
 
 /**
  * Validates that a value appears to be a valid Discord snowflake by checking that:
- * - It has the minimum bit length (> 2^21)
+ * - It has the minimum bit length (> 2^22)
  * - It doesn't overflow (< [ULong.MAX_VALUE])
  * - Its timestamp is not in the future (allowing 60 seconds for clock drift)
  *
@@ -28,11 +28,12 @@ interface ValidatedConfig {
 @Suppress("MagicNumber")
 fun ValidationBuilder<ULong>.appearsToBeSnowflake(displayName: String) =
 	constrain("$displayName must be a valid Discord snowflake and it appears not to be") {
-		it > (1UL shl 21) && it < ULong.MAX_VALUE
+		it > (1UL shl 22) && it < ULong.MAX_VALUE
 				&& ((it shr 22) + DISCORD_EPOCH) <= (System.currentTimeMillis() + 60_000).toULong()
 	}
 
-fun <T> ValidationBuilder<T>.defined(displayName: String = "Value ") = constrain("$displayName must be defined and it appears not to be") {
+fun <T> ValidationBuilder<T>.defined(displayName: String = "Value ") =
+	constrain("$displayName must be defined and it appears not to be") {
 	when (it) {
 		is String -> it.isNotBlank()
 		is Collection<*> -> it.isNotEmpty()
