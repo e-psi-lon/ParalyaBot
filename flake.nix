@@ -217,7 +217,7 @@
                         fi
 
                         echo "Building $PLUGIN-plugin..."
-                        OUT_PATH=$(${lib.getExe build-plugin}"$PLUGIN" true)
+                        OUT_PATH=$(${lib.getExe build-plugin} "$PLUGIN" true)
 
                         PLUGIN_DIR="$PWD/container/plugins"
                         mkdir -p "$PLUGIN_DIR"
