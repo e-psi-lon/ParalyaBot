@@ -97,7 +97,7 @@
                             version = version;
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-ZOnjFQNxOTfNfCzjbwT/fTIYN5kEpQaFMlJC0U2W/lU=";
+                            outputHash = "sha256-ZuWZHaF1aC1MZ2P6vf73aNcGfQfva3X2l9kRluNaAIg=";
                         };
 
                     lg-plugin =
@@ -110,7 +110,7 @@
                             output = "lg/build/distributions/lg-${version}.zip";
                             name = "lg-plugin-${version}";
                             extension = "zip";
-                            outputHash = "sha256-tZb0u8/eSiCtK+4nyLXwoOAoiUGX1V1PQK9JeTWqc/A=";
+                            outputHash = "sha256-a0Uv7fo4gYmc2dyDBgUJ7fXy54O2sOA1W/LS6SyLU3s=";
                         };
 
                     sta-plugin =
@@ -236,46 +236,20 @@
                     '';
 
                     update-hash = pkgs.writeShellScriptBin "update-hash" ''
-                        PACKAGE="''${1:-paralyabot-jar}"
-                        FORCE_REBUILD=""
-                        if [[ "$1" == "--force" ]] || [[ "$2" == "--force" ]]; then
-                            FORCE_REBUILD="--rebuild"
-                            if [[ "$1" == "--force" ]]; then
-                                PACKAGE="''${2:-paralyabot-jar}"
-                            fi
-                        fi
-
-                        echo "Building .#$PACKAGE to check for hash mismatch..."
-                        LOG=$(mktemp)
-                        nix build ".#$PACKAGE" $FORCE_REBUILD > "$LOG" 2>&1 || true
-
-                        if grep -q "hash mismatch" "$LOG"; then
-                            echo "Hash mismatch detected."
-
-                            OLD_HASH=$(grep "specified:" "$LOG" | grep -oP 'sha256-\S+')
-                            NEW_HASH=$(grep "got:" "$LOG" | grep -oP 'sha256-\S+')
-
-                            if [ -n "$OLD_HASH" ] && [ -n "$NEW_HASH" ]; then
-                            echo "Updating flake.nix..."
-                            echo "Replacing: $OLD_HASH"
-                            echo "With:      $NEW_HASH"
-
-                            sed -i "s|$OLD_HASH|$NEW_HASH|" flake.nix
-                            echo "Success. You can now build."
-                            else
-                            echo "Could not parse hashes from output. See log:"
-                            cat "$LOG"
-                            fi
+                        if [ "''${1:-}" = "--all" ]; then
+                            for pkg in paralyabot-jar lg-plugin sta-plugin; do
+                                ${lib.getExe pkgs.nix-update} --flake --version=skip "$pkg"
+                            done
                         else
-                            echo "No hash mismatch found. Last build log:"
-                            cat "$LOG"
+                            PACKAGE="''${1:-paralyabot-jar}"
+                            ${lib.getExe pkgs.nix-update} --flake --version=skip "$PACKAGE"
                         fi
-                        rm "$LOG"
                     '';
                 in
                 pkgs.mkShell {
                     buildInputs = with pkgs; [
                         jdk21
+                        nix-update
                         build-bot
                         run-bot
                         build-and-run-bot
