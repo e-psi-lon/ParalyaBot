@@ -97,7 +97,7 @@ fun FlowContent.span(text: String) = span { +text }
 
 
 
-@OptIn(BlockingAccessor::class, KordExperimental::class, KordUnsafe::class, ExperimentalTime::class)
+@OptIn(KordExperimental::class, KordUnsafe::class, ExperimentalTime::class)
 @HtmlTagMarker
 fun FlowContent.discordMessageContainer(message: Message, index: Int, mentionedUsers: List<User>) {
     val author = message.author
@@ -153,10 +153,8 @@ fun FlowContent.discordMessageContainer(message: Message, index: Int, mentionedU
                                 }
 
                                 MessageType.Call -> {
-                                    val endedTimestamp = message.call?.endedTimestamp?.value?.toInt()
-                                        ?: (message.timestamp.toEpochMilliseconds() / 1000).toInt()
                                     val startedTimestamp = message.timestamp.toEpochMilliseconds() / 1000
-                                    span(text = "a commencé un appel qui a duré ${(endedTimestamp - startedTimestamp) / 60} minutes.")
+                                    span(text = "a commencé un appel à ${(startedTimestamp) / 60} minutes.")
                                 }
 
                                 MessageType.ChannelNameChange -> {
