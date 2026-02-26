@@ -100,14 +100,27 @@ tasks {
 			exclude("com/sun/jna/$platform/**")
 		}
 
-		listOf(
-			"ar", "be", "bg", "ca", "cs", "da", "de", "el", "es", "et", "fa", "fi", "fil",
-			"he", "hi", "hr", "hu", "id", "is", "it", "ja", "ko", "lt", "lv", "mk", "ms",
-			"nb", "nl", "pl", "pt", "ro", "ru", "sk", "sl", "sq", "sr", "sv", "th", "tr",
-			"uk", "vi", "zh", "zh_Hans", "zh_Hant"
-		).forEach { lang ->
-			exclude("com/ibm/icu/impl/data/icudata/coll/${lang}.res")
-			exclude("com/ibm/icu/impl/data/icudata/coll/${lang}_*.res")
+		exclude { file ->
+			val path = file.relativePath.pathString
+			if (!path.startsWith("com/ibm/icu/impl/data/icudata/")) return@exclude false
+
+			val name = file.relativePath.lastName.removeSuffix(".res")
+
+			// Keep structural files
+			val keepFiles = setOf(
+				"root", "pool", "res_index", "metadata", "supplementalData",
+				"langInfo", "zoneinfo64", "metaZones", "timezoneTypes",
+				"windowsZones", "tzdbNames", "numberingSystems", "plurals",
+				"pluralRanges", "currencyNumericCodes", "keyTypeData",
+				"grammaticalFeatures", "genderList", "dayPeriods",
+				"icustd", "icuver", "units", "unames", "uprops",
+				"confusables", "pnames", "supplementalData"
+			)
+			if (name in keepFiles) return@exclude false
+			if (name.startsWith("en") || name.startsWith("fr")) return@exclude false
+
+			// Exclude everything else that looks like a locale
+			name.first().isLetter() && name !in keepFiles
 		}
 
 		listOf("osx", "linux_aarch_64").forEach { platform ->
@@ -156,7 +169,7 @@ tasks {
 			.filter { it.name !in listOf("sta") }
 			.mapNotNull { it.tasks.findByName("exportToPluginsDir") }
 		)
-		val runTask = getByName<JavaExec>("run")
+		val runTask = getByName<JavaExec>("runShadow")
 		mainClass = runTask.mainClass
 		classpath = runTask.classpath
 		jvmArgs = runTask.jvmArgs
