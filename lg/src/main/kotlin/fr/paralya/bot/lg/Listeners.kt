@@ -80,9 +80,10 @@ suspend fun LG.registerListeners() {
 			failIf { event.message.author?.id !in botCache.getInterviews() }
 		}
 		action {
-			botCache.removeInterview(event.message.author!!.id)
+			val author = event.message.author ?: return@action
+			botCache.removeInterview(author.id)
 			(event.message.channel as TopGuildChannelBehavior)
-				.removeMemberPermission(event.message.author!!.id, Permission.SendMessages)
+				.removeMemberPermission(author.id, Permission.SendMessages)
 		}
 	}
 

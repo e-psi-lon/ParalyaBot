@@ -54,6 +54,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			description = Lg.Vote.List.Command.description
 
 			action {
+				val guild = guild ?: return@action
 				val voteManager by inject<VoteManager>()
 				val phase = validateVoteChannel(Lg.Vote.Response.Error.cantVoteHere) ?: return@action
 				val vote = voteManager.getCurrentVote(phase)
@@ -71,9 +72,9 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 							Lg.Vote.List.Response.Success.Embed.Description.day.contextTranslate()
 						else Lg.Vote.List.Response.Success.Embed.Description.night.contextTranslate()
 						voteCount.entries.sortedByDescending { it.value }.forEach { (target, count) ->
-							field(guild!!.getMember(target).mention, inline = false) {
+							field(guild.getMember(target).mention, inline = false) {
 								val playerNameList = votersByTarget[target]?.map {
-									guild!!.getMember(it).mention
+									guild.getMember(it).mention
 								}?.sorted()?.joinToString(", ", prefix = "(", postfix = ")") ?: ""
 
 								if (target == vote.corbeau) {
@@ -155,6 +156,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 		description = Lg.MostVoted.Command.description
 
 		adminOnly {
+			val guild = guild ?: return@adminOnly
 			val voteManager by inject<VoteManager>()
 			val phase = validateVoteChannel(Lg.MostVoted.Response.Error.cantUseHere)
 				?: return@adminOnly
@@ -172,7 +174,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			val mostVotedPlayers = voteCount.filter { it.value == maxVotes }.keys
 			if (mostVotedPlayers.size > 1) {
 				val members = mostVotedPlayers.map { playerId ->
-					val member = guild!!.getMember(playerId)
+					val member = guild.getMember(playerId)
 					member.dm {
 						content = Lg.MostVoted.Response.Success.tie.contextTranslate(maxVotes)
 					}
@@ -185,7 +187,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 					)
 				}
 			} else {
-				val member = guild!!.getMember(mostVotedPlayers.first())
+				val member = guild.getMember(mostVotedPlayers.first())
 				member.dm {
 					content = Lg.MostVoted.Response.Success.single.contextTranslate(maxVotes)
 				}

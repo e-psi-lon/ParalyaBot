@@ -59,7 +59,7 @@ class LG : Extension() {
 				super.setState(state)
 			}
 		} catch (timeout: TimeoutCancellationException) {
-			logger.warn(timeout) { "The default implementation timed out probably at the bot.send(). The even wasn't sent" }
+			logger.warn(timeout) { "The default implementation timed out probably at the bot.send(). The event wasn't sent" }
 			this.state = state
 		}
 	}
@@ -150,11 +150,12 @@ class LG : Extension() {
                 description = Lg.Kill.Command.description
 
                 adminOnly {
+					val guild = guild ?: return@adminOnly
                     val target = arguments.target
                     val reason = arguments.reason ?: Lg.Kill.Argument.Reason.default.contextTranslate()
                     val config by inject<LgConfig>()
 
-                    guild!!.getMember(target.id).swapRoles(
+                    guild.getMember(target.id).swapRoles(
                         config.deadRole.snowflake,
                         config.aliveRole.snowflake,
                         reason

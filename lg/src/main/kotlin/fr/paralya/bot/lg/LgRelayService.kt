@@ -99,10 +99,10 @@ class LgRelayService : KordExKoinComponent {
         outChannel: Snowflake?,
     ) {
         val botConfig by this.inject<BotConfig>()
-        val event = context.event
-        if (event.message?.author.shouldIgnore(botConfig)) return
+        val eventMessage = context.event.message ?: return
+        if (eventMessage.author.shouldIgnore(botConfig)) return
         val oldMessage = outChannel?.let {
-            MessageChannelBehavior(outChannel, bot.kordRef).getCorrespondingMessage(event.message!!)
+            MessageChannelBehavior(outChannel, bot.kordRef).getCorrespondingMessage(eventMessage)
         }
         if (oldMessage != null) {
             val webhook = getWebhook(outChannel, bot, webhookName)

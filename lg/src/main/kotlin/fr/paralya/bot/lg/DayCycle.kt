@@ -53,6 +53,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 		description = Lg.Day.Command.description
 
 		adminOnly {
+			val guild = guild ?: return@adminOnly
 			val force = arguments.force
 			val kill = arguments.kill
 			val botCache = lg.botCache
@@ -90,14 +91,14 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					}
 
 					is VoteResult.Killed -> {
-						guild!!.getMember(result.player).swapRoles(
+						guild.getMember(result.player).swapRoles(
 							config.deadRole.snowflake,
 							aliveRole,
 							Lg.System.Permissions.PlayerKilled.reason.contextTranslate()
 						)
 						respond {
 							content =
-								Lg.DayCycle.Response.Success.killed.contextTranslate(guild!!.getMember(result.player).effectiveName)
+								Lg.DayCycle.Response.Success.killed.contextTranslate(guild.getMember(result.player).effectiveName)
 						}
 					}
 				}
@@ -133,6 +134,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 		description = Lg.Night.Command.description
 
 		adminOnly {
+			val guild = guild ?: return@adminOnly
 			val force = arguments.force
 			val kill = arguments.kill
 			val botCache = lg.botCache
@@ -169,13 +171,13 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					}
 
 					is VoteResult.Killed -> {
-						guild!!.getMember(result.player).swapRoles(
+						guild.getMember(result.player).swapRoles(
 							config.deadRole.snowflake,
 							aliveRole,
 							Lg.System.Permissions.PlayerKilled.reason.contextTranslate()
 						)
 						Lg.DayCycle.Response.Success.killed.contextTranslate(
-							guild!!.getMember(result.player).effectiveName
+							guild.getMember(result.player).effectiveName
 						)
 					}
 				}
