@@ -32,56 +32,49 @@ import kotlin.reflect.KClass
  * Allows for dynamic registration of game-specific configurations.
  *
  * @property configFile The file where the configuration is stored.
- * @property config The loaded configuration object.
  * @property botConfig The core bot configuration.
  * @constructor Creates a new [ConfigManager] instance and automatically populates the base configuration.
  */
 @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
 class ConfigManager internal constructor(private val configFile: Path) : KordExKoinComponent {
-	private lateinit var config: Config
 	val logger = KotlinLogging.logger("ConfigManager")
 
 	constructor() : this(Path(System.getenv("PARALYA_BOT_CONFIG_FILE") ?: "config.conf"))
+
+	private var state: ConfigState = try {
+		loadState()
+	} catch (e: ConfigException) {
+		logger.error(e) { "Failed to load config file on startup, cannot continue" }
+		throw e
+	}
 
 	@PublishedApi
 	internal val modules = mutableMapOf<String, Module>()
 
 
 	// Core bot configuration, directly integrated into the ConfigManager
-	var botConfig: BotConfig
-		private set
-
-	init {
-		val fileExistedBeforeLoad = configFile.exists()
-		loadFile()
-		botConfig = Hocon.decodeFromConfig(getSubConfig("bot"))
-		if (fileExistedBeforeLoad) validateConfig(botConfig)
-	}
+	val botConfig: BotConfig
+		get() = state.botConfig
 	/**
-	 * Loads the configuration file into a [Config] object.
-	 * If the file does not exist, it creates a default configuration file.
-	 * It also handles any exceptions that may occur during the loading process.
+	 * Loads the configuration file into a [ConfigState] object
+	 * If the file does not exist, it creates a default configuration file
+	 * It also validates the given configuration
 	 */
-	private fun loadFile() {
+	private fun loadState(): ConfigState {
 		if (!configFile.exists()) createDefaultConfig()
-
-		try {
-			config = ConfigFactory.parseFile(configFile.toFile())
-		} catch (e: ConfigException) {
-			if (::config.isInitialized) logger.warn(e) {
-				"Failed to reload config file, keeping previous configuration"
-			} else {
-				logger.error(e) { "Failed to load config file on startup, cannot continue" }
-				throw e
-			}
-		}
+		val raw = ConfigFactory.parseFile(configFile.toFile())
+		val botConfig = Hocon.decodeFromConfig<BotConfig>(getSubConfig("bot"))
+		validateConfig(botConfig)
+		return ConfigState(raw, botConfig)
 	}
 
 	fun reload() {
-		val fileExistedBeforeLoad = configFile.exists()
-		loadFile()
-		botConfig = Hocon.decodeFromConfig(getSubConfig("bot"))
-		if (fileExistedBeforeLoad) validateConfig(botConfig)
+		state = try {
+			loadState()
+		} catch (e: ConfigException) {
+			logger.warn(e) { "Failed to reload config file, keeping previous configuration" }
+			state
+		}
 	}
 
 	/**
@@ -146,9 +139,9 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
     }
 
 	private fun getSubConfig(path: String): Config {
-		if (!config.hasPath(path))
+		if (!state.raw.hasPath(path))
 			throw IllegalArgumentException("No configuration found for path: $path")
-		return config.getConfig(path)
+		return state.raw.getConfig(path)
 	}
 
 	private fun validateConfig(config: ValidatedConfig) {
@@ -160,6 +153,12 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 		)
 	}
 }
+
+
+private class ConfigState(
+	val raw: Config,
+	val botConfig: BotConfig
+)
 
 /**
  * Data class representing the core bot configuration.
