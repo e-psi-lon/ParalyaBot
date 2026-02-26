@@ -21,8 +21,6 @@ import kotlin.lazy
 abstract class Plugin: KordExPlugin() {
     abstract val name: String
     abstract val key: Key
-    @PublishedApi
-    internal var configDefined = false
     open val isGame = true
     @PublishedApi
     internal val components = mutableListOf<Module>()
@@ -68,7 +66,7 @@ abstract class Plugin: KordExPlugin() {
     /**
      * Register your plugin's config type by calling `define<T>()`.
      */
-    protected abstract fun defineConfig()
+    protected abstract fun defineConfig() : ConfigDefinition
 
 
     open suspend fun onSetup() {}
@@ -97,7 +95,7 @@ abstract class Plugin: KordExPlugin() {
         getKoin().unloadModules(components)
     }
 
-    protected inline fun <reified T : ValidatedConfig> define() {
+    protected inline fun <reified T : ValidatedConfig> define() : ConfigDefinition {
         // This function is seemingly doing a lot of work, but
         // It is necessary to avoid too many indirections
         val configManager by inject<ConfigManager>()
@@ -106,27 +104,23 @@ abstract class Plugin: KordExPlugin() {
             val gameRegistry by inject<GameRegistry>()
             gameRegistry.registerGameMode(key, name)
         }
-        configDefined = true
+        return ConfigDefinition()
     }
 
 
     private fun prepareRegistration() {
-        val executeDefine = {
-            defineConfig()
-            if (!configDefined) throw PluginConfigurationException(
-                "Config for plugin $name not defined. Please call define<T>() in your plugin's defineConfig() method."
-            )
-        }
         try {
             getKoin()
         } catch (_: IllegalStateException) {
             bot.logger.info { "Koin not started, registering $name config and game hook after Koin setup" }
             settings {
-                hooks { afterKoinSetup { executeDefine() } }
+                hooks { afterKoinSetup { defineConfig() } }
             }
             return
         }
         bot.logger.info { "Koin already started, registering $name config and game" }
-        executeDefine()
+        defineConfig()
     }
+
+    class ConfigDefinition @PublishedApi internal constructor()
 }
