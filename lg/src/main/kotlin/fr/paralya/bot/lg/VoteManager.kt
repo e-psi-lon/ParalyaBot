@@ -22,6 +22,7 @@ import org.koin.core.component.inject
  * Manager class responsible for handling voting operations in the Werewolf game.
  * This provides a centralized way to manage votes for both day and night phases.
  */
+@Suppress("TooManyFunctions")
 class VoteManager : KordExKoinComponent {
 	private val lg by inject<LG>()
 	private val botCache by lazy { lg.botCache }

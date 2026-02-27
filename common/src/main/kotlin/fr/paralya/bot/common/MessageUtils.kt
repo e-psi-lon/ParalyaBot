@@ -112,6 +112,8 @@ suspend fun MessageChannelBehavior.getCorrespondingMessage(message: Message): Me
 		}
 }
 
+private const val REACTION_DELAY = 250L
+
 /**
  * Adds multiple reactions to a message.
  *
@@ -120,8 +122,7 @@ suspend fun MessageChannelBehavior.getCorrespondingMessage(message: Message): Me
 suspend fun Message.addReactions(emojis: List<ReactionEmoji>) {
 	for (emoji in emojis) {
 		addReaction(emoji)
-		@Suppress("MagicNumber")
-		delay(250) // Add small delay to avoid rate limiting
+		delay(REACTION_DELAY) // Add small delay to avoid rate limiting
 	}
 }
 
