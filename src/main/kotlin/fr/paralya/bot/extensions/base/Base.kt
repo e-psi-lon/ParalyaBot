@@ -112,7 +112,7 @@ class Base : Extension() {
 			check {
 				noGuild()
 				isNotBot()
-				failIf { event.message != null }
+				failIf { event.message == null }
 			}
 			action {
 				val oldMessage = event.message?.let {
@@ -120,6 +120,7 @@ class Base : Extension() {
 				}
 				if (oldMessage != null) {
 					val webhook = getWebhook(dmChannelId, bot, "DM")
+					// Keep the NPE here, we want a loud error if it's null
 					webhook.deleteMessage(webhook.token!!, oldMessage.id)
 				}
 			}

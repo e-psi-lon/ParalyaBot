@@ -129,13 +129,14 @@ suspend fun FollowupMessageCreateBuilder.addHtmlExport(
     val guildIcon = guild?.asGuildOrNull()?.icon?.cdnUrl ?: ""
     val channelName = guild?.getChannel(channel.id)?.name ?: "Pas de nom de salon"
     val channelTopic = (channel.asChannelOrNull() as? dev.kord.core.entity.channel.TextChannel)?.topic
+    val start = arguments.start
 
     val lastMessageId = messages.lastOrNull()?.id
     val exportRange = when {
-        arguments.start != null && lastMessageId != null ->
-            "Entre ${formatDate(arguments.start!!)} et ${formatDate(lastMessageId)}"
-        arguments.start != null ->
-            "Après ${formatDate(arguments.start!!)}"
+        start != null && lastMessageId != null ->
+            "Entre ${formatDate(start)} et ${formatDate(lastMessageId)}"
+        start != null ->
+            "Après ${formatDate(start)}"
         lastMessageId != null ->
             "Jusqu'à ${formatDate(lastMessageId)}"
         else -> null

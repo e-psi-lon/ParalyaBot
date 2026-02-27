@@ -206,8 +206,7 @@ class LgRelayService : KordExKoinComponent {
         isAdd: Boolean
     ) {
         val botConfig by this.inject<BotConfig>()
-        if (message.author.shouldIgnore(botConfig)) return
-        if (author.shouldIgnore(botConfig)) return
+        if (message.author.shouldIgnore(botConfig) || author.shouldIgnore(botConfig)) return
         val (userName, userAvatar) = getMessageIdentity(author, isAnonymous)
         val content = buildRelayReactionContent(emoji, message, isAdd)
         if (isAnonymous) sendAsWebhook(
@@ -232,8 +231,8 @@ class LgRelayService : KordExKoinComponent {
         isAnonymous: Boolean,
         updateExisting: Boolean = false
     ) = if (isAnonymous) {
-        if (updateExisting && author?.id != botCache.getLastWerewolfMessageSender()) {
-            botCache.setLastWerewolfMessageSender(author!!.id)
+        if (updateExisting && author != null && author.id != botCache.getLastWerewolfMessageSender()) {
+            botCache.setLastWerewolfMessageSender(author.id)
             botCache.toggleProfilePicture()
         }
         (if (botCache.getProfilePictureState()) "🐺 Anonyme" else "🐺Anonyme") to
