@@ -130,13 +130,14 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 		logger.debug { "Config for $name registered successfully" }
 	}
 
-	inline fun <reified T : ValidatedConfig> registerConfig(name: String) {
+	@PublishedApi
+	internal inline fun <reified T : ValidatedConfig> registerConfig(name: String) {
 		registerConfigInternal(name, T::class.simpleName, serializer<T>()) { config ->
 			single<T> { config } withOptions { named(name) }
 		}
 	}
 
-	fun unregisterConfig(name: String) {
+	internal fun unregisterConfig(name: String) {
 		configs.remove(name)?.let { (module, _) ->
 			getKoin().unloadModules(listOf(module))
 			logger.debug { "Koin module for $name unloaded successfully" }

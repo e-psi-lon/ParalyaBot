@@ -23,7 +23,7 @@ class GameRegistry : KordExKoinComponent {
 	 * @param key The translation key for the game mode.
 	 * @param gameMode The name of the game mode.
 	 */
-	fun registerGameMode(key: Key, gameMode: String) {
+	internal fun registerGameMode(key: Key, gameMode: String) {
 		gameModes[key] = gameMode
 	}
 
@@ -49,7 +49,7 @@ class GameRegistry : KordExKoinComponent {
 	 *
 	 * @param value The name of the game mode to unload.
 	 */
-	fun unloadGameMode(value: String) {
+	internal fun unloadGameMode(value: String) {
 		if (value == "none") return
 		if (!gameModes.containsValue(value)) return
 		gameModes.remove(gameModes.filterValues { it == value }.keys.first())

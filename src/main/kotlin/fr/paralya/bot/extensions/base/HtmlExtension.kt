@@ -97,7 +97,7 @@ fun FlowContent.span(text: String) = span { +text }
 
 
 
-@OptIn(KordExperimental::class, KordUnsafe::class, ExperimentalTime::class)
+@OptIn(ExperimentalTime::class)
 @HtmlTagMarker
 fun FlowContent.discordMessageContainer(message: Message, index: Int, mentionedUsers: List<User>) {
     val author = message.author

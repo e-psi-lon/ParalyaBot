@@ -169,7 +169,7 @@ class Base : Extension() {
 					.take(arguments.count!!)
                 else -> channel.getMessagesBefore(
 					channel.asChannel().lastMessageId ?: Snowflake.max,
-					arguments.count!!
+					arguments.count
 				)
             }
                 respond {
