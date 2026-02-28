@@ -6,20 +6,19 @@ import dev.kord.cache.api.QueryBuilder
 import dev.kord.cache.api.put
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.cbor.Cbor
 import kotlinx.serialization.serializer
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.KSerializer
 
 @JvmName("enumEq")
 fun <T : Any, E : Enum<E>> QueryBuilder<T>.idEq(property: KProperty1<T, E?>, value: E?) = property.eq(value)
 
-@PublishedApi
 @OptIn(ExperimentalSerializationApi::class)
-internal val cbor = Cbor {
+private val cbor = Cbor {
     ignoreUnknownKeys = true
 }
 
@@ -29,17 +28,19 @@ inline fun <reified T : Any> DataCache.querySerialized(
     typeKey: String = T::class.simpleName ?: "unknown",
     noinline block: QueryBuilder<T>.() -> Unit = {}
 ): Query<T> {
-    return querySerialized(T::class, namespace, itemIdProperty, typeKey, block)
+    return querySerialized(T::class, namespace, serializer<T>(), itemIdProperty, typeKey, block)
 }
 
+@OptIn(ExperimentalSerializationApi::class)
 fun <T : Any> DataCache.querySerialized(
     clazz: KClass<T>,
     namespace: String,
+    serializer: KSerializer<T>,
     itemIdProperty: KProperty1<T, Any>? = null,
     typeKey: String = clazz.simpleName ?: "unknown",
     block: QueryBuilder<T>.() -> Unit = {}
 ): Query<T> {
-    val builder = DeserializedQueryBuilder("$namespace:$typeKey", clazz, this, itemIdProperty)
+    val builder = DeserializedQueryBuilder("$namespace:$typeKey", clazz, this, itemIdProperty, serializer, cbor)
     builder.block()
     return builder.build()
 }
@@ -49,17 +50,18 @@ suspend inline fun <reified T : Any> DataCache.putSerialized(
     item: T,
     itemId: KProperty1<T, Any>? = null
 ) {
-    putSerialized(namespace, item, T::class, itemId)
+    putSerialized(namespace, item, T::class, itemId, serializer<T>())
 }
 
-@OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
+@OptIn(ExperimentalSerializationApi::class)
 suspend fun <T : Any>DataCache.putSerialized(
     namespace: String,
     item: T,
     clazz: KClass<T>,
-    itemId: KProperty1<T, Any>? = null
+    itemId: KProperty1<T, Any>? = null,
+    serializer: KSerializer<T>
 ) {
-    val data = cbor.encodeToByteArray(clazz.serializer(), item)
+    val data = cbor.encodeToByteArray(serializer, item)
     val cachedData = CachedData(
         namespace = namespace,
         key = clazz.simpleName ?: "unknown",
@@ -70,25 +72,30 @@ suspend fun <T : Any>DataCache.putSerialized(
 }
 
 suspend inline fun <reified T : Any> DataCache.putSerializedAll(namespace: String, items: Flow<T>) =
-    putSerializedAll(namespace, items, T::class)
+    putSerializedAll(namespace, items, T::class, serializer<T>())
 
-suspend fun <T : Any>DataCache.putSerializedAll(namespace: String, items: Flow<T>, clazz: KClass<T>) =
-    items.collect { putSerialized(namespace, it, clazz) }
+suspend fun <T : Any>DataCache.putSerializedAll(
+    namespace: String,
+    items: Flow<T>,
+    clazz: KClass<T>,
+    serializer: KSerializer<T>
+) = items.collect { putSerialized(namespace, it, clazz, serializer = serializer) }
 
 suspend inline fun <reified T : Any> DataCache.removeSerialized(
     namespace: String,
     itemIdProperty: KProperty1<T, Any>? = null,
     typeKey: String = T::class.simpleName ?: "unknown",
     noinline block: QueryBuilder<T>.() -> Unit = {}
-) = removeSerialized(T::class, namespace, itemIdProperty, typeKey, block)
+) = removeSerialized(T::class, namespace, serializer<T>(), itemIdProperty, typeKey, block)
 
 suspend fun <T : Any>DataCache.removeSerialized(
     clazz: KClass<T>,
     namespace: String,
+    serializer: KSerializer<T>,
     itemIdProperty: KProperty1<T, Any>? = null,
     typeKey: String = clazz.simpleName ?: "unknown",
     block: QueryBuilder<T>.() -> Unit = {}
-) = querySerialized(clazz, namespace, itemIdProperty, typeKey, block).remove()
+) = querySerialized(clazz, namespace, serializer, itemIdProperty, typeKey, block).remove()
 
 suspend inline fun <reified T : Any> DataCache.updateSerialized(
     namespace: String,
@@ -96,16 +103,17 @@ suspend inline fun <reified T : Any> DataCache.updateSerialized(
     typeKey: String = T::class.simpleName ?: "unknown",
     noinline block: QueryBuilder<T>.() -> Unit = {},
     noinline transform: suspend (T) -> T
-) = updateSerialized(T::class, namespace, itemIdProperty, typeKey, block, transform)
+) = updateSerialized(T::class, namespace, serializer<T>(), itemIdProperty, typeKey, block, transform)
 
 suspend fun <T : Any> DataCache.updateSerialized(
     clazz: KClass<T>,
     namespace: String,
+    serializer: KSerializer<T>,
     itemIdProperty: KProperty1<T, Any>? = null,
     typeKey: String = clazz.simpleName ?: "unknown",
     block: QueryBuilder<T>.() -> Unit = {},
     transform: suspend (T) -> T
-) = querySerialized(clazz, namespace, itemIdProperty, typeKey, block).update { transform(it) }
+) = querySerialized(clazz, namespace, serializer, itemIdProperty, typeKey, block).update { transform(it) }
 
 private val defaultCacheMutex = Mutex()
 

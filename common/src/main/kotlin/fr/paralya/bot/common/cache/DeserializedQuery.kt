@@ -6,15 +6,17 @@ import dev.kord.cache.api.query
 import dev.kord.core.cache.idEq
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-class DeserializedQuery<T : Any>(
+class DeserializedQuery<T : Any> internal constructor(
     private val cache: DataCache,
     private val namespace: String,
     private val items: Flow<Pair<T, CachedData>>,
     private val clazz: KClass<T>,
-    private val itemIdProperty: KProperty1<T, Any>? = null
+    private val itemIdProperty: KProperty1<T, Any>? = null,
+    private val serializer: KSerializer<T>
 ) : Query<T> {
     override fun asFlow(): Flow<T> = items.map { it.first }
 
@@ -28,7 +30,7 @@ class DeserializedQuery<T : Any>(
 
     override suspend fun update(mapper: suspend (T) -> T) {
         items.collect { (item, _) ->
-            cache.putSerialized(namespace, mapper(item), clazz, itemIdProperty)
+            cache.putSerialized(namespace, mapper(item), clazz, itemIdProperty, serializer)
         }
     }
 }

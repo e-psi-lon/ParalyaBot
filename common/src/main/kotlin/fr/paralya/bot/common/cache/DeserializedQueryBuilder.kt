@@ -8,16 +8,19 @@ import dev.kord.core.cache.idEq
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.serializer
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.cbor.Cbor
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
+@OptIn(ExperimentalSerializationApi::class)
 internal class DeserializedQueryBuilder<T : Any>(
     private val typeName: String,
     private val clazz: KClass<T>,
     private val cache: DataCache,
-    private val itemIdProperty: KProperty1<T, Any>? = null
+    private val itemIdProperty: KProperty1<T, Any>? = null,
+    private val serializer: KSerializer<T>,
+    private val cbor: Cbor
 ) : QueryBuilder<T> {
     private val predicates = mutableListOf<(T) -> Boolean>()
 
@@ -25,7 +28,7 @@ internal class DeserializedQueryBuilder<T : Any>(
         predicates.add { predicate(this.get(it)) }
     }
 
-    @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
+    @OptIn(ExperimentalSerializationApi::class)
     override fun build(): Query<T> {
         val namespace = typeName.substringBefore(":")
         val key = typeName.substringAfter(":")
@@ -36,10 +39,10 @@ internal class DeserializedQueryBuilder<T : Any>(
         }.asFlow()
         val items = cachedDataFlow
             .map { cachedData ->
-                val item = cbor.decodeFromByteArray(clazz.serializer(), cachedData.data)
+                val item = cbor.decodeFromByteArray(serializer, cachedData.data)
                 item to cachedData
             }
             .filter { (item, _) -> predicates.all { it(item) } }
-        return DeserializedQuery(cache, namespace, items, clazz, itemIdProperty)
+        return DeserializedQuery(cache, namespace, items, clazz, itemIdProperty, serializer)
     }
 }
