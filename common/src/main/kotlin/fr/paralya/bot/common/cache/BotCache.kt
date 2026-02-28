@@ -71,15 +71,20 @@ suspend fun <T : Any>DataCache.putSerialized(
     put(cachedData)
 }
 
-suspend inline fun <reified T : Any> DataCache.putSerializedAll(namespace: String, items: Flow<T>) =
-    putSerializedAll(namespace, items, T::class, serializer<T>())
+suspend inline fun <reified T : Any> DataCache.putSerializedAll(
+    namespace: String,
+    items: Flow<T>,
+    itemId: KProperty1<T, Any>
+) = putSerializedAll(namespace, items, T::class, serializer<T>(), itemId)
+
 
 suspend fun <T : Any>DataCache.putSerializedAll(
     namespace: String,
     items: Flow<T>,
     clazz: KClass<T>,
-    serializer: KSerializer<T>
-) = items.collect { putSerialized(namespace, it, clazz, serializer = serializer) }
+    serializer: KSerializer<T>,
+    itemId: KProperty1<T, Any>
+) = items.collect { putSerialized(namespace, it, clazz, itemId, serializer) }
 
 suspend inline fun <reified T : Any> DataCache.removeSerialized(
     namespace: String,
