@@ -10,7 +10,7 @@ import kotlinx.serialization.KSerializer
 import kotlin.reflect.KClass
 import kotlin.reflect.KProperty1
 
-class DeserializedQuery<T : Any> internal constructor(
+internal class DeserializedQuery<T : Any>(
     private val cache: DataCache,
     private val namespace: String,
     private val items: Flow<Pair<T, CachedData>>,

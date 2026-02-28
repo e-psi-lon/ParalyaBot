@@ -32,7 +32,18 @@ fun ValidationBuilder<ULong>.appearsToBeSnowflake(displayName: String) =
 				&& ((it shr 22) + DISCORD_EPOCH) <= (System.currentTimeMillis() + 60_000).toULong()
 	}
 
-fun <T> ValidationBuilder<T>.defined(displayName: String = "Value ") =
+/**
+ * Validates that a value is defined and not empty.
+ *
+ * The following rules are applied:
+ * - For Strings: blank strings are considered empty.
+ * - For Collections and Maps: empty collections/maps are considered empty.
+ * - For Numbers, ULong, and UInt: zero values are considered empty.
+ * - For Boolean: both true and false are considered defined (use `Boolean? = null` to represent undefined Boolean values).
+ * - For null values: considered empty.
+ * - **IMPORTANT:** Unknown types are considered defined by default.
+ */
+fun <T> ValidationBuilder<T>.defined(displayName: String = "Value") =
 	constrain("$displayName must be defined and it appears not to be") {
 	when (it) {
 		is String -> it.isNotBlank()

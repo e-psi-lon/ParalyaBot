@@ -23,6 +23,7 @@ class GameRegistry : KordExKoinComponent {
 	 * @param key The translation key for the game mode.
 	 * @param gameMode The name of the game mode.
 	 */
+	@PublishedApi
 	internal fun registerGameMode(key: Key, gameMode: String) {
 		gameModes[key] = gameMode
 	}
@@ -40,15 +41,16 @@ class GameRegistry : KordExKoinComponent {
 	/**
 	 * Retrieves all registered game modes.
 	 *
-	 * @return A mutable map containing all game modes with their associated keys.
+	 * @return A map containing all game modes with their associated keys.
 	 */
-	fun getGameModes(): MutableMap<Key, String> = gameModes
+	fun getGameModes(): Map<Key, String> = gameModes.toMap()
 
 	/**
 	 * Unloads a game mode by removing it from the registry.
 	 *
 	 * @param value The name of the game mode to unload.
 	 */
+	@PublishedApi
 	internal fun unloadGameMode(value: String) {
 		if (value == "none") return
 		if (!gameModes.containsValue(value)) return

@@ -194,7 +194,7 @@ class Base : Extension() {
 		val game by stringChoice {
 			name = I18n.StartGame.Argument.Game.name
 			description = I18n.StartGame.Argument.Game.description
-			choices = getKoin().get<GameRegistry>().getGameModes()
+			choices = getKoin().get<GameRegistry>().getGameModes().toMutableMap()
 		}
 	}
 
