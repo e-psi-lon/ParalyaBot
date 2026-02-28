@@ -10,7 +10,7 @@ import io.konform.validation.Validation
 import io.konform.validation.ValidationResult
 import io.konform.validation.onEach
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.hocon.Hocon
@@ -24,7 +24,6 @@ import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.io.path.writeText
-import kotlin.reflect.KClass
 
 /**
  * Configuration manager for the bot.
@@ -35,9 +34,9 @@ import kotlin.reflect.KClass
  * @property botConfig The core bot configuration.
  * @constructor Creates a new [ConfigManager] instance and automatically populates the base configuration.
  */
-@OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
+@OptIn(ExperimentalSerializationApi::class)
 class ConfigManager internal constructor(private val configFile: Path) : KordExKoinComponent {
-	val logger = KotlinLogging.logger("ConfigManager")
+	private val logger = KotlinLogging.logger("ConfigManager")
 
 	constructor() : this(Path(System.getenv("PARALYA_BOT_CONFIG_FILE") ?: "config.conf"))
 
@@ -48,13 +47,13 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 		throw e
 	}
 
-	@PublishedApi
-	internal val modules = mutableMapOf<String, Module>()
+	private val configs = mutableMapOf<String, ConfigEntry>()
 
 
 	// Core bot configuration, directly integrated into the ConfigManager
 	val botConfig: BotConfig
 		get() = state.botConfig
+
 	/**
 	 * Loads the configuration file into a [ConfigState] object
 	 * If the file does not exist, it creates a default configuration file
@@ -74,6 +73,14 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 		} catch (e: ConfigException) {
 			logger.warn(e) { "Failed to reload config file, keeping previous configuration" }
 			state
+		}
+		@Suppress("TooGenericExceptionCaught")
+		for ((name, configEntry) in configs) try {
+			unregisterConfig(name)
+			configEntry.configRegister(configEntry)
+			logger.debug { "Config for $name reloaded successfully" }
+		} catch (e: Exception) {
+			logger.error(e) { "Failed to reload config for $name, config may be unavailable" }
 		}
 	}
 
@@ -106,27 +113,41 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 	 *
 	 * @param name The name of the configuration, used as a key in the config file.
 	 */
-	inline fun <reified T : ValidatedConfig> registerConfig(name: String) {
-        val configObject = getConfigObject(T::class, name) ?: return
-        modules[name] = loadModule(true) {
-			single<T> { configObject } withOptions { named(name) }
+	@PublishedApi
+	internal fun <T : ValidatedConfig> registerConfigInternal(
+		name: String,
+		className: String?,
+		serializer: KSerializer<T>,
+		moduleBuilder: Module.(T) -> Unit
+	) {
+		val configObject = getConfigObject(serializer, className, name) ?: return
+		val module = loadModule(true) { moduleBuilder(configObject) }
+		configs[name] = ConfigEntry(module) { configEntry ->
+			val newObject = getConfigObject(serializer, className, name) ?: return@ConfigEntry
+			val newModule = loadModule(true) { moduleBuilder(newObject) }
+			configs[name] = ConfigEntry(newModule, configEntry.configRegister)
 		}
 		logger.debug { "Config for $name registered successfully" }
 	}
 
+	inline fun <reified T : ValidatedConfig> registerConfig(name: String) {
+		registerConfigInternal(name, T::class.simpleName, serializer<T>()) { config ->
+			single<T> { config } withOptions { named(name) }
+		}
+	}
+
 	fun unregisterConfig(name: String) {
-		modules.remove(name)?.let {
-			getKoin().unloadModules(listOf(it))
+		configs.remove(name)?.let { (module, _) ->
+			getKoin().unloadModules(listOf(module))
 			logger.debug { "Koin module for $name unloaded successfully" }
 		} ?: logger.warn { "No Koin module found for $name" }
 	}
 
-	@PublishedApi
-    internal fun <T : ValidatedConfig> getConfigObject(clazz: KClass<T>, name: String): T? {
+	private fun <T : ValidatedConfig> getConfigObject(serializer: KSerializer<T>, className: String?, name: String): T? {
 		val actualName = name.lowercase()
-        logger.debug { "Registering config for $name at path games.$actualName with datatype ${clazz.simpleName}" }
+        logger.debug { "Registering config for $name at path games.$actualName with datatype $className" }
         val configObject = try {
-            Hocon.decodeFromConfig(clazz.serializer(), getSubConfig("games.$actualName"))
+            Hocon.decodeFromConfig(serializer, getSubConfig("games.$actualName"))
         } catch (e: IllegalArgumentException) {
             logger.error(e) {
                 "Failed to find the configuration for name $name at path games.$actualName. " +
@@ -155,9 +176,14 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 }
 
 
-private class ConfigState(
+private data class ConfigState(
 	val raw: Config,
 	val botConfig: BotConfig
+)
+
+private data class ConfigEntry(
+	val module: Module,
+	val configRegister: (ConfigEntry) -> Unit
 )
 
 /**
