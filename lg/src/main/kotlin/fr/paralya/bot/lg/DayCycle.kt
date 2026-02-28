@@ -217,8 +217,8 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			if (oldVillageVote?.corbeau != null) sendAsWebhook(
 				lg.bot,
 				LgChannelType.VOTES.toId(),
-				"Corbeau",
-				getAsset("\"\uD83D\uDC26\u200D⬛ Corbeau\"", lg.prefix)
+				"\uD83D\uDC26\u200D⬛ Corbeau",
+				getAsset("black_bird", lg.prefix)
 			) {
 				content = Lg.Night.Response.Other.corbeau.contextTranslate(oldVillageVote.corbeau.value)
 			}

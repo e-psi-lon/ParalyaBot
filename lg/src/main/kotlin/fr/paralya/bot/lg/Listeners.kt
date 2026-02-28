@@ -52,6 +52,7 @@ private val requiredMainChannels = listOf(
 
 private const val WEBHOOK_PF_NAME = "PF"
 private const val WEBHOOK_CUPIDON_NAME = "Cupidon"
+private const val DISCORD_THREAD_MAX_LENGTH = 100
 
 /**
  * Registers all event listeners for the Werewolf (Loup-Garou) game.
@@ -92,10 +93,9 @@ suspend fun LG.registerListeners() {
 		action {
 			val reasonText = I18n.System.Topics.creation.contextTranslate()
 			val textChannel = event.message.channel as TextChannel
-			@Suppress("MagicNumber")
 			textChannel.startPublicThreadWithMessage(
 					event.message.id,
-					event.message.content.truncate(100)
+					event.message.content.truncate(DISCORD_THREAD_MAX_LENGTH)
 			) {
 				reason = reasonText
 			}
