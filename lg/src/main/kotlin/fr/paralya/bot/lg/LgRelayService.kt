@@ -107,7 +107,8 @@ class LgRelayService : KordExKoinComponent {
         if (oldMessage != null) {
             val webhook = getWebhook(outChannel, bot, webhookName)
             try {
-                webhook.token?.let { webhook.deleteMessage(it, oldMessage.id) }
+                // Keep the NPE here, we want a loud error if it's null
+                webhook.deleteMessage(webhook.token!!, oldMessage.id)
             } catch (e: RestRequestException) {
                 logger.error(e) { "Error while deleting message" }
             }
@@ -128,14 +129,13 @@ class LgRelayService : KordExKoinComponent {
         val newMessage = event.message.asMessage()
         if (oldMessage != null) {
             try {
-                webhook.token?.let {
-                    webhook.getMessage(it, oldMessage.id).edit {
-                        content = newMessage.content
-                        if (newMessage.referencedMessage != null) embed {
-                            title = Lg.Transmission.Reference.title.contextTranslate()
-                            description = newMessage.referencedMessage!!.content
-                        } else embeds?.clear()
-                    }
+                // Keep the NPE here, we want a loud error if it's null
+                webhook.getMessage(webhook.token!!, oldMessage.id).edit {
+                    content = newMessage.content
+                    if (newMessage.referencedMessage != null) embed {
+                        title = Lg.Transmission.Reference.title.contextTranslate()
+                        description = newMessage.referencedMessage!!.content
+                    } else embeds?.clear()
                 }
             } catch (_: Exception) {
                 logger.debug { "Message sender is ${event.old?.author?.id?.value}" }
