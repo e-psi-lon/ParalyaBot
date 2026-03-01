@@ -62,7 +62,7 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 	private fun loadState(): ConfigState {
 		if (!configFile.exists()) createDefaultConfig()
 		val raw = ConfigFactory.parseFile(configFile.toFile())
-		val botConfig = Hocon.decodeFromConfig<BotConfig>(getSubConfig("bot"))
+		val botConfig = Hocon.decodeFromConfig<BotConfig>(getSubConfig("bot", raw))
 		validateConfig(botConfig)
 		return ConfigState(raw, botConfig)
 	}
@@ -160,10 +160,10 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
         return configObject
     }
 
-	private fun getSubConfig(path: String): Config {
-		if (!state.raw.hasPath(path))
+	private fun getSubConfig(path: String, config: Config = state.raw): Config {
+		if (!config.hasPath(path))
 			throw IllegalArgumentException("No configuration found for path: $path")
-		return state.raw.getConfig(path)
+		return config.getConfig(path)
 	}
 
 	private fun validateConfig(config: ValidatedConfig) {
