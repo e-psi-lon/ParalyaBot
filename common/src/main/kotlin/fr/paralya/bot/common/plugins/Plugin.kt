@@ -90,8 +90,10 @@ abstract class Plugin: KordExPlugin() {
     private fun removeAllRegistration() {
         val configManager by inject<ConfigManager>()
         configManager.unregisterConfig(name)
-        val gameRegistry by inject<GameRegistry>()
-        gameRegistry.unloadGameMode(name)
+        if (isGame) {
+            val gameRegistry by inject<GameRegistry>()
+            gameRegistry.unloadGameMode(name)
+        }
         getKoin().unloadModules(components)
     }
 
