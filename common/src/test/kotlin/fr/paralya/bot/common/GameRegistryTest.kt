@@ -33,8 +33,8 @@ class GameRegistryTest {
 		val result = registry.getGameMode(gameMode)
 
 		// Assert
-		assertEquals(key, result.first)
-		assertEquals(gameMode, result.second)
+		assertEquals(key, result?.first)
+		assertEquals(gameMode, result?.second)
 	}
 
 	@Test
@@ -69,7 +69,7 @@ class GameRegistryTest {
 		registry.unloadGameMode(gameMode)
 
 		// Assert
-		assertEquals(GameRegistry.NONE, registry.getGameMode(gameMode))
+		assertEquals(null, registry.getGameMode(gameMode))
 		assertEquals(0, registry.getGameModes().size)
 	}
 
@@ -82,7 +82,7 @@ class GameRegistryTest {
 		val result = registry.getGameMode("NonExistent")
 
 		// Assert
-		assertEquals(GameRegistry.NONE, result)
+		assertEquals(null, result)
 	}
 
 	@Test
@@ -96,7 +96,7 @@ class GameRegistryTest {
 		registry.registerGameMode(key, "New Game")
 
 		// Assert
-		assertEquals(GameRegistry.NONE, registry.getGameMode("Old Game"))
+		assertEquals(null, registry.getGameMode("Old Game"))
 		assertEquals(key to "New Game", registry.getGameMode("New Game"))
 	}
 

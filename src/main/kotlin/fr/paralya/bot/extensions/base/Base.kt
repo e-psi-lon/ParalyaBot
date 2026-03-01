@@ -146,7 +146,7 @@ class Base : Extension() {
 			action {
 				val bKord = this@Base.kord
 				bKord.editPresence {
-					gameMode(GameRegistry.NONE)
+					gameMode(null)
 				}
 				respond {
 					content = I18n.StopGame.Response.success.contextTranslate()

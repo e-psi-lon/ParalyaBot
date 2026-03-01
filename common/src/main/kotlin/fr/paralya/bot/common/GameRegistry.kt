@@ -36,7 +36,7 @@ class GameRegistry : KordExKoinComponent {
 	 */
 	fun getGameMode(value: String) = if (gameModes.containsValue(value))
 		gameModes.filterValues { it == value }.keys.first() to value
-	else NONE
+	else null
 
 	/**
 	 * Retrieves all registered game modes.
@@ -51,14 +51,10 @@ class GameRegistry : KordExKoinComponent {
 	 * @param value The name of the game mode to unload.
 	 */
 	@PublishedApi
-	internal fun unloadGameMode(value: String) {
-		if (value == "none") return
+	internal fun unloadGameMode(value: String?) {
+		if (value == null) return
 		if (!gameModes.containsValue(value)) return
 		gameModes.remove(gameModes.filterValues { it == value }.keys.first())
-	}
-
-	companion object {
-		val NONE = I18n.GameMode.none to "none"
 	}
 }
 
@@ -67,8 +63,8 @@ class GameRegistry : KordExKoinComponent {
  *
  * @param gameMode A pair containing the key and value of the game mode.
  */
-fun PresenceBuilder.gameMode(gameMode: Pair<Key, String>) {
-	if (gameMode == GameRegistry.NONE) {
+fun PresenceBuilder.gameMode(gameMode: Pair<Key, String>?) {
+	if (gameMode == null) {
 		status = PresenceStatus.Idle
 		this.watching("Paralya sans animation en cours...")
 	} else {

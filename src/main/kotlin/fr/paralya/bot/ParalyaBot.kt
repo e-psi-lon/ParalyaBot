@@ -90,7 +90,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 
 		members { all() }
 
-		presence { gameMode(GameRegistry.NONE) }
+		presence { gameMode(null) }
 
 		errorResponse { message, type ->
 			val locale = KI18n.defaultLocale
