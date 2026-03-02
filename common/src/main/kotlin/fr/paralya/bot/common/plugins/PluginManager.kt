@@ -2,30 +2,20 @@ package fr.paralya.bot.common.plugins
 
 import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.koin.KordExKoinComponent
-import dev.kordex.core.plugins.PluginManager
+import dev.kordex.core.plugins.PluginManager as KordExPluginManager
 import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.launch
 import org.koin.core.component.inject
 import org.pf4j.PluginState
+import org.pf4j.PluginStateEvent
+import org.pf4j.PluginStateListener
+import org.pf4j.PluginWrapper
 import java.nio.file.Path
 
-class PluginManager(roots: List<Path>, enabled: Boolean) : PluginManager(roots, enabled), KordExKoinComponent {
+class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(roots, enabled), KordExKoinComponent {
 
-
-    override fun startPlugin(pluginId: String?): PluginState? {
-        return super.startPlugin(pluginId).also {
-            val bot by inject<ExtensibleBot>()
-            bot.kordRef.launch {
-                bot.send(PluginReadyEvent(
-                    pluginId ?: error("Plugin id couldn't be found."),
-                    bot.kordRef.guilds.toSet()
-                ))
-            }
-        }
-    }
-
-    override fun stopPlugin(pluginId: String?): PluginState? {
-        return super.stopPlugin(pluginId)
+    init {
+        addPluginStateListener(PluginListener())
     }
 
     override fun deletePlugin(pluginId: String?): Boolean {
@@ -34,5 +24,22 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : PluginManager(roots, 
 
     fun reloadPlugin(pluginId: String?): PluginState? {
         return null
+    }
+
+
+    private inner class PluginListener : PluginStateListener, KordExKoinComponent {
+        override fun pluginStateChanged(event: PluginStateEvent?) {
+            event ?: return
+            val bot = getKoin().getOrNull<ExtensibleBot>() ?: return logger.debug {
+                "Plugin state changed before initialization of the bot itself"
+            }
+            logger.info { "Plugin ${event.plugin.pluginId} changed state to ${event.pluginState}" }
+            if (event.pluginState == PluginState.STARTED) bot.kordRef.launch {
+                bot.send(PluginReadyEvent(
+                    event.plugin.pluginId, // Access to pluginState already required a non-null `plugin``
+                    bot.kordRef.guilds.toSet()
+                ))
+            }
+        }
     }
 }
