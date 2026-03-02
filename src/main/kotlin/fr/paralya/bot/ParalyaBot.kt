@@ -6,6 +6,7 @@ import dev.kord.rest.builder.message.embed
 import dev.kordex.core.ExtensibleBot
 import dev.kordex.i18n.I18n as KI18n
 import dev.kordex.core.utils.loadModule
+import dev.kordex.core.plugins.PluginManager as KordExPluginManager
 import fr.paralya.bot.common.GameRegistry
 import fr.paralya.bot.common.plugins.PluginManager
 import fr.paralya.bot.common.config.ConfigManager
@@ -20,21 +21,21 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import dev.kordex.core.DISCORD_RED
 import dev.kordex.core.annotations.warnings.ReplacingDefaultErrorResponseBuilder
+import fr.paralya.bot.extensions.plugins.PluginExtension
 import org.slf4j.LoggerFactory
 import java.util.Locale
 
 /**
  * Main entry point for the Paralya's Discord bot.
- *
- * This function gets the bot instance and starts it.
- *
- * @param args Command line arguments for the bot.
  */
 suspend fun main(args: Array<String>) {
 	val bot = buildBot(args)
 	bot.start()
 }
 
+/**
+ * Configures the logging level based on the development mode.
+ */
 private fun configureLogging(devMode: Boolean) {
 	val rootLogger = LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME) as Logger
 	rootLogger.level = if (devMode) Level.DEBUG else Level.INFO
@@ -49,19 +50,22 @@ private fun configureLogging(devMode: Boolean) {
  */
 @OptIn(ReplacingDefaultErrorResponseBuilder::class)
 suspend fun buildBot(args: Array<String>): ExtensibleBot {
-	// We need to define a first instance of ConfigManager to access the bot token.
-	// Then the bot will be configured, and the ConfigManager will be replaced by the one defined in the Koin module
-	val firstConfigManager = ConfigManager()
-	return ExtensibleBot(firstConfigManager.botConfig.token) {
+	val devModeArg = args.contains("--dev")
+	configureLogging(devModeArg) // Initial logger setup
+	val configManager = ConfigManager() // Bootstrap to get the token
+	return ExtensibleBot(configManager.botConfig.token) {
+		// Add another option to enable dev mode; the CLI flag
+		// KordEx also provides env vars to set it (see the doc)
+		devMode = devMode || devModeArg
+		configureLogging(devMode) // Reconfigure logging after the "true" dev mode is set
 		val logger = KotlinLogging.logger("ParalyaBot")
-		devMode = if (!devMode) args.contains("--dev") else true
-		configureLogging(devMode)
 		logger.info { "Starting bot in ${if (devMode) "development" else "production"} mode" }
 		extensions {
 			sentry {
 				enable = false
 			}
 			add(::Base)
+			add(::PluginExtension)
 			help {
 				enableBundledExtension = false
 			}
@@ -69,6 +73,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 
 		plugins {
 			manager = ::PluginManager
+			pluginPaths.clear() // We only need one single path, not the default one
 			pluginPath(System.getenv("PARALYA_BOT_PLUGINS_DIR") ?: "./plugins")
 		}
 
@@ -93,7 +98,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 		presence { gameMode(null) }
 
 		errorResponse { message, type ->
-			val locale = KI18n.defaultLocale
+			val locale = message.locale ?: KI18n.defaultLocale
 			embed {
 				title = I18n.Error.title.translateLocale(locale)
 				description = I18n.Error.description.translateLocale(locale, message, type.error::class.simpleName)
@@ -104,7 +109,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 		hooks {
 			beforeKoinSetup {
 				loadModule {
-					singleOf(::ConfigManager) withOptions {
+					single<ConfigManager> { configManager } withOptions {
 						named("configManager")
 						createdAtStart()
 					}
@@ -112,6 +117,15 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 						named("registry")
 						createdAtStart()
 					}
+				}
+			}
+
+			afterKoinSetup {
+				loadModule {
+					// To expose our custom manager for injection, we need to re-register it
+					// on top of what `manager` already does in the plugin block
+					// as KordEx only bind its own type
+					single<PluginManager> { get<KordExPluginManager>() as PluginManager }
 				}
 			}
 		}
