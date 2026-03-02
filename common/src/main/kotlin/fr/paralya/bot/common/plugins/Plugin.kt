@@ -2,7 +2,6 @@ package fr.paralya.bot.common.plugins
 
 import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.plugins.KordExPlugin
-import dev.kordex.core.plugins.PluginManager
 import dev.kordex.i18n.Key
 import fr.paralya.bot.common.GameRegistry
 import fr.paralya.bot.common.config.ConfigManager
@@ -32,6 +31,10 @@ abstract class Plugin: KordExPlugin() {
 
     val pluginId: String by lazy {
         plugin?.pluginId ?: error("Plugin ${this::class.simpleName} identifier couldn't be found.")
+    }
+
+    val version: String by lazy {
+        plugin?.descriptor?.version ?: "unknown"
     }
 
     override suspend fun setup() {

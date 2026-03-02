@@ -59,7 +59,10 @@ class LG : Extension() {
 				super.setState(state)
 			}
 		} catch (timeout: TimeoutCancellationException) {
-			logger.warn(timeout) { "The default implementation timed out probably at the bot.send(). The event wasn't sent" }
+			logger.warn(timeout) {
+				"KordEx's default setState hangs at boot because of an uninitialized Flow. " +
+						"This timeout allows the rest of the setup to continue"
+			}
 			this.state = state
 		}
 	}
