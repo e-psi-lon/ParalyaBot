@@ -24,43 +24,46 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
         val wrapper = super.loadPluginFromPath(pluginPath)
         val classLoader = getPluginClassLoader(wrapper.pluginId)
         val pluginClass = classLoader.loadClass(wrapper.descriptor.pluginClass)
+        val pluginId = wrapper.pluginId
         logger.debug { "Verifying validity of the plugin at path $pluginPath with main class ${wrapper.descriptor.pluginClass}" }
-        require(Plugin::class.java.isAssignableFrom(pluginClass)) {
-            "Plugin ${wrapper.pluginId} does not extend Plugin"
+        if (!Plugin::class.java.isAssignableFrom(pluginClass)) {
+            throw PluginValidationException("Plugin $pluginId does not extend Plugin", pluginId)
         }
 
-        val annotation = pluginClass.getAnnotation(ApiVersion::class.java)
-        requireNotNull(annotation) {
-            "Plugin ${wrapper.pluginId} is missing @ApiVersion annotation"
-        }
+        val annotation = pluginClass.getAnnotation(ApiVersion::class.java) ?:
+        throw PluginValidationException(
+            "Plugin $pluginId is missing @ApiVersion annotation",
+            pluginId
+        )
 
-        require(versionManager.checkVersionConstraint(
+        if (!versionManager.checkVersionConstraint(
             annotation.version, ">=${CommonModule.MIN_COMPATIBLE_VERSION}"
-        )) {
-            "Plugin ${wrapper.pluginId} is not compatible with the current API version. " +
-                    "Minimum compatible version: ${CommonModule.MIN_COMPATIBLE_VERSION}"
-        }
+        )) throw PluginInvalidVersionException("Plugin $pluginId is not compatible with the current API version. " +
+                    "Minimum compatible version: ${CommonModule.MIN_COMPATIBLE_VERSION}", pluginId, annotation.version)
 
-        require(versionManager.checkVersionConstraint(
+        if (!versionManager.checkVersionConstraint(
             annotation.version, "<=${CommonModule.API_VERSION}"
-        )) {
-            "Plugin ${wrapper.pluginId} requires API version ${annotation.version}, " +
-                    "but the current API version is ${CommonModule.API_VERSION}"
-        }
+        )) throw PluginInvalidVersionException("Plugin $pluginId requires API version ${annotation.version}, " +
+                    "but the current API version is ${CommonModule.API_VERSION}", pluginId, annotation.version)
 
         return wrapper
     }
 
-    fun reloadPlugin(pluginId: String?): PluginState? {
-        return null
+    fun reloadPlugin(pluginId: String, newPath: Path? = null): PluginReloadResult? {
+        val plugin = getPlugin(pluginId) ?: return OldPluginNotFound
+        val pluginPath = plugin.pluginPath!! // PluginWrapper requires a path in its constructor
+        val reloadStrategy = createReloadStrategy(pluginPath, newPath ?: pluginPath)
+        return reloadStrategy.reload()
     }
 
 
     private inner class PluginListener : PluginStateListener, KordExKoinComponent {
         override fun pluginStateChanged(event: PluginStateEvent?) {
             event ?: return
-            val bot = getKoin().getOrNull<ExtensibleBot>() ?: return logger.debug {
-                "Plugin state changed before initialization of the bot itself"
+            val bot = getKoin().getOrNull<ExtensibleBot>()
+            if (bot == null) {
+                logger.debug { "Plugin state changed before initialization of the bot itself" }
+                return
             }
             logger.info { "Plugin ${event.plugin.pluginId} changed state to ${event.pluginState}" }
             if (event.pluginState == PluginState.STARTED) bot.kordRef.launch {
