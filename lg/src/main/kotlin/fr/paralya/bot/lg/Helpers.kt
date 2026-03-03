@@ -27,6 +27,12 @@ suspend fun Member.swapRoles(
 	removeRole(removeRoleId, reason)
 }
 
+/**
+ * Truncates a string to a specified maximum length, adding an ellipsis if necessary.
+ *
+ * @param maxLength The maximum length of the string. Must be greater than 3 to account for the ellipsis.
+ * @return The truncated string.
+ */
 @Suppress("MagicNumber")
 fun String.truncate(maxLength: Int): String =
 	if (length <= maxLength) this else take(maxLength - 3) + "..."
