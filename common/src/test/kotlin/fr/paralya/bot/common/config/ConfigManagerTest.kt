@@ -42,7 +42,11 @@ class ConfigManagerTest : KoinTest {
 		val nonExistentPath = tempDir.resolve("non-existent.conf")
 
 		// Act
-		ConfigManager(nonExistentPath)
+		try {
+			ConfigManager(nonExistentPath)
+		} catch (e: IllegalStateException) {
+			// Expected to fail due to missing required fields, but the file should still be created
+		}
 
 		// Assert
 		assertTrue(nonExistentPath.toFile().exists())
