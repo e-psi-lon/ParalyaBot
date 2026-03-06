@@ -97,7 +97,7 @@
                             version = version;
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-0xBA18bSFkWlKpc9VAZL6KhI9ZzvFLOH6h8THS3R+k4=";
+                            outputHash = "sha256-MbokdeI6Z+7GBeANrsDkzGci/HQNIQssGoDl8ViIaHE=";
                         };
 
                     lg-plugin =
@@ -110,7 +110,7 @@
                             output = "lg/build/distributions/lg-${version}.zip";
                             name = "lg-plugin-${version}";
                             extension = "zip";
-                            outputHash = "sha256-DUBtT6MV0iV8nER5A+JdNCppDrv58Qvf/GKDsrRcO4M=";
+                            outputHash = "sha256-lKVcA9tPOnS+Pgh1TdDF0i8M6XkKbhgwNJN4AgzlcVo=";
                         };
 
                     sta-plugin =

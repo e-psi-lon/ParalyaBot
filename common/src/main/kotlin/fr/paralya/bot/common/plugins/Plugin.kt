@@ -100,6 +100,11 @@ abstract class Plugin: KordExPlugin() {
         getKoin().unloadModules(components)
     }
 
+    /**
+     * Perform the registration of the config type.
+     * As the only way to obtain the required [ConfigDefinition] instance,
+     * you must call it in [defineConfig]
+     */
     protected inline fun <reified T : ValidatedConfig> define() : ConfigDefinition {
         // This function is seemingly doing a lot of work, but
         // It is necessary to avoid too many indirections
@@ -127,5 +132,5 @@ abstract class Plugin: KordExPlugin() {
         defineConfig()
     }
 
-    class ConfigDefinition @PublishedApi internal constructor()
+    class ConfigDefinition @PublishedApi internal constructor() // Marker class to force subclasses to call define<T>()
 }

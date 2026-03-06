@@ -49,11 +49,18 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
         return wrapper
     }
 
-    fun reloadPlugin(pluginId: String, newPath: Path? = null): PluginReloadResult? {
+    fun reloadPlugin(pluginId: String, newPath: Path? = null): PluginReloadResult {
         val plugin = getPlugin(pluginId) ?: return OldPluginNotFound
         val pluginPath = plugin.pluginPath!! // PluginWrapper requires a path in its constructor
-        val reloadStrategy = createReloadStrategy(pluginPath, newPath ?: pluginPath)
+        val reloadStrategy = createReloadStrategy(pluginId,pluginPath, newPath ?: pluginPath, logger)
         return reloadStrategy.reload()
+    }
+
+    // TODO: Consolidate handling and expose to public API
+    private fun reloadPlugins() {
+        unloadPlugins()
+        loadPlugins()
+        startPlugins()
     }
 
 

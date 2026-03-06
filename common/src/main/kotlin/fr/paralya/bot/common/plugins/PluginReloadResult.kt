@@ -1,8 +1,13 @@
 package fr.paralya.bot.common.plugins
 
-sealed interface PluginReloadResult
+import org.pf4j.PluginRuntimeException
 
-sealed interface PluginReloadError : PluginReloadResult
-object OldPluginNotFound : PluginReloadError
-object OldPluginFallbackFailedToReload : PluginReloadError
-object OldPluginReused : PluginReloadError
+sealed interface PluginReloadResult
+object SuccessfulPluginReload : PluginReloadResult
+
+sealed class PluginReloadError(val exception: Exception?) : PluginReloadResult
+
+object OldPluginNotFound : PluginReloadError(null)
+class OldPluginFailedToDelete(exception: PluginRuntimeException? = null) : PluginReloadError(exception)
+class OldPluginFallbackFailedToLoad(exception: Exception, val fallbackException: Exception) : PluginReloadError(exception)
+class OldPluginReused(exception: Exception) : PluginReloadError(exception)
