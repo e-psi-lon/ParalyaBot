@@ -10,6 +10,7 @@
             system = "x86_64-linux";
             pkgs = nixpkgs.legacyPackages.${system};
             lib = pkgs.lib;
+            project-jdk = pkgs.jdk21;
 
 
             lastCommitAsTimestamp = let
@@ -50,23 +51,22 @@
                     gradle-wrapper = (pkgs.gradle-packages.mkGradle {
                         version = gradleVersion;
                         hash = "sha256-oX3dhaJran9d23H/iwX8UQTAICxuZHgkKXkMkzaGyAY=";
-                        defaultJava = pkgs.jdk21;
+                        defaultJava = project-jdk;
                     }).wrapped;
 
-                    mkGradleBuild = { task, version, output, name, extension ? "jar", extraArgs ? "", outputHash }:
+                    mkGradleBuild = { task, version, output, name, outputHash, extension ? "jar", extraArgs ? "" }:
                         pkgs.stdenv.mkDerivation {
                             pname = name;
-                            inherit version;
+                            inherit version outputHash;
                             src = ./.;
-                            buildInputs = with pkgs; [ jdk21 cacert gradle-wrapper ];
+                            buildInputs = with pkgs; [ project-jdk cacert gradle-wrapper ];
                             dontConfigure = true;
-                            outputHash = outputHash;
                             outputHashMode = "recursive";
                             outputHashAlgo = "sha256";
 
                             buildPhase = ''
                                 export GRADLE_USER_HOME=$(mktemp -d)
-                                export JAVA_HOME=${pkgs.jdk21}
+                                export JAVA_HOME=${project-jdk}
                                 export TZ=UTC
                                 export LANG=C.UTF-8
                                 export LC_ALL=C.UTF-8
@@ -93,8 +93,8 @@
                             version = extractVersion "paralyabot.version";
                         in
                         mkGradleBuild {
+                            inherit version;
                             task = "shadowJar";
-                            version = version;
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
                             outputHash = "sha256-MbokdeI6Z+7GBeANrsDkzGci/HQNIQssGoDl8ViIaHE=";
@@ -105,8 +105,8 @@
                             version = extractPluginVersion "lg";
                         in
                         mkGradleBuild {
+                            inherit version;
                             task = "lg:distZip";
-                            version = version;
                             output = "lg/build/distributions/lg-${version}.zip";
                             name = "lg-plugin-${version}";
                             extension = "zip";
@@ -118,8 +118,8 @@
                             version = extractPluginVersion "sta";
                         in
                         mkGradleBuild {
+                            inherit version;
                             task = "sta:distZip";
-                            version = extractPluginVersion "sta";
                             output = "sta/build/distributions/sta-${version}.zip";
                             name = "sta-plugin-${version}";
                             extension = "zip";
@@ -128,12 +128,12 @@
 
                     paralyabot-image =
                         let
-                            headlessJdk = pkgs.jdk21.override {
+                            headlessJdk = project-jdk.override {
                                 headless = true;
                                 enableGtk = false;
                                 enableJavaFX = false;
                             };
-                            jre21 = pkgs.jre21_minimal.override {
+                            project-jre = pkgs.jre21_minimal.override {
                                 jdk = headlessJdk;
                                 jdkOnBuild = headlessJdk;
                                 modules = [ "java.base" "java.xml" "java.naming" "java.logging" "jdk.crypto.ec" ];
@@ -145,7 +145,7 @@
                             created = lastCommitAsTimestamp;
 
                             contents = [
-                                jre21
+                                project-jre
                                 pkgs.cacert
                             ];
 
@@ -155,7 +155,7 @@
                             '';
 
                             config = {
-                                Entrypoint = [ (lib.getExe jre21) "-jar" "/app/paralyabot.jar" ];
+                                Entrypoint = [ (lib.getExe project-jre) "-jar" "/app/paralyabot.jar" ];
                                 WorkingDir = "/app";
                                 Env = [
                                     "PARALYA_BOT_CONFIG_FILE=/app/external/config.conf"
@@ -173,22 +173,21 @@
             devShells.${system}.default =
                 let
                     build-bot = pkgs.writeShellScriptBin "build-bot" ''
+                        set -e
                         IMAGE_PATH=$(nix build .#paralyabot-image --print-out-paths)
-                        if [ -n "$IMAGE_PATH" ]; then
-                            "$IMAGE_PATH" | podman load
-                        fi
+                        "$IMAGE_PATH" | podman load
                     '';
                     run-bot = pkgs.writeShellScriptBin "run-bot" ''
-                    CONTAINER_NAME="''${1:-ParalyaBot}"
+                        CONTAINER_NAME="''${1:-ParalyaBot}"
 
-                    echo "Starting container: $CONTAINER_NAME..."
-                    podman run \
-                        --name "$CONTAINER_NAME" \
-                        --replace \
-                        --detach \
-                        --volume "$PWD/container:/app/external:Z" \
-                        localhost/paralyabot:latest
-                    echo "Container $CONTAINER_NAME started successfully."
+                        echo "Starting container: $CONTAINER_NAME..."
+                        podman run \
+                            --name "$CONTAINER_NAME" \
+                            --replace \
+                            --detach \
+                            --volume "$PWD/container:/app/external:Z" \
+                            localhost/paralyabot:latest
+                        echo "Container $CONTAINER_NAME started successfully."
                     '';
 
                     build-and-run-bot = pkgs.writeShellScriptBin "build-and-run-bot" ''
@@ -247,8 +246,12 @@
                     '';
                 in
                 pkgs.mkShell {
+                    shellHook = ''
+                        ln -sfn ${project-jdk}/lib/openjdk .jdk
+                        export JAVA_HOME=$PWD/.jdk
+                    '';
                     buildInputs = with pkgs; [
-                        jdk21
+                        project-jdk
                         nix-update
                         build-bot
                         run-bot
