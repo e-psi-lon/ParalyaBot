@@ -7,6 +7,10 @@ repositories {
 	mavenCentral()
 }
 
+kotlin {
+	jvmToolchain(libs.versions.jvm.get().toInt())
+}
+
 dependencies {
 	implementation(plugin(libs.plugins.kotlin.jvm))
 	implementation(plugin(libs.plugins.kover))

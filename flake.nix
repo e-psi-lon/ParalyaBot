@@ -10,7 +10,7 @@
             system = "x86_64-linux";
             pkgs = nixpkgs.legacyPackages.${system};
             lib = pkgs.lib;
-            project-jdk = pkgs.jdk21;
+            project-jdk = pkgs.jdk25;
 
 
             lastCommitAsTimestamp = let
@@ -97,7 +97,7 @@
                             task = "shadowJar";
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-MbokdeI6Z+7GBeANrsDkzGci/HQNIQssGoDl8ViIaHE=";
+                            outputHash = "sha256-TTw0CoUtMkv5C+WUPCODZipSZKSQrq60FKKKVQIPbio=";
                         };
 
                     lg-plugin =
@@ -110,7 +110,7 @@
                             output = "lg/build/distributions/lg-${version}.zip";
                             name = "lg-plugin-${version}";
                             extension = "zip";
-                            outputHash = "sha256-lKVcA9tPOnS+Pgh1TdDF0i8M6XkKbhgwNJN4AgzlcVo=";
+                            outputHash = "sha256-Mj7oEmfEFJpD3O9/x7HA+mC5sCrYdCdAa/ki2vkPT7s=";
                         };
 
                     sta-plugin =
@@ -123,7 +123,7 @@
                             output = "sta/build/distributions/sta-${version}.zip";
                             name = "sta-plugin-${version}";
                             extension = "zip";
-                            outputHash = "sha256-ldka+45f/2+di/DHmsv4poVpZWpnVY+s0VPiv/KLWsQ=";
+                            outputHash = "sha256-N4jEuHX/zgY8pQ712WtgJNVnWsFCQkalS2ZG+6e+a4I=";
                         };
 
                     paralyabot-image =
@@ -133,7 +133,7 @@
                                 enableGtk = false;
                                 enableJavaFX = false;
                             };
-                            project-jre = pkgs.jre21_minimal.override {
+                            project-jre = pkgs.jre25_minimal.override {
                                 jdk = headlessJdk;
                                 jdkOnBuild = headlessJdk;
                                 modules = [ "java.base" "java.xml" "java.naming" "java.logging" "jdk.crypto.ec" ];
