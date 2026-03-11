@@ -155,6 +155,7 @@
                             '';
 
                             config = {
+                                User = "1000:1000";
                                 Entrypoint = [
                                     (lib.getExe project-jre)
                                     "-XX:+UseCompactObjectHeaders"
