@@ -155,7 +155,23 @@
                             '';
 
                             config = {
-                                Entrypoint = [ (lib.getExe project-jre) "-jar" "/app/paralyabot.jar" ];
+                                Entrypoint = [
+                                    (lib.getExe project-jre)
+                                    "-XX:+UseCompactObjectHeaders"
+                                    "-XX:+UseContainerSupport"
+                                    "-XX:+UseStringDeduplication"
+                                    "-XX:+PerfDisableSharedMem"
+                                    "-XX:SoftMaxHeapSize=32m"
+                                    "-XX:+DisableExplicitGC"
+                                    "-XX:+ExitOnOutOfMemoryError"
+                                    "-XX:MaxGCPauseMillis=50"
+                                    "-XX:G1HeapRegionSize=1m"
+                                    "-XX:ReservedCodeCacheSize=32m"
+                                    "-Xms12m"
+                                    "-Xmx64m"
+                                    "-jar"
+                                    "/app/paralyabot.jar"
+                                ];
                                 WorkingDir = "/app";
                                 Env = [
                                     "PARALYA_BOT_CONFIG_FILE=/app/external/config.conf"
