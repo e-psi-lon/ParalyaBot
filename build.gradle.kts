@@ -104,9 +104,12 @@ tasks {
 			val path = file.relativePath.pathString
 			if (!path.startsWith("com/ibm/icu/impl/data/icudata/")) return@exclude false
 
-			val name = file.relativePath.lastName.removeSuffix(".res")
+			val lastName = file.relativePath.lastName
+			// Keep all non-res/icu binary data files (.cfu, .nrm, .spp, .brk, .dict, etc.)
+			if (!lastName.endsWith(".res") && !lastName.endsWith(".icu")) return@exclude false
 
-			// Keep structural files
+			val name = lastName.removeSuffix(".res").removeSuffix(".icu")
+
 			val keepFiles = setOf(
 				"root", "pool", "res_index", "metadata", "supplementalData",
 				"langInfo", "zoneinfo64", "metaZones", "timezoneTypes",
@@ -114,13 +117,12 @@ tasks {
 				"pluralRanges", "currencyNumericCodes", "keyTypeData",
 				"grammaticalFeatures", "genderList", "dayPeriods",
 				"icustd", "icuver", "units", "unames", "uprops",
-				"confusables", "pnames", "supplementalData"
+				"confusables", "pnames", "ucase"
 			)
 			if (name in keepFiles) return@exclude false
 			if (name.startsWith("en") || name.startsWith("fr")) return@exclude false
 
-			// Exclude everything else that looks like a locale
-			name.first().isLetter() && name !in keepFiles
+			name.first().isLetter()
 		}
 
 		listOf("osx", "linux_aarch_64").forEach { platform ->
