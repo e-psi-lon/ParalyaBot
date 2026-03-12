@@ -33,20 +33,34 @@ import org.koin.core.component.inject
  */
 context(lg: LG)
 suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVotingCommands() {
+	val voteManager by lg.inject<VoteManager>()
 	group(Lg.Vote.Command.name) {
 		description = Lg.Vote.Command.description
 		ephemeralSubCommand(::VoteArguments) {
 			name = Lg.Vote.Village.Command.name
 			description = Lg.Vote.Village.Command.description
 			action {
-				handleVote(PhaseType.DAY, LgChannelType.VOTES, arguments.target, arguments.reason, true)
+				handleVote(
+					PhaseType.DAY,
+					LgChannelType.VOTES,
+					arguments.target,
+					arguments.reason,
+					voteManager,
+					true
+				)
 			}
 		}
 		ephemeralSubCommand(::VoteArguments) {
 			name = Lg.Vote.Werewolf.Command.name
 			description = Lg.Vote.Werewolf.Command.description
 			action {
-				handleVote(PhaseType.NIGHT, LgChannelType.LOUPS_VOTE, arguments.target, arguments.reason)
+				handleVote(
+					PhaseType.NIGHT,
+					LgChannelType.LOUPS_VOTE,
+					arguments.target,
+					arguments.reason,
+					voteManager
+				)
 			}
 		}
 		ephemeralSubCommand {
@@ -55,7 +69,6 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 
 			action {
 				val guild = guild ?: return@action
-				val voteManager by inject<VoteManager>()
 				val phase = validateVoteChannel(Lg.Vote.Response.Error.cantVoteHere) ?: return@action
 				val vote = voteManager.getCurrentVote(phase)
 				val isCorrectPhase = lg.botCache.getGameData().phase.type == phase
@@ -92,7 +105,6 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 			name = Lg.Vote.Reset.Command.name
 			description = Lg.Vote.Reset.Command.description
 			adminOnly {
-				val voteManager by inject<VoteManager>()
 				val phase = validateVoteChannel(Lg.Vote.Response.Error.cantVoteHere) ?: return@adminOnly
 				val vote = voteManager.getCurrentVote(phase)
 				val votes = vote?.votes
@@ -113,7 +125,6 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 		action {
 			val previousId = arguments.previousId?.snowflake
 			val channelId = channel.id
-			val voteManager by inject<VoteManager>()
 			val votes = LgChannelType.VOTES.toId()
 			val voteLoups = LgChannelType.LOUPS_VOTE.toId()
 			val voteCorbeau = LgChannelType.CORBEAU.toId()
@@ -157,7 +168,6 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 
 		adminOnly {
 			val guild = guild ?: return@adminOnly
-			val voteManager by inject<VoteManager>()
 			val phase = validateVoteChannel(Lg.MostVoted.Response.Error.cantUseHere)
 				?: return@adminOnly
 			if (phase != PhaseType.DAY) {
@@ -225,9 +235,9 @@ private suspend fun <A : Arguments, M : ModalForm> EphemeralSlashCommandContext<
 	voteChannelType: LgChannelType,
 	target: User,
 	reason: String?,
+	voteManager: VoteManager,
 	handleCorbeau: Boolean = false
 ) {
-	val voteManager by lg.inject<VoteManager>()
 	val currentVote = voteManager.getCurrentVote(phase)
 	if (handleCorbeau && channel.id == LgChannelType.CORBEAU.toId()) {
 		if (currentVote?.corbeau != null) {
