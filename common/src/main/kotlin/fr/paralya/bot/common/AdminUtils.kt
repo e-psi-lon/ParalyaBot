@@ -2,9 +2,8 @@ package fr.paralya.bot.common
 
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.User
+import dev.kordex.core.checks.memberFor
 import dev.kordex.core.commands.Arguments
-import dev.kordex.core.commands.application.slash.EphemeralSlashCommandContext
-import dev.kordex.core.commands.application.slash.PublicSlashCommandContext
 import dev.kordex.core.commands.application.slash.SlashCommand
 import dev.kordex.core.commands.application.slash.SlashCommandContext
 import dev.kordex.core.components.forms.ModalForm
@@ -25,20 +24,17 @@ import org.koin.core.component.inject
  * @param action The action to be executed if the user is an admin.
  */
 fun <C : SlashCommandContext<*, A, M>, A : Arguments, M : ModalForm> SlashCommand<C, A, M>.adminOnly(
-	action: suspend C.(M?) -> Unit
+	extraAllowList: List<ULong> = emptyList(),
+	action: suspend C.(M?) -> Unit,
 ) {
-	action { modal ->
-		val configManager by inject<ConfigManager>()
-		if (configManager.botConfig.admins.contains(member?.id?.value)) {
-			action(modal)
-		} else {
-			val text = I18n.System.Permissions.notAdmin.contextTranslate()
-			when (this) {
-				is PublicSlashCommandContext<*, *> -> respond { content = text }
-				is EphemeralSlashCommandContext<*, *> -> respond { content = text }
-			}
+	val configManager: ConfigManager by inject()
+	check {
+		errorResponseKey = I18n.System.Permissions.notAdmin
+		failIfNot {
+			(configManager.botConfig.admins + extraAllowList).contains(memberFor(event)?.id?.value)
 		}
 	}
+	action(action)
 }
 
 /**

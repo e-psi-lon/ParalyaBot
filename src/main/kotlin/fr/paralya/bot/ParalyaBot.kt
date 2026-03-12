@@ -21,6 +21,7 @@ import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
 import dev.kordex.core.DISCORD_RED
 import dev.kordex.core.annotations.warnings.ReplacingDefaultErrorResponseBuilder
+import dev.kordex.i18n.generated.CoreTranslations
 import fr.paralya.bot.extensions.plugins.PluginExtension
 import org.slf4j.LoggerFactory
 import java.util.Locale
@@ -101,7 +102,8 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 			val locale = message.locale ?: KI18n.defaultLocale
 			embed {
 				title = I18n.Error.title.translateLocale(locale)
-				description = I18n.Error.description.translateLocale(locale, message, type.error::class.simpleName)
+				description = if (message != CoreTranslations.Checks.responseTemplate) message.translateLocale(locale)
+				else I18n.Error.description.translateLocale(locale, message, type.error::class.simpleName)
 				color = DISCORD_RED
 			}
 		}
