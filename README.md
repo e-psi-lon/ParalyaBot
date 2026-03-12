@@ -1,7 +1,7 @@
 # ParalyaBot
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
-[![JDK](https://img.shields.io/badge/JDK-21%2B-blue.svg)](https://www.oracle.com/java/technologies/javase/jdk21-archive-downloads.html)
+[![JDK](https://img.shields.io/badge/JDK-25%2B-blue.svg)](https://www.oracle.com/java/technologies/javase/jdk25-archive-downloads.html)
 [![Discord](https://img.shields.io/badge/Discord-Paralya-7289DA.svg)](https://discord.gg/gQVxH7bGsP)
 
 A Discord bot for the Paralya Discord server, built with Kotlin and KordEx.
@@ -54,7 +54,7 @@ paralya-bot/
 
 ## Requirements
 
-- JDK 21 or newer
+- JDK 25
 - Gradle (wrapper included)
 - Discord Bot Token
 - Discord server with appropriate permissions
