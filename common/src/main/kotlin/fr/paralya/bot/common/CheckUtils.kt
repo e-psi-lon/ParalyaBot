@@ -6,7 +6,7 @@ import dev.kordex.core.checks.types.CheckContext
 import dev.kordex.core.checks.userFor
 import io.github.oshai.kotlinlogging.KotlinLogging
 
-public suspend fun CheckContext<*>.isUser() {
+suspend fun CheckContext<*>.isUser() {
     if (!passed) {
         return
     }

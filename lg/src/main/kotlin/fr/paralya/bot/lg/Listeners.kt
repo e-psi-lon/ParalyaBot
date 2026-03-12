@@ -19,6 +19,7 @@ import fr.paralya.bot.common.addReactions
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.config.BotConfig
 import fr.paralya.bot.common.contextTranslate
+import fr.paralya.bot.common.isUser
 import fr.paralya.bot.common.plugins.PluginReadyEvent
 import fr.paralya.bot.common.removeMemberPermission
 import fr.paralya.bot.common.snowflake
@@ -66,12 +67,12 @@ suspend fun LG.registerListeners() {
 	val relayService by inject<LgRelayService>()
 
 	event<MessageCreateEvent> {
-		check { inChannel(LgChannelType.LOUPS_CHAT.toId()) }
+		check { inChannel(LgChannelType.LOUPS_CHAT.toId()); isUser() }
 		action { relayService.onMessageSent(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId(), true) }
 	}
 
 	event<MessageCreateEvent> {
-		check { inChannel(LgChannelType.DATE_MYSTERE.toId()) }
+		check { inChannel(LgChannelType.DATE_MYSTERE.toId()); isUser() }
 		action { relayService.onMessageSent(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId(), false) }
 	}
 
@@ -89,7 +90,7 @@ suspend fun LG.registerListeners() {
 	}
 
 	event<MessageCreateEvent> {
-		check { inChannel(LgChannelType.SUJETS.toId()) }
+		check { inChannel(LgChannelType.SUJETS.toId()); isUser() }
 		action {
 			val reasonText = I18n.System.Topics.creation.contextTranslate()
 			val textChannel = event.message.channel as TextChannel
@@ -108,47 +109,47 @@ suspend fun LG.registerListeners() {
 	}
 
 	event<MessageUpdateEvent> {
-		check { inChannel(LgChannelType.LOUPS_CHAT.toId()) }
+		check { inChannel(LgChannelType.LOUPS_CHAT.toId()); isUser() }
 		action { relayService.onMessageUpdate(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId(), true) }
 	}
 
 	event<MessageUpdateEvent> {
-		check { inChannel(LgChannelType.DATE_MYSTERE.toId()) }
+		check { inChannel(LgChannelType.DATE_MYSTERE.toId()); isUser() }
 		action { relayService.onMessageUpdate(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId(), false) }
 	}
 
 	event<MessageDeleteEvent> {
-		check { inChannel(LgChannelType.LOUPS_CHAT.toId()) }
+		check { inChannel(LgChannelType.LOUPS_CHAT.toId()); isUser() }
 		action { relayService.onMessageDelete(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId()) }
 	}
 
 	event<MessageDeleteEvent> {
-		check { inChannel(LgChannelType.DATE_MYSTERE.toId()) }
+		check { inChannel(LgChannelType.DATE_MYSTERE.toId()); isUser() }
 		action { relayService.onMessageDelete(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId()) }
 	}
 
 	event<ReactionAddEvent> {
-		check { inChannel(LgChannelType.LOUPS_CHAT.toId()) }
+		check { inChannel(LgChannelType.LOUPS_CHAT.toId()); isUser() }
 		action { relayService.onReactionAdd(WEBHOOK_PF_NAME,
 			LgChannelType.PETITE_FILLE.toId(), isAnonymous = true
 		) }
 	}
 
 	event<ReactionAddEvent> {
-		check { inChannel(LgChannelType.DATE_MYSTERE.toId()) }
+		check { inChannel(LgChannelType.DATE_MYSTERE.toId()); isUser() }
 		action { relayService.onReactionAdd(WEBHOOK_CUPIDON_NAME,
 			LgChannelType.CUPIDON.toId(), isAnonymous = false
 		) }
 	}
 
 	event<ReactionRemoveEvent> {
-		check { inChannel(LgChannelType.LOUPS_CHAT.toId()) }
+		check { inChannel(LgChannelType.LOUPS_CHAT.toId()); isUser() }
 		action { relayService.onReactionRemove(WEBHOOK_PF_NAME,
 			LgChannelType.PETITE_FILLE.toId(), isAnonymous = true
 		) }
 	}
 	event<ReactionRemoveEvent> {
-		check { inChannel(LgChannelType.DATE_MYSTERE.toId()) }
+		check { inChannel(LgChannelType.DATE_MYSTERE.toId()); isUser() }
 		action { relayService.onReactionRemove(WEBHOOK_CUPIDON_NAME,
 			LgChannelType.CUPIDON.toId(), isAnonymous = false
 		) }
