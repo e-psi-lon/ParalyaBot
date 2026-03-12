@@ -30,6 +30,7 @@ import fr.paralya.bot.common.contextTranslate
 import fr.paralya.bot.common.gameMode
 import fr.paralya.bot.common.getCorrespondingMessage
 import fr.paralya.bot.common.getWebhook
+import fr.paralya.bot.common.isUser
 import fr.paralya.bot.common.sendAsWebhook
 import fr.paralya.bot.common.snowflake
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -86,6 +87,7 @@ class Base : Extension() {
 			check {
 				noGuild()
 				isNotBot()
+				isUser()
 			}
 
 			action {
@@ -99,10 +101,10 @@ class Base : Extension() {
 					event.new.author.value.asUser(kord)?.avatar?.cdnUrl?.toUrl(),
 					"DM"
 				) {
-					content = event.new.content.toString()
+					content = event.new.content.value ?: ""
 					embed {
 						title = I18n.Transmission.Update.title.contextTranslate()
-						description = event.new.content.toString()
+						description = event.new.content.value ?: ""
 					}
 				}
 			}
