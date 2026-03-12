@@ -97,7 +97,7 @@
                             task = "shadowJar";
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-TTw0CoUtMkv5C+WUPCODZipSZKSQrq60FKKKVQIPbio=";
+                            outputHash = "sha256-k1X8tA+rnq55e0CP9j2mobF8EY3nDBAfQAvu2ewNF+s=";
                         };
 
                     lg-plugin =
@@ -110,7 +110,7 @@
                             output = "lg/build/distributions/lg-${version}.zip";
                             name = "lg-plugin-${version}";
                             extension = "zip";
-                            outputHash = "sha256-Mj7oEmfEFJpD3O9/x7HA+mC5sCrYdCdAa/ki2vkPT7s=";
+                            outputHash = "sha256-jNN0FRM/VhRz2gCDzAf1NZNb44KcUrTUWxdyz2hv72I=";
                         };
 
                     sta-plugin =
@@ -167,9 +167,10 @@
                                     "-XX:+ExitOnOutOfMemoryError"
                                     "-XX:MaxGCPauseMillis=50"
                                     "-XX:G1HeapRegionSize=1m"
-                                    "-XX:ReservedCodeCacheSize=32m"
+                                    "-XX:ReservedCodeCacheSize=64m"
                                     "-Xms12m"
-                                    "-Xmx64m"
+                                    "-Xmx128m"
+                                    "--enable-native-access=ALL-UNNAMED "
                                     "-jar"
                                     "/app/paralyabot.jar"
                                 ];
@@ -177,6 +178,9 @@
                                 Env = [
                                     "PARALYA_BOT_CONFIG_FILE=/app/external/config.conf"
                                     "PARALYA_BOT_PLUGINS_DIR=/app/external/plugins"
+                                    "BOT_DEVELOPER_ID=708006478807695450"
+                                    # Required by data collection even if disabled
+                                    "DATA_COLLECTION_UUID=7f7bec74-d7f9-4320-9a7e-46eab2be31c8"
                                 ];
                                 Volumes = {
                                     "/app/external" = {};

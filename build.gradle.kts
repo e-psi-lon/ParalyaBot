@@ -174,6 +174,6 @@ tasks {
 		val runTask = getByName<JavaExec>("runShadow")
 		mainClass = runTask.mainClass
 		classpath = runTask.classpath
-		jvmArgs = runTask.jvmArgs
+		jvmArgs = runTask.jvmArgs + listOf("--enable-native-access=ALL-UNNAMED")
 	}
 }
