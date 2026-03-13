@@ -66,6 +66,8 @@
 
                             buildPhase = ''
                                 export GRADLE_USER_HOME=$(mktemp -d)
+                                cp -r ${self.packages.${system}.gradle-deps}/caches $GRADLE_USER_HOME/
+                                chmod -R u+w $GRADLE_USER_HOME
                                 export JAVA_HOME=${project-jdk}
                                 export TZ=UTC
                                 export LANG=C.UTF-8
@@ -88,6 +90,31 @@
                             '';
                         };
                 in {
+                    gradle-deps = pkgs.stdenv.mkDerivation {
+                        pname = "paralyabot-gradle-deps";
+                        version = "0";
+                        src = ./.;
+                        buildInputs = with pkgs; [ project-jdk cacert gradle-wrapper perl ];
+                        dontConfigure = true;
+                        outputHashMode = "recursive";
+                        outputHashAlgo = "sha256";
+                        outputHash = "sha256-E7wKHV3K+Dfn/tyZzXJkKH7WtxL+7hWDuGQkCyaFoe8=";
+
+                        buildPhase = ''
+                            export GRADLE_USER_HOME=$(mktemp -d)
+                            export JAVA_HOME=${project-jdk}
+                            ${lib.getExe gradle-wrapper} :common:jar \
+                                --no-daemon \
+                                --no-configuration-cache \
+                                --console=plain
+                        '';
+
+                        installPhase = ''
+                            mkdir -p $out/caches/modules-2
+                            cp -r $GRADLE_USER_HOME/caches/modules-2/files-2.1 $out/caches/modules-2/
+                            cp -r $GRADLE_USER_HOME/caches/build-cache-1 $out/caches/
+                        '';
+                    };
                     paralyabot-jar =
                         let
                             version = extractVersion "paralyabot.version";
@@ -97,7 +124,7 @@
                             task = "shadowJar";
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-72tE7v7aqShHH4Ejtc0XC3uGXN5gVA8oEjFD/qHoq6c=";
+                            outputHash = "sha256-618gTq5UQkCD4g+J5E7Wj5ogoHVdpYk9uD69/3YTNLI=";
                         };
 
                     lg-plugin =
@@ -257,14 +284,35 @@
                     '';
 
                     update-hash = pkgs.writeShellScriptBin "update-hash" ''
-                        if [ "''${1:-}" = "--all" ]; then
-                            for pkg in paralyabot-jar lg-plugin sta-plugin; do
-                                ${lib.getExe pkgs.nix-update} --flake --version=skip "$pkg"
-                            done
-                        else
-                            PACKAGE="''${1:-paralyabot-jar}"
-                            ${lib.getExe pkgs.nix-update} --flake --version=skip "$PACKAGE"
-                        fi
+                        case "''${1:-}" in
+                            --help|-h)
+                                echo "Usage: update-hash [OPTION|PACKAGE]"
+                                echo ""
+                                echo "Options:"
+                                echo "  --all         Update all build artifact hashes (jar, plugins)"
+                                echo "  --deps        Update the Gradle dependency cache hash"
+                                echo "  --everything  Update deps first, then all build artifacts"
+                                echo "  --help, -h    Show this help message"
+                                echo ""
+                                echo "Without arguments, defaults to updating paralyabot-jar"
+                                ;;
+                            --everything)
+                                for pkg in gradle-deps paralyabot-jar lg-plugin sta-plugin; do
+                                    ${lib.getExe pkgs.nix-update} --flake --version=skip "$pkg"
+                                done
+                                ;;
+                            --all)
+                                for pkg in paralyabot-jar lg-plugin sta-plugin; do
+                                    ${lib.getExe pkgs.nix-update} --flake --version=skip "$pkg"
+                                done
+                                ;;
+                            --deps)
+                                ${lib.getExe pkgs.nix-update} --flake --version=skip gradle-deps
+                                ;;
+                            *)
+                                ${lib.getExe pkgs.nix-update} --flake --version=skip "''${1:-paralyabot-jar}"
+                                ;;
+                        esac
                     '';
                 in
                 pkgs.mkShell {
