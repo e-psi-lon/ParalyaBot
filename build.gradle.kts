@@ -76,7 +76,6 @@ dependencies {
 	testImplementation(kotlin("test"))
 	implementation(libs.logback)
     implementation(libs.kotlinx.html)
-	implementation(libs.kordex.i18n.runtime)
 	implementation(projects.common)
 }
 
