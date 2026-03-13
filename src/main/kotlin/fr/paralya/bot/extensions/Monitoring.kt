@@ -49,7 +49,7 @@ class Monitoring : Extension() {
                     val load = newSnapshot?.getProcessCpuLoadBetweenTicks(current.snapshot) // 0 when null
                     CpuState(
                         snapshot = newSnapshot,
-                        usage = load?.let { it / Runtime.getRuntime().availableProcessors() * 100 } ?: current.usage
+                        usage = load?.let { it / 100 } ?: current.usage
                     )
                 }
             }
