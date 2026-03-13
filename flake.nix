@@ -97,7 +97,7 @@
                             task = "shadowJar";
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-k1X8tA+rnq55e0CP9j2mobF8EY3nDBAfQAvu2ewNF+s=";
+                            outputHash = "sha256-72tE7v7aqShHH4Ejtc0XC3uGXN5gVA8oEjFD/qHoq6c=";
                         };
 
                     lg-plugin =
@@ -150,7 +150,8 @@
                             ];
 
                             extraCommands = ''
-                                mkdir -p app/config app/plugins
+                                mkdir -p app/config app/plugins tmp
+                                chmod 1777 tmp
                                 cp ${self.packages.${system}.paralyabot-jar}/paralyabot.jar app/paralyabot.jar
                             '';
 
@@ -170,7 +171,7 @@
                                     "-XX:ReservedCodeCacheSize=64m"
                                     "-Xms12m"
                                     "-Xmx128m"
-                                    "--enable-native-access=ALL-UNNAMED "
+                                    "--enable-native-access=ALL-UNNAMED"
                                     "-jar"
                                     "/app/paralyabot.jar"
                                 ];
