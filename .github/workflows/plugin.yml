@@ -1,0 +1,38 @@
+name: Build ParalyaBot plugin
+on:
+  workflow_dispatch:
+    inputs:
+      plugin:
+        description: Plugin to build
+        required: true
+        type: choice
+        options:
+          - lg
+          - sta
+
+permissions:
+  contents: read
+
+jobs:
+  build-plugin:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Setup Nix
+        uses: DeterminateSystems/determinate-nix-action@main
+      - name: Setup Nix caching
+        uses: DeterminateSystems/magic-nix-cache-action@main
+
+      - name: Build plugin
+        env:
+          PLUGIN: ${{ inputs.plugin }}
+        run: nix develop --command bash -c 'echo "PLUGIN_PATH=$(build-plugin $PLUGIN)" >> $GITHUB_ENV'
+
+      - name: Upload plugin
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.plugin }}-plugin
+          path: '${{ env.PLUGIN_PATH }}/*.zip'
+          archive: false

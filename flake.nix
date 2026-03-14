@@ -1,9 +1,7 @@
 {
     description = "The official flake for ParalyaBot, the Discord bot of the Paralya server.";
 
-    inputs = {
-        nixpkgs.url = "github:NixOS/nixpkgs/release-25.11";
-    };
+    inputs.nixpkgs.url = "github:NixOS/nixpkgs/release-25.11";
 
     outputs = { self, nixpkgs }:
         let
@@ -11,7 +9,6 @@
             pkgs = nixpkgs.legacyPackages.${system};
             lib = pkgs.lib;
             project-jdk = pkgs.jdk25;
-
 
             lastCommitAsTimestamp = let
                 d = self.lastModifiedDate;
@@ -22,24 +19,25 @@
                 minute = builtins.substring 10 2 d;
                 second = builtins.substring 12 2 d;
             in "${year}-${month}-${day}T${hour}:${minute}:${second}Z";
+
+            parseProperties = path: let
+                lines = pkgs.lib.splitString "\n" (builtins.readFile path);
+                toPair = line: let
+                   match = builtins.match "([^=]+)=(.*)$" line;
+                in if match == null then null else {
+                    name = builtins.elemAt match 0;
+                    value = builtins.elemAt match 1;
+                };
+            in builtins.listToAttrs (builtins.filter (x: x != null) (map toPair lines));
+
+            gradleProperties = parseProperties ./gradle.properties;
+            extractVersion = propertyName:
+                if builtins.hasAttr propertyName gradleProperties
+                then gradleProperties.${propertyName}
+                else throw "Property ${propertyName} not found";
         in {
             packages.${system} =
                 let
-                    parseProperties = path: let
-                        lines = pkgs.lib.splitString "\n" (builtins.readFile path);
-                        toPair = line: let
-                           match = builtins.match "([^=]+)=(.*)$" line;
-                        in if match == null then null else {
-                            name = builtins.elemAt match 0;
-                            value = builtins.elemAt match 1;
-                        };
-                    in builtins.listToAttrs (builtins.filter (x: x != null) (map toPair lines));
-
-                    gradleProperties = parseProperties ./gradle.properties;
-                    extractVersion = propertyName:
-                        if builtins.hasAttr propertyName gradleProperties
-                        then gradleProperties.${propertyName}
-                        else throw "Property ${propertyName} not found";
 
                     extractPluginVersion = pluginName: extractVersion "plugin.${pluginName}.version";
 
@@ -224,7 +222,14 @@
                     build-bot = pkgs.writeShellScriptBin "build-bot" ''
                         set -e
                         IMAGE_PATH=$(nix build .#paralyabot-image --print-out-paths)
-                        "$IMAGE_PATH" | podman load
+                        if command -v podman &> /dev/null; then
+                            "$IMAGE_PATH" | podman load
+                        elif command -v docker &> /dev/null; then
+                            "$IMAGE_PATH" | docker load
+                        else
+                            echo "Neither podman nor docker found"
+                            exit 1
+                        fi
                     '';
                     run-bot = pkgs.writeShellScriptBin "run-bot" ''
                         CONTAINER_NAME="''${1:-ParalyaBot}"
@@ -245,16 +250,21 @@
 
                     build-plugin = pkgs.writeShellScriptBin "build-plugin" ''
                         PLUGIN=$1
-                        NO_SYMLINK=''${2:-false}
+                        KEEP_RESULT=''${2:-false}
 
                         if [ -z "$PLUGIN" ]; then
                             echo "Usage: build-plugin <plugin-name> [keep-result]"
                             exit 1
                         fi
 
+                        NO_LINK=""
+                        if [ "$KEEP_RESULT" = "false" ]; then
+                            NO_LINK="--no-link"
+                        fi
+
                         nix build .#$PLUGIN-plugin \
                             --print-out-paths \
-                            ''${NO_SYMLINK:+--no-link} \
+                            $NO_LINK
                     '';
 
                     deploy-plugin = pkgs.writeShellScriptBin "deploy-plugin" ''
@@ -265,7 +275,7 @@
                         fi
 
                         echo "Building $PLUGIN-plugin..."
-                        OUT_PATH=$(${lib.getExe build-plugin} "$PLUGIN" true)
+                        OUT_PATH=$(${lib.getExe build-plugin} "$PLUGIN" false)
 
                         PLUGIN_DIR="$PWD/container/plugins"
                         mkdir -p "$PLUGIN_DIR"
@@ -319,6 +329,7 @@
                     shellHook = ''
                         ln -sfn ${project-jdk}/lib/openjdk .jdk
                         export JAVA_HOME=$PWD/.jdk
+                        export PARALYABOT_VERSION=${extractVersion "paralyabot.version"}
                     '';
                     buildInputs = with pkgs; [
                         project-jdk
