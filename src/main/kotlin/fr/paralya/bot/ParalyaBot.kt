@@ -27,6 +27,9 @@ import fr.paralya.bot.extensions.plugins.PluginExtension
 import org.slf4j.LoggerFactory
 import java.util.Locale
 
+
+internal val botDeveloper = System.getenv("BOT_DEVELOPER_ID").toULong()
+
 /**
  * Main entry point for the Paralya's Discord bot.
  */

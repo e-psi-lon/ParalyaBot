@@ -6,6 +6,7 @@ import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.types.TranslatableContext
 import fr.paralya.bot.I18n
+import fr.paralya.bot.botDeveloper
 import fr.paralya.bot.common.adminOnly
 import fr.paralya.bot.common.contextTranslate
 import kotlinx.coroutines.Job
@@ -26,8 +27,6 @@ private data class CpuState(
 
 class Monitoring : Extension() {
     override val name: String = "Monitoring"
-
-    private val botDeveloper = System.getenv("BOT_DEVELOPER_ID").toULong()
     private val systemInfo = SystemInfo()
     private val cpuState = MutableStateFlow(CpuState())
     private var cpuUsageJob : Job? = null
