@@ -131,9 +131,8 @@ class LG : Extension() {
 					val day = arguments.day ?: botCache.getGameData().phase.number
 					val config by inject<LgConfig>()
 
-					sendAsWebhook(
+					LgChannelType.ANNONCES_VILLAGE.toId().sendAsWebhook(
 						bot,
-						LgChannelType.ANNONCES_VILLAGE.toId(),
 						"ParalyaLG",
 						getAsset("paralya_lg", prefix)
 					) {

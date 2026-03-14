@@ -1,6 +1,7 @@
 package fr.paralya.bot.common
 
 import dev.kord.common.entity.Snowflake
+import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.channel.createMessage
 import dev.kord.core.behavior.execute
@@ -158,29 +159,32 @@ fun MessageCreateBuilder.appendEmoji(emoji: String) {
 /**
  * Retrieves or creates a webhook in a specified channel.
  *
+ * @receiver The Kord instance used to interact with Discord.
  * @param channel The ID of the channel where the webhook will be retrieved or created.
- * @param bot The instance of the [ExtensibleBot] used to interact with Discord.
  * @param name The name of the webhook to retrieve or create.
  * @param avatar An optional avatar image for the webhook. If not provided, Discord's default avatar will be used.
  * @return The retrieved or newly created webhook.
  */
-suspend fun getWebhook(channel: Snowflake, bot: ExtensibleBot, name: String, avatar: Image? = null): Webhook {
-	val webhooks = bot.kordRef.rest.webhook.getChannelWebhooks(channel)
-	return (webhooks.firstOrNull { it.name == name } ?: bot.kordRef.rest.webhook.createWebhook(
+suspend fun Kord.getWebhook(channel: Snowflake, name: String, avatar: Image? = null): Webhook {
+	val webhooks = rest.webhook.getChannelWebhooks(channel)
+	return (webhooks.firstOrNull { it.name == name } ?: rest.webhook.createWebhook(
 		channel,
 		name
 	) {
 		this.avatar = avatar ?: getAsset("bot")
 	}).let {
-		bot.kordRef.getWebhook(it.id)
+		getWebhook(it.id)
 	}
 }
+
+suspend inline fun ExtensibleBot.getWebhook(channel: Snowflake, name: String, avatar: Image? = null) =
+	kordRef.getWebhook(channel, name, avatar)
 
 /**
  * Sends a message as a webhook in a specified channel.
  *
+ * @receiver The Snowflake representing the channel ID where the message will be sent.
  * @param bot The instance of the [ExtensibleBot] used to interact with Discord.
- * @param channel The ID of the channel where the message will be sent.
  * @param name The name of the webhook to use or create.
  * @param avatar An optional avatar image for the webhook. If not provided, Discord's default avatar will be used.
  * @param message A message builder block to configure the message content and properties.
@@ -190,15 +194,14 @@ suspend fun getWebhook(channel: Snowflake, bot: ExtensibleBot, name: String, ava
  * with the provided content and properties. The webhook is identified by its name and optionally customized
  * with an avatar image.
  */
-suspend fun sendAsWebhook(
+suspend fun Snowflake.sendAsWebhook(
 	bot: ExtensibleBot,
-	channel: Snowflake,
 	name: String,
 	avatar: Image? = null,
 	webhookName: String? = null,
 	message: suspend WebhookMessageCreateBuilder.() -> Unit
 ): Message? {
-	val webhook = getWebhook(channel, bot, webhookName ?: name, avatar)
+	val webhook = bot.getWebhook(this, webhookName ?: name, avatar)
 	return webhook.token?.let {
 		webhook.execute(it) {
 			username = name
@@ -210,22 +213,21 @@ suspend fun sendAsWebhook(
 /**
  * Sends a message as a webhook in a specified channel with a string avatar URL.
  *
+ * @receiver The Snowflake representing the channel ID where the message will be sent.
  * @param bot The instance of the [ExtensibleBot] used to interact with Discord.
- * @param channel The ID of the channel where the message will be sent.
  * @param name The name of the webhook to use or create.
  * @param avatar An optional avatar URL for the webhook. If not provided, Discord's default avatar will be used.
  * @param message A message builder block to configure the message content and properties.
  * @return The message sent by the webhook, or null if the webhook token is unavailable.
  */
-suspend fun sendAsWebhook(
+suspend fun Snowflake.sendAsWebhook(
 	bot: ExtensibleBot,
-	channel: Snowflake,
 	name: String,
 	avatar: String? = null,
 	webhookName: String? = null,
 	message: suspend WebhookMessageCreateBuilder.() -> Unit
 ): Message? {
-	val webhook = getWebhook(channel, bot, webhookName ?: name)
+	val webhook = bot.getWebhook(this, webhookName ?: name)
 	return webhook.token?.let {
 		webhook.execute(it) {
 			avatarUrl = avatar

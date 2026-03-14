@@ -75,16 +75,14 @@ class LgRelayService : KordExKoinComponent {
         val (userName, userAvatar) = getMessageIdentity(message.author, isAnonymous, true)
         logger.debug { "Avatar is $userAvatar and name is $userName" }
         val content = buildRelayContent(message)
-        if (isAnonymous) sendAsWebhook(
+        if (isAnonymous) outChannel.sendAsWebhook(
             bot,
-            outChannel,
             userName,
             getAsset(userAvatar, lg.prefix),
             webhookName,
             content
-        ) else sendAsWebhook(
+        ) else outChannel.sendAsWebhook(
             bot,
-            outChannel,
             userName,
             userAvatar,
             webhookName,
@@ -105,7 +103,7 @@ class LgRelayService : KordExKoinComponent {
             MessageChannelBehavior(outChannel, bot.kordRef).getCorrespondingMessage(eventMessage)
         }
         if (oldMessage != null) {
-            val webhook = getWebhook(outChannel, bot, webhookName)
+            val webhook = bot.getWebhook(outChannel, webhookName)
             try {
                 // Keep the NPE here, we want a loud error if it's null
                 webhook.deleteMessage(webhook.token!!, oldMessage.id)
@@ -125,7 +123,7 @@ class LgRelayService : KordExKoinComponent {
         val event = context.event
         if (event.old?.author.shouldIgnore(botConfig)) return
         val oldMessage = event.old?.let { MessageChannelBehavior(outChannel, bot.kordRef).getCorrespondingMessage(it) }
-        val webhook = getWebhook(outChannel, bot, webhookName)
+        val webhook = bot.getWebhook(outChannel, webhookName)
         val newMessage = event.message.asMessage()
         if (oldMessage != null) {
             try {
@@ -147,9 +145,8 @@ class LgRelayService : KordExKoinComponent {
                         description = oldMessage.content
                     }
                 }
-                sendAsWebhook(
+                outChannel.sendAsWebhook(
                     bot,
-                    outChannel,
                     userName,
                     userAvatar,
                     webhookName,
@@ -209,16 +206,14 @@ class LgRelayService : KordExKoinComponent {
         if (message.author.shouldIgnore(botConfig) || author.shouldIgnore(botConfig)) return
         val (userName, userAvatar) = getMessageIdentity(author, isAnonymous)
         val content = buildRelayReactionContent(emoji, message, isAdd)
-        if (isAnonymous) sendAsWebhook(
+        if (isAnonymous) outChannel.sendAsWebhook(
             bot,
-            outChannel,
             userName,
             getAsset(userAvatar, lg.prefix),
             webhookName,
             content
-        ) else sendAsWebhook(
+        ) else outChannel.sendAsWebhook(
             bot,
-            outChannel,
             userName,
             userAvatar,
             webhookName,

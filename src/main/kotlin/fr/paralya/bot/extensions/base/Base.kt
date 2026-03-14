@@ -68,9 +68,8 @@ class Base : Extension() {
 			}
 			action {
 				val message = event.message
-				sendAsWebhook(
+				dmChannelId.sendAsWebhook(
 					bot,
-					dmChannelId,
 					message.author?.tag ?: "Inconnu",
 					message.author?.avatar?.cdnUrl?.toUrl(),
 					"DM"
@@ -94,9 +93,8 @@ class Base : Extension() {
 				val oldMessage = event.old?.let {
 					MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it)
 				}
-				if (oldMessage != null) sendAsWebhook(
+				if (oldMessage != null) dmChannelId.sendAsWebhook(
 					bot,
-					dmChannelId,
 					event.new.author.value?.asUser(kord)?.tag ?: "Inconnu",
 					event.new.author.value.asUser(kord)?.avatar?.cdnUrl?.toUrl(),
 					"DM"
@@ -121,7 +119,7 @@ class Base : Extension() {
 					MessageChannelBehavior(dmChannelId, kord).getCorrespondingMessage(it)
 				}
 				if (oldMessage != null) {
-					val webhook = getWebhook(dmChannelId, bot, "DM")
+					val webhook = bot.getWebhook(dmChannelId, "DM")
 					// Keep the NPE here, we want a loud error if it's null
 					webhook.deleteMessage(webhook.token!!, oldMessage.id)
 				}

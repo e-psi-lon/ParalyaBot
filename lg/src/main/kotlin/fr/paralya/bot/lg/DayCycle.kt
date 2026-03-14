@@ -73,9 +73,8 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				when (val result = voteManager.calculateVoteResult(oldWerewolfVote, kill, force)) {
 					is VoteResult.NoVotes -> return@adminOnly
 					is VoteResult.Tie -> {
-						sendAsWebhook(
+						LgChannelType.LOUPS_VOTE.toId().sendAsWebhook(
 							lg.bot,
-							LgChannelType.LOUPS_VOTE.toId(),
 							"ParalyaLG",
 							getAsset("paralya_lg", lg.prefix)	) {
 							content = Lg.DayCycle.Response.Other.equality.contextTranslate(
@@ -153,9 +152,8 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 				val response = when (val result = voteManager.calculateVoteResult(oldVillageVote, kill, force)) {
 					is VoteResult.NoVotes -> return@adminOnly
 					is VoteResult.Tie -> {
-						sendAsWebhook(
+						LgChannelType.VOTES.toId().sendAsWebhook(
 							lg.bot,
-							LgChannelType.VOTES.toId(),
 							"ParalyaLG",
 							getAsset("paralya_lg", lg.prefix),
 						) {
@@ -194,7 +192,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					?.getTopChannel()
 					?.run {
 						removeRolePermissions(aliveRole, Permission.ViewChannel, Permission.SendMessages)
-						sendAsWebhook(lg.bot, this.id, "ParalyaLG", getAsset("paralya_lg", lg.prefix)) {
+						id.sendAsWebhook(lg.bot,"ParalyaLG", getAsset("paralya_lg", lg.prefix)) {
 							content = Lg.System.separator.contextTranslate()
 						}
 					}
@@ -214,9 +212,8 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 						}
 					}
 				}
-			if (oldVillageVote?.corbeau != null) sendAsWebhook(
+			if (oldVillageVote?.corbeau != null) LgChannelType.VOTES.toId().sendAsWebhook(
 				lg.bot,
-				LgChannelType.VOTES.toId(),
 				"\uD83D\uDC26\u200D⬛ Corbeau",
 				getAsset("black_bird", lg.prefix)
 			) {

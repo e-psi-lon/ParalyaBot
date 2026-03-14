@@ -263,9 +263,8 @@ private suspend fun <A : Arguments, M : ModalForm> EphemeralSlashCommandContext<
 	val alreadyVoted = user.id in currentVote.votes
 	voteManager.vote(user.id, target)
 	respond { content = Lg.Vote.Response.Success.vote.contextTranslate(target.mention) }
-	sendAsWebhook(
+	voteChannelType.toId().sendAsWebhook(
 		lg.bot,
-		voteChannelType.toId(),
 		member?.asMember()?.effectiveName ?: "Inconnu",
 		member?.asMember()?.avatar?.cdnUrl?.toUrl(),
 		"votes"
