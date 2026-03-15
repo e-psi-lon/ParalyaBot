@@ -1,5 +1,6 @@
 package fr.paralya.bot.lg
 
+import dev.kord.core.Kord
 import dev.kord.core.cache.idEq
 import dev.kord.core.entity.User
 import dev.kordex.core.koin.KordExKoinComponent
@@ -17,6 +18,7 @@ import fr.paralya.bot.lg.data.Voter
 import fr.paralya.bot.lg.data.getGameData
 import kotlinx.coroutines.sync.Mutex
 import org.koin.core.component.inject
+import org.koin.java.KoinJavaComponent.inject
 
 /**
  * Manager class responsible for handling voting operations in the Werewolf game.
@@ -24,9 +26,10 @@ import org.koin.core.component.inject
  */
 @Suppress("TooManyFunctions")
 class VoteManager : KordExKoinComponent {
-	private val lg by inject<LG>()
-	private val botCache by lazy { lg.botCache }
-	private val pluginNamespace by lazy { lg.pluginRef.pluginId }
+	private val plugin by inject<LgPlugin>()
+	private val kord by inject<Kord>()
+	private val botCache by lazy { kord.cache }
+	private val pluginNamespace by lazy { plugin.pluginId }
 	private val voteMutex = Mutex()
 
 

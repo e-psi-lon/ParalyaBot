@@ -15,6 +15,7 @@ import dev.kord.core.exception.EntityNotFoundException
 import dev.kord.rest.builder.message.MessageBuilder
 import dev.kord.rest.builder.message.embed
 import dev.kord.rest.request.RestRequestException
+import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.events.EventContext
 import dev.kordex.core.koin.KordExKoinComponent
 import fr.paralya.bot.common.config.BotConfig
@@ -30,6 +31,7 @@ import fr.paralya.bot.lg.data.getLastWerewolfMessageSender
 import fr.paralya.bot.lg.data.getProfilePictureState
 import fr.paralya.bot.lg.data.setLastWerewolfMessageSender
 import fr.paralya.bot.lg.data.toggleProfilePicture
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.minutes
 import fr.paralya.bot.lg.I18n as Lg
@@ -37,10 +39,10 @@ import fr.paralya.bot.lg.I18n as Lg
 
 private const val MESSAGE_MAX_LENGTH = 2000
 class LgRelayService : KordExKoinComponent {
-    private val lg by inject<LG>()
-    private val logger by lazy { lg.logger }
-    private val botCache by lazy { lg.botCache }
-    private val bot by lazy { lg.bot }
+    private val logger = KotlinLogging.logger(this::class.java.name)
+    private val bot by inject<ExtensibleBot>()
+    private val plugin by inject<LgPlugin>()
+    private val botCache by lazy { bot.kordRef.cache }
 
     fun User?.shouldIgnore(botConfig: BotConfig) =
         this.isAdmin(botConfig) || this?.isBot == true || this?.isSelf == true
