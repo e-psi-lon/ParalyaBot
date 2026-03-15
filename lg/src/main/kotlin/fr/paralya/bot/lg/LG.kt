@@ -24,7 +24,6 @@ import fr.paralya.bot.common.getAsset
 import fr.paralya.bot.common.sendAsWebhook
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.common.Message
-import fr.paralya.bot.common.get
 import fr.paralya.bot.lg.data.LgChannelType
 import fr.paralya.bot.lg.data.LgConfig
 import fr.paralya.bot.lg.data.getGameData
@@ -32,6 +31,7 @@ import fr.paralya.bot.lg.I18n as Lg
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
+import org.koin.core.component.get
 import org.koin.core.component.inject
 
 /**

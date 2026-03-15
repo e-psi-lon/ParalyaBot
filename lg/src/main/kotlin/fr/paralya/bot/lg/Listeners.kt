@@ -19,7 +19,6 @@ import fr.paralya.bot.common.addReactions
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.config.BotConfig
 import fr.paralya.bot.common.contextTranslate
-import fr.paralya.bot.common.get
 import fr.paralya.bot.common.isUser
 import fr.paralya.bot.common.plugins.PluginReadyEvent
 import fr.paralya.bot.common.removeMemberPermission
@@ -32,6 +31,7 @@ import fr.paralya.bot.lg.data.removeInterview
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
+import org.koin.core.component.get
 import org.koin.core.component.inject
 
 

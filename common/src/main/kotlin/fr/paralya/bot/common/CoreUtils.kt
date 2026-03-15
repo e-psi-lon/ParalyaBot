@@ -61,13 +61,3 @@ suspend fun Flow<Member>.filterByRole(roleId: Snowflake): Flow<Member> =
     filter { member -> member.roles.any { it.id == roleId } }
 
 fun Flow<Member>.filterByRole(role: RoleBehavior): Flow<Member> = filter { it.hasRole(role) }
-
-
-inline fun <reified T : Any> KordExKoinComponent.get(
-    qualifier: Qualifier? = null,
-    noinline parameters: (() -> ParametersHolder)? = null
-) = getKoin().get<T>(qualifier, parameters)
-inline fun <reified T : Any> KordExKoinComponent.getOrNull(
-    qualifier: Qualifier? = null,
-    noinline parameters: (() -> ParametersHolder)? = null
-) = getKoin().getOrNull<T>(qualifier, parameters)

@@ -27,7 +27,7 @@ fun <C : SlashCommandContext<*, A, M>, A : Arguments, M : ModalForm> SlashComman
 	extraAllowList: List<ULong> = emptyList(),
 	action: suspend C.(M?) -> Unit,
 ) {
-	val configManager: ConfigManager by inject()
+	val configManager by inject<ConfigManager>()
 	check {
 		errorResponseKey = I18n.System.Permissions.notAdmin
 		failIfNot {

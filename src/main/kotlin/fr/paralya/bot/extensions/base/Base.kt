@@ -28,7 +28,6 @@ import fr.paralya.bot.common.asUser
 import fr.paralya.bot.common.cache.CachedData
 import fr.paralya.bot.common.contextTranslate
 import fr.paralya.bot.common.gameMode
-import fr.paralya.bot.common.get
 import fr.paralya.bot.common.getCorrespondingMessage
 import fr.paralya.bot.common.getWebhook
 import fr.paralya.bot.common.isUser
@@ -37,6 +36,7 @@ import fr.paralya.bot.common.snowflake
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.takeWhile
+import org.koin.core.component.get
 import org.koin.core.component.inject
 
 /**
@@ -51,10 +51,10 @@ import org.koin.core.component.inject
 class Base : Extension() {
 	override val name = "Base"
 	private val logger = KotlinLogging.logger(this::class.java.name)
+	private val configManager by inject<ConfigManager>()
     override suspend fun setup() {
 		kord.cache.register(CachedData.description)
-		val botConfig = inject<ConfigManager>().value.botConfig
-		val dmChannelId = botConfig.dmLogChannelId.snowflake
+		val dmChannelId = configManager.botConfig.dmLogChannelId.snowflake
 		event<ReadyEvent> {
 			action {
 				logger.info { "Bot connected to Discord as ${event.self.username}" }

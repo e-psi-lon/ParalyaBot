@@ -12,6 +12,7 @@ import fr.paralya.bot.common.contextTranslate
 import fr.paralya.bot.common.get
 import fr.paralya.bot.common.plugins.Plugin
 import fr.paralya.bot.common.plugins.PluginManager
+import org.koin.core.component.get
 import org.koin.core.component.inject
 
 class PluginExtension : Extension() {

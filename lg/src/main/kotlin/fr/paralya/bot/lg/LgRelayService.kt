@@ -32,6 +32,7 @@ import fr.paralya.bot.lg.data.getProfilePictureState
 import fr.paralya.bot.lg.data.setLastWerewolfMessageSender
 import fr.paralya.bot.lg.data.toggleProfilePicture
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.koin.core.component.get
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.minutes
 import fr.paralya.bot.lg.I18n as Lg
@@ -53,7 +54,7 @@ class LgRelayService : KordExKoinComponent {
         outChannel: Snowflake,
         isAnonymous: Boolean
     ) {
-        val botConfig by this.inject<BotConfig>()
+        val botConfig = this.get<BotConfig>()
         val message = context.event.message
         if (message.author.shouldIgnore(botConfig)) return
 
@@ -98,7 +99,7 @@ class LgRelayService : KordExKoinComponent {
         webhookName: String,
         outChannel: Snowflake?,
     ) {
-        val botConfig by this.inject<BotConfig>()
+        val botConfig =  this.get<BotConfig>()
         val eventMessage = context.event.message ?: return
         if (eventMessage.author.shouldIgnore(botConfig)) return
         val oldMessage = outChannel?.let {
@@ -121,7 +122,7 @@ class LgRelayService : KordExKoinComponent {
         outChannel: Snowflake,
         isAnonymous: Boolean
     ) {
-        val botConfig by this.inject<BotConfig>()
+        val botConfig = this.get<BotConfig>()
         val event = context.event
         if (event.old?.author.shouldIgnore(botConfig)) return
         val oldMessage = event.old?.let { MessageChannelBehavior(outChannel, bot.kordRef).getCorrespondingMessage(it) }
@@ -204,7 +205,7 @@ class LgRelayService : KordExKoinComponent {
         emoji: ReactionEmoji,
         isAdd: Boolean
     ) {
-        val botConfig by this.inject<BotConfig>()
+        val botConfig = this.get<BotConfig>()
         if (message.author.shouldIgnore(botConfig) || author.shouldIgnore(botConfig)) return
         val (userName, userAvatar) = getMessageIdentity(author, isAnonymous)
         val content = buildRelayReactionContent(emoji, message, isAdd)
@@ -241,7 +242,7 @@ class LgRelayService : KordExKoinComponent {
         message: Message,
         additionalElements: (suspend MessageBuilder.() -> Unit)? = null
     ): suspend MessageBuilder.() -> Unit = {
-        val botConfig by ctx.inject<BotConfig>()
+        val botConfig = ctx.get<BotConfig>()
         content = message.content
 
         if (message.referencedMessage != null && !message.referencedMessage!!.author.isAdmin(botConfig)) embed {
@@ -267,7 +268,7 @@ class LgRelayService : KordExKoinComponent {
             title = Lg.Transmission.Reaction.Content.title.contextTranslate()
             description = message.content
         }
-        val botConfig by ctx.inject<BotConfig>()
+        val botConfig = ctx.get<BotConfig>()
         if (message.referencedMessage != null && !message.referencedMessage!!.author.isAdmin(botConfig)) embed {
             title = Lg.Transmission.Reference.title.contextTranslate()
             description = message.referencedMessage!!.content
