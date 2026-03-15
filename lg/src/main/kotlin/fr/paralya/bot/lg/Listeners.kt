@@ -19,6 +19,7 @@ import fr.paralya.bot.common.addReactions
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.config.BotConfig
 import fr.paralya.bot.common.contextTranslate
+import fr.paralya.bot.common.get
 import fr.paralya.bot.common.isUser
 import fr.paralya.bot.common.plugins.PluginReadyEvent
 import fr.paralya.bot.common.removeMemberPermission
@@ -62,8 +63,7 @@ private const val DISCORD_THREAD_MAX_LENGTH = 100
  * message updates, message deletion, reactions, and bot ready event.
  */
 suspend fun LG.registerListeners() {
-	val lgConfig by inject<LgConfig>()
-	val botConfig = inject<ConfigManager>().value.botConfig
+	val configManager by inject<ConfigManager>()
 	val relayService by inject<LgRelayService>()
 
 	event<MessageCreateEvent> {
@@ -157,14 +157,14 @@ suspend fun LG.registerListeners() {
 
 	event<ReadyEvent> {
 		action {
-			handleReadyEvent(event.guilds, botConfig, lgConfig)
+			handleReadyEvent(event.guilds, configManager.botConfig, get<LgConfig>())
 		}
 	}
 
 	event<PluginReadyEvent> {
 		check { failIf { pluginRef.pluginId != event.pluginId } }
 		action {
-			handleReadyEvent(event.guilds, botConfig, lgConfig)
+			handleReadyEvent(event.guilds, configManager.botConfig, get<LgConfig>())
 		}
 	}
 }

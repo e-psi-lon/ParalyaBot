@@ -33,7 +33,7 @@ import org.koin.core.component.inject
  */
 context(lg: LG)
 suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVotingCommands() {
-	val voteManager by lg.inject<VoteManager>()
+	val voteManager by this.inject<VoteManager>()
 	group(Lg.Vote.Command.name) {
 		description = Lg.Vote.Command.description
 		ephemeralSubCommand(::VoteArguments) {

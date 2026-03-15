@@ -4,6 +4,7 @@ import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.koin.KordExKoinComponent
 import fr.paralya.bot.common.ApiVersion
 import fr.paralya.bot.common.CommonModule
+import fr.paralya.bot.common.getOrNull
 import dev.kordex.core.plugins.PluginManager as KordExPluginManager
 import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.launch
@@ -18,7 +19,6 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
     init {
         addPluginStateListener(PluginListener())
     }
-
 
     override fun loadPluginFromPath(pluginPath: Path): PluginWrapper {
         val wrapper = super.loadPluginFromPath(pluginPath)
@@ -67,7 +67,7 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
     private inner class PluginListener : PluginStateListener, KordExKoinComponent {
         override fun pluginStateChanged(event: PluginStateEvent?) {
             event ?: return
-            val bot = getKoin().getOrNull<ExtensibleBot>()
+            val bot = getOrNull<ExtensibleBot>()
             if (bot == null) {
                 logger.debug { "Plugin state changed before initialization of the bot itself" }
                 return
@@ -75,7 +75,7 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
             logger.info { "Plugin ${event.plugin.pluginId} changed state to ${event.pluginState}" }
             if (event.pluginState == PluginState.STARTED) bot.kordRef.launch {
                 bot.send(PluginReadyEvent(
-                    event.plugin.pluginId, // Access to pluginState already required a non-null `plugin``
+                    event.plugin.pluginId, // Access to pluginState already required a non-null `plugin`
                     bot.kordRef.guilds.toSet()
                 ))
             }

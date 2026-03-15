@@ -24,8 +24,14 @@ abstract class Plugin: KordExPlugin() {
     @PublishedApi
     internal val components = mutableListOf<Module>()
 
+
+    @PublishedApi
+    internal val configManager by inject<ConfigManager>()
+    private val pluginManager by inject<PluginManager>()
+    @PublishedApi
+    internal val gameRegistry by inject<GameRegistry>()
+
     val plugin: PluginWrapper? by lazy {
-        val pluginManager by inject<PluginManager>()
         pluginManager.whichPlugin(this::class.java)
     }
 
@@ -91,10 +97,8 @@ abstract class Plugin: KordExPlugin() {
     }.also { super.stop() }
 
     private fun removeAllRegistration() {
-        val configManager by inject<ConfigManager>()
         configManager.unregisterConfig(name)
         if (isGame) {
-            val gameRegistry by inject<GameRegistry>()
             gameRegistry.unloadGameMode(name)
         }
         getKoin().unloadModules(components)
@@ -108,10 +112,8 @@ abstract class Plugin: KordExPlugin() {
     protected inline fun <reified T : ValidatedConfig> define() : ConfigDefinition {
         // This function is seemingly doing a lot of work, but
         // It is necessary to avoid too many indirections
-        val configManager by inject<ConfigManager>()
         configManager.registerConfig<T>(name)
         if (isGame) {
-            val gameRegistry by inject<GameRegistry>()
             gameRegistry.registerGameMode(key, name)
         }
         return ConfigDefinition()

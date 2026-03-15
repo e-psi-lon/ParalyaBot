@@ -18,6 +18,7 @@ import fr.paralya.bot.common.removeRolePermissions
 import fr.paralya.bot.common.sendAsWebhook
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.common.filterByRole
+import fr.paralya.bot.common.get
 import fr.paralya.bot.lg.data.getGameData
 import fr.paralya.bot.lg.data.GamePhase.PhaseType
 import fr.paralya.bot.lg.data.LgChannelType
@@ -48,6 +49,7 @@ private val WOLF_CHANNELS = listOf(
  */
 context(lg: LG)
 suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayCycleCommands() {
+	val voteManager by this.inject<VoteManager>()
 	ephemeralSubCommand(::DayArguments) {
 		name = Lg.Day.Command.name
 		description = Lg.Day.Command.description
@@ -58,7 +60,6 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			val kill = arguments.kill
 			val botCache = lg.botCache
 			val gameData = botCache.getGameData()
-			val voteManager by inject<VoteManager>()
 
 			if (gameData.phase.isDay) {
 				respond { content = Lg.Day.Response.Error.alreadyDay.contextTranslate() }
@@ -67,7 +68,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			voteManager.createVillageVote()
 			val oldWerewolfVote = voteManager.finishCurrentVote(PhaseType.NIGHT)
 			val newVoteWerewolf = voteManager.createWerewolfVote()
-			val config by inject<LgConfig>()
+			val config = get<LgConfig>()
 			val aliveRole = config.aliveRole.snowflake
 			if (oldWerewolfVote?.votes?.isNotEmpty() == true) {
 				when (val result = voteManager.calculateVoteResult(oldWerewolfVote, kill, force)) {
@@ -138,7 +139,6 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			val kill = arguments.kill
 			val botCache = lg.botCache
 			val gameData = botCache.getGameData()
-			val voteManager by inject<VoteManager>()
 			if (gameData.phase.isNight) {
 				respond { content = Lg.Night.Response.Error.alreadyNight.contextTranslate() }
 				return@adminOnly
@@ -146,7 +146,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			voteManager.createWerewolfVote()
 			val oldVillageVote = voteManager.finishCurrentVote(PhaseType.DAY)
 			val newVoteVillage = voteManager.createVillageVote()
-			val config by inject<LgConfig>()
+			val config = get<LgConfig>()
 			val aliveRole = config.aliveRole.snowflake
 			if (oldVillageVote?.votes?.isNotEmpty() == true) {
 				val response = when (val result = voteManager.calculateVoteResult(oldVillageVote, kill, force)) {

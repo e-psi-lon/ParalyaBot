@@ -8,12 +8,15 @@ import dev.kord.core.cache.data.UserData
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.User
 import dev.kord.rest.Image
+import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.utils.any
 import dev.kordex.core.utils.hasRole
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.withContext
+import org.koin.core.parameter.ParametersHolder
+import org.koin.core.qualifier.Qualifier
 
 /**
  * Retrieves an image asset from the specified path.
@@ -58,3 +61,13 @@ suspend fun Flow<Member>.filterByRole(roleId: Snowflake): Flow<Member> =
     filter { member -> member.roles.any { it.id == roleId } }
 
 fun Flow<Member>.filterByRole(role: RoleBehavior): Flow<Member> = filter { it.hasRole(role) }
+
+
+inline fun <reified T : Any> KordExKoinComponent.get(
+    qualifier: Qualifier? = null,
+    noinline parameters: (() -> ParametersHolder)? = null
+) = getKoin().get<T>(qualifier, parameters)
+inline fun <reified T : Any> KordExKoinComponent.getOrNull(
+    qualifier: Qualifier? = null,
+    noinline parameters: (() -> ParametersHolder)? = null
+) = getKoin().getOrNull<T>(qualifier, parameters)

@@ -24,6 +24,7 @@ import fr.paralya.bot.common.getAsset
 import fr.paralya.bot.common.sendAsWebhook
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.common.Message
+import fr.paralya.bot.common.get
 import fr.paralya.bot.lg.data.LgChannelType
 import fr.paralya.bot.lg.data.LgConfig
 import fr.paralya.bot.lg.data.getGameData
@@ -129,7 +130,7 @@ class LG : Extension() {
 				adminOnly {
 					val hour = arguments.hour
 					val day = arguments.day ?: botCache.getGameData().phase.number
-					val config by inject<LgConfig>()
+					val config = get<LgConfig>()
 
 					LgChannelType.ANNONCES_VILLAGE.toId().sendAsWebhook(
 						bot,
@@ -155,7 +156,7 @@ class LG : Extension() {
 					val guild = guild ?: return@adminOnly
                     val target = arguments.target
                     val reason = arguments.reason ?: Lg.Kill.Argument.Reason.default.contextTranslate()
-                    val config by inject<LgConfig>()
+                    val config = get<LgConfig>()
 
                     guild.getMember(target.id).swapRoles(
                         config.deadRole.snowflake,

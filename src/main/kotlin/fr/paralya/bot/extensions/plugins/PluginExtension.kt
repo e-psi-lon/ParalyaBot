@@ -9,6 +9,7 @@ import dev.kordex.core.extensions.ephemeralSlashCommand
 import fr.paralya.bot.I18n
 import fr.paralya.bot.common.adminOnly
 import fr.paralya.bot.common.contextTranslate
+import fr.paralya.bot.common.get
 import fr.paralya.bot.common.plugins.Plugin
 import fr.paralya.bot.common.plugins.PluginManager
 import org.koin.core.component.inject
@@ -61,7 +62,7 @@ class PluginExtension : Extension() {
         val plugin by stringChoice {
             name = I18n.Plugins.Reload.Argument.Plugin.name
             description = I18n.Plugins.Reload.Argument.Plugin.description
-            choices = getKoin().get<PluginManager>().plugins.associate { plugin ->
+            choices = get<PluginManager>().plugins.associate { plugin ->
                 val pluginInstance = plugin.plugin as Plugin
                 pluginInstance.key to pluginInstance.name
             }.toMutableMap()
