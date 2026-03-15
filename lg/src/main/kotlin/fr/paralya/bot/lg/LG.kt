@@ -43,13 +43,12 @@ import org.koin.core.component.inject
  * @property name The name of the extension.
  * @property logger The logger for the extension.
  * @property botCache An alias for the bot's cache for easier access.
- * @property prefix The internal prefix for assets, game registry, etc.
+ * @property pluginRef A reference to the plugin instance.
  */
 class LG : Extension() {
 	override val name = "LG"
 	val logger = KotlinLogging.logger(this::class.java.name)
 	val botCache by lazy { kord.cache }
-	val prefix = "paralya-lg"
 	val pluginRef by inject<LgPlugin>()
 
 	// TODO: Add this to a parent class to avoid repetition with other extensions
@@ -135,7 +134,7 @@ class LG : Extension() {
 					LgChannelType.ANNONCES_VILLAGE.toId().sendAsWebhook(
 						bot,
 						"ParalyaLG",
-						getAsset("paralya_lg", prefix)
+						getAsset("paralya_lg", pluginRef.pluginId)
 					) {
 						content = Lg.EndDay.Response.infoMessage.contextTranslate(day, hour, config.aliveRole)
 					}

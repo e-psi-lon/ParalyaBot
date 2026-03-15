@@ -77,7 +77,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 						LgChannelType.LOUPS_VOTE.toId().sendAsWebhook(
 							lg.bot,
 							"ParalyaLG",
-							getAsset("paralya_lg", lg.prefix)	) {
+							getAsset("paralya_lg", lg.pluginRef.pluginId)	) {
 							content = Lg.DayCycle.Response.Other.equality.contextTranslate(
 								result.players.joinToString(", ") { "<@${it.value}>" }
 							)
@@ -155,7 +155,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 						LgChannelType.VOTES.toId().sendAsWebhook(
 							lg.bot,
 							"ParalyaLG",
-							getAsset("paralya_lg", lg.prefix),
+							getAsset("paralya_lg", lg.pluginRef.pluginId),
 						) {
 							content = Lg.DayCycle.Response.Other.equality.contextTranslate(
 								result.players.joinToString(", ") { "<@${it.value}>" }
@@ -192,7 +192,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 					?.getTopChannel()
 					?.run {
 						removeRolePermissions(aliveRole, Permission.ViewChannel, Permission.SendMessages)
-						id.sendAsWebhook(lg.bot,"ParalyaLG", getAsset("paralya_lg", lg.prefix)) {
+						id.sendAsWebhook(lg.bot,"ParalyaLG", getAsset("paralya_lg", lg.pluginRef.pluginId)) {
 							content = Lg.System.separator.contextTranslate()
 						}
 					}
@@ -215,7 +215,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			if (oldVillageVote?.corbeau != null) LgChannelType.VOTES.toId().sendAsWebhook(
 				lg.bot,
 				"\uD83D\uDC26\u200D⬛ Corbeau",
-				getAsset("black_bird", lg.prefix)
+				getAsset("black_bird", lg.pluginRef.pluginId),
 			) {
 				content = Lg.Night.Response.Other.corbeau.contextTranslate(oldVillageVote.corbeau.value)
 			}

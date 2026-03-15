@@ -80,7 +80,7 @@ class LgRelayService : KordExKoinComponent {
         if (isAnonymous) outChannel.sendAsWebhook(
             bot,
             userName,
-            getAsset(userAvatar, lg.prefix),
+            getAsset(userAvatar, plugin.pluginId),
             webhookName,
             content
         ) else outChannel.sendAsWebhook(
@@ -211,7 +211,7 @@ class LgRelayService : KordExKoinComponent {
         if (isAnonymous) outChannel.sendAsWebhook(
             bot,
             userName,
-            getAsset(userAvatar, lg.prefix),
+            getAsset(userAvatar, plugin.pluginId),
             webhookName,
             content
         ) else outChannel.sendAsWebhook(
