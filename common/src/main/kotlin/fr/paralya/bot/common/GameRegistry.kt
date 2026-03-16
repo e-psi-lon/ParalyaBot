@@ -10,12 +10,11 @@ import dev.kordex.core.koin.KordExKoinComponent
 /**
  * [GameRegistry] is a singleton class that manages game modes for the bot.
  * It allows for the registration, retrieval, and unloading of game modes.
- * Registration and unloading are currently unused because the at-runtime game loading is not implemented yet.
  *
  * @property gameModes A mutable map that stores game modes with their associated keys.
  */
 class GameRegistry : KordExKoinComponent {
-	private val gameModes = mutableMapOf<Key, String>()
+	private val gameModes = mutableMapOf<String, Key>()
 
 	/**
 	 * Registers a new game mode with the given key and value.
@@ -25,7 +24,7 @@ class GameRegistry : KordExKoinComponent {
 	 */
 	@PublishedApi
 	internal fun registerGameMode(key: Key, gameMode: String) {
-		gameModes[key] = gameMode
+		gameModes[gameMode] = key
 	}
 
 	/**
@@ -34,16 +33,14 @@ class GameRegistry : KordExKoinComponent {
 	 * @param value The name of the game mode.
 	 * @return A pair containing the key and value of the game mode, or NONE if not found.
 	 */
-	fun getGameMode(value: String) = if (gameModes.containsValue(value))
-		gameModes.filterValues { it == value }.keys.first() to value
-	else null
+	fun getGameMode(value: String) = gameModes[value]?.let { it to value }
 
 	/**
 	 * Retrieves all registered game modes.
 	 *
 	 * @return A map containing all game modes with their associated keys.
 	 */
-	fun getGameModes(): Map<Key, String> = gameModes.toMap()
+	fun getGameModes(): Map<Key, String> = gameModes.entries.associate { it.value to it.key }
 
 	/**
 	 * Unloads a game mode by removing it from the registry.
@@ -51,10 +48,8 @@ class GameRegistry : KordExKoinComponent {
 	 * @param value The name of the game mode to unload.
 	 */
 	@PublishedApi
-	internal fun unloadGameMode(value: String?) {
-		if (value == null) return
-		if (!gameModes.containsValue(value)) return
-		gameModes.remove(gameModes.filterValues { it == value }.keys.first())
+	internal fun unloadGameMode(value: String) {
+		gameModes.remove(value)
 	}
 }
 
@@ -66,9 +61,9 @@ class GameRegistry : KordExKoinComponent {
 fun PresenceBuilder.gameMode(gameMode: Pair<Key, String>?) {
 	if (gameMode == null) {
 		status = PresenceStatus.Idle
-		this.watching("Paralya sans animation en cours...")
+		watching("Paralya sans animation en cours...")
 	} else {
 		status = PresenceStatus.Online
-		this.playing("une partie de ${gameMode.first.translateLocale(KI18n.defaultLocale)}")
+		playing("une partie de ${gameMode.first.translateLocale(KI18n.defaultLocale)}")
 	}
 }

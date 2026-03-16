@@ -74,7 +74,7 @@ class GameRegistryTest {
 	}
 
 	@Test
-	fun `getGameMode returns NONE for non-existent mode`() {
+	fun `getGameMode returns null for non-existent mode`() {
 		// Arrange
 		val registry = GameRegistry()
 
@@ -119,18 +119,6 @@ class GameRegistryTest {
 
 		// Assert
 		assertEquals(0, modes.size)
-	}
-
-	@Test
-	fun `unloadGameMode with NONE game mode does nothing`() {
-		// Arrange
-		val registry = GameRegistry()
-
-		// Act
-		registry.unloadGameMode("none")
-
-		// Assert - should not throw, registry should remain empty
-		assertEquals(0, registry.getGameModes().size)
 	}
 
 	@Test
