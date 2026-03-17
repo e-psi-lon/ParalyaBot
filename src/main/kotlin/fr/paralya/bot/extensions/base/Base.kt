@@ -52,6 +52,7 @@ class Base : Extension() {
 	override val name = "Base"
 	private val logger = KotlinLogging.logger(this::class.java.name)
 	private val configManager by inject<ConfigManager>()
+	private val gameRegistry by inject<GameRegistry>()
     override suspend fun setup() {
 		kord.cache.register(CachedData.description)
 		val dmChannelId = configManager.botConfig.dmLogChannelId.snowflake
@@ -131,7 +132,6 @@ class Base : Extension() {
 			name = I18n.StartGame.Command.name
 			description = I18n.StartGame.Command.description
 			action {
-				val gameRegistry = get<GameRegistry>()
 				this@Base.kord.editPresence {
 					gameMode(gameRegistry.getGameMode(arguments.game))
 				}
@@ -195,7 +195,7 @@ class Base : Extension() {
 		val game by stringChoice {
 			name = I18n.StartGame.Argument.Game.name
 			description = I18n.StartGame.Argument.Game.description
-			choices = get<GameRegistry>().getGameModes().toMutableMap()
+			choices = gameRegistry.toChoices()
 		}
 	}
 

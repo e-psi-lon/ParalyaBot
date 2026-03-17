@@ -40,7 +40,7 @@ class GameRegistry : KordExKoinComponent {
 	 *
 	 * @return A map containing all game modes with their associated keys.
 	 */
-	fun getGameModes(): Map<Key, String> = gameModes.entries.associate { it.value to it.key }
+	fun toChoices(): MutableMap<Key, String> = gameModes.entries.associate { it.value to it.key }.toMutableMap()
 
 	/**
 	 * Unloads a game mode by removing it from the registry.
