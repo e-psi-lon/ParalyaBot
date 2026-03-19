@@ -83,7 +83,7 @@ internal class PluginReloadStrategy(
         e
     }
 
-    @Suppress("TooGenericExceptionCaught")
+    @Suppress("ReturnCount")
     private fun fallback(safeCopy: Path, originalException: Exception) : PluginReloadResult {
         safeCopy.copyTo(oldPluginPath, overwrite = true)
         try {
@@ -95,7 +95,7 @@ internal class PluginReloadStrategy(
                 logger.error(exception) { "Failed to start the old plugin $pluginId." }
                 return OldPluginFallbackFailedToLoad(originalException, exception)
             }
-            return OldPluginReused(originalException)
+            return OldPluginReusedAsFallback(originalException)
         } catch (e: PluginRuntimeException) {
             logger.error(e) { "Failed to load the old plugin $pluginId." }
             return OldPluginFallbackFailedToLoad(originalException, e)
@@ -108,6 +108,7 @@ internal class PluginReloadStrategy(
         }
     }
 
+    @Suppress("ReturnCount")
     fun reload(): PluginReloadResult {
         val safeCopy = saveCopy()
         try {
