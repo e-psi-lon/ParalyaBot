@@ -14,6 +14,7 @@ private sealed interface TeardownResult {
 }
 
 
+// Not thread-safe, but reload operations aren't concurrent anyway
 private var tempDirectory: Path = Files.createTempDirectory("ParalyaBot-Reload")
     get() {
         if (!field.exists()) {
