@@ -45,7 +45,7 @@ class LgRelayService : KordExKoinComponent {
     private val plugin by inject<LgPlugin>()
     private val botCache by lazy { bot.kordRef.cache }
 
-    fun User?.shouldIgnore(botConfig: BotConfig) =
+    private fun User?.shouldIgnore(botConfig: BotConfig) =
         this.isAdmin(botConfig) || this?.isBot == true || this?.isSelf == true
 
     context(context: EventContext<MessageCreateEvent>)
@@ -72,6 +72,7 @@ class LgRelayService : KordExKoinComponent {
                 channel.sendTemporaryMessage(it, 1.minutes)
             }
             message.delete(Lg.Transmission.Error.Reason.messageTooLong.contextTranslate())
+            return
         }
 
         logger.debug { "Message sender is ${message.author?.id?.value}" }
