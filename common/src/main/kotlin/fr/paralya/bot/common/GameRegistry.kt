@@ -51,6 +51,8 @@ class GameRegistry : KordExKoinComponent {
 	internal fun unloadGameMode(value: String) {
 		gameModes.remove(value)
 	}
+
+	fun hasGameMode(value: String) = gameModes.containsKey(value)
 }
 
 /**

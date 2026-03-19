@@ -1,5 +1,6 @@
 package fr.paralya.bot.extensions.base
 
+import dev.kord.common.asJavaLocale
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.event.gateway.ReadyEvent
@@ -12,14 +13,16 @@ import dev.kordex.core.checks.noGuild
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.converters.ChoiceEnum
 import dev.kordex.core.commands.application.slash.converters.impl.defaultingEnumChoice
-import dev.kordex.core.commands.application.slash.converters.impl.stringChoice
 import dev.kordex.core.commands.converters.impl.defaultingBoolean
 import dev.kordex.core.commands.converters.impl.optionalChannel
 import dev.kordex.core.commands.converters.impl.optionalInt
 import dev.kordex.core.commands.converters.impl.optionalSnowflake
+import dev.kordex.core.commands.converters.impl.string
 import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.ephemeralSlashCommand
 import dev.kordex.core.extensions.event
+import dev.kordex.core.utils.suggestStringMap
+import dev.kordex.i18n.I18n as KI18n
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.I18n
 import fr.paralya.bot.common.GameRegistry
@@ -36,7 +39,6 @@ import fr.paralya.bot.common.snowflake
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.takeWhile
-import org.koin.core.component.get
 import org.koin.core.component.inject
 
 /**
@@ -192,10 +194,16 @@ class Base : Extension() {
 	 * @property game The game mode to start. Loaded from the game registry.
 	 */
 	inner class StartGameArguments : Arguments() {
-		val game by stringChoice {
+		val game by string {
 			name = I18n.StartGame.Argument.Game.name
 			description = I18n.StartGame.Argument.Game.description
-			choices = gameRegistry.toChoices()
+			validate {
+				if (!gameRegistry.hasGameMode(value)) fail()
+			}
+			autoComplete {
+				val effectiveLocale = (locale ?: guildLocale)?.asJavaLocale() ?: KI18n.defaultLocale
+				suggestStringMap(gameRegistry.toChoices().mapKeys { it.key.translateLocale(effectiveLocale) })
+			}
 		}
 	}
 
