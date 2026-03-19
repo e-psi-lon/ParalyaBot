@@ -4,7 +4,6 @@ import dev.kordex.core.ExtensibleBot
 import dev.kordex.core.koin.KordExKoinComponent
 import fr.paralya.bot.common.ApiVersion
 import fr.paralya.bot.common.CommonModule
-import fr.paralya.bot.common.getOrNull
 import dev.kordex.core.plugins.PluginManager as KordExPluginManager
 import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.launch
@@ -20,6 +19,7 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
         addPluginStateListener(PluginListener())
     }
 
+    @Suppress("ThrowsCount")
     override fun loadPluginFromPath(pluginPath: Path): PluginWrapper {
         val wrapper = super.loadPluginFromPath(pluginPath)
         val classLoader = getPluginClassLoader(wrapper.pluginId)
@@ -49,10 +49,18 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
         return wrapper
     }
 
+
+    /**
+     * Reloads a plugin.
+     *
+     * @param pluginId The ID of the plugin to be reloaded.
+     * @param newPath The new path to the plugin. If null, the plugin will be reloaded from its current path.
+     */
     fun reloadPlugin(pluginId: String, newPath: Path? = null): PluginReloadResult {
         val plugin = getPlugin(pluginId) ?: return OldPluginNotFound
         val pluginPath = plugin.pluginPath!! // PluginWrapper requires a path in its constructor
-        val reloadStrategy = createReloadStrategy(pluginId,pluginPath, newPath ?: pluginPath, logger)
+        val fullPath = if (pluginPath.isAbsolute) pluginPath else pluginsRoot.resolve(pluginPath)
+        val reloadStrategy = createReloadStrategy(pluginId, fullPath, newPath ?: fullPath, logger)
         return reloadStrategy.reload()
     }
 
@@ -67,7 +75,7 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
     private inner class PluginListener : PluginStateListener, KordExKoinComponent {
         override fun pluginStateChanged(event: PluginStateEvent?) {
             event ?: return
-            val bot = getOrNull<ExtensibleBot>()
+            val bot = getKoin().getOrNull<ExtensibleBot>()
             if (bot == null) {
                 logger.debug { "Plugin state changed before initialization of the bot itself" }
                 return
