@@ -64,7 +64,7 @@
 
                             buildPhase = ''
                                 export GRADLE_USER_HOME=$(mktemp -d)
-                                cp -r ${self.packages.${system}.gradle-deps}/caches $GRADLE_USER_HOME/
+                                cp -r ${self.packages.${system}.common-deps}/caches $GRADLE_USER_HOME/
                                 chmod -R u+w $GRADLE_USER_HOME
                                 export JAVA_HOME=${project-jdk}
                                 export TZ=UTC
@@ -88,15 +88,15 @@
                             '';
                         };
                 in {
-                    gradle-deps = pkgs.stdenv.mkDerivation {
-                        pname = "paralyabot-gradle-deps";
+                    common-deps = pkgs.stdenv.mkDerivation {
+                        pname = "paralyabot-common-deps";
                         version = "0";
                         src = ./.;
                         buildInputs = with pkgs; [ project-jdk cacert gradle-wrapper perl ];
                         dontConfigure = true;
                         outputHashMode = "recursive";
                         outputHashAlgo = "sha256";
-                        outputHash = "sha256-E7wKHV3K+Dfn/tyZzXJkKH7WtxL+7hWDuGQkCyaFoe8=";
+                        outputHash = "sha256-SMkw1QS0gBEwzY63dkbyrhdIKXImcwp07Pmfv9DHCb4=";
 
                         buildPhase = ''
                             export GRADLE_USER_HOME=$(mktemp -d)
@@ -122,7 +122,7 @@
                             task = "shadowJar";
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-618gTq5UQkCD4g+J5E7Wj5ogoHVdpYk9uD69/3YTNLI=";
+                            outputHash = "sha256-f64bBaCNMk8Xmn9ndCtANA1fKt8CBEQ4oUq4Zg/PgXc=";
                         };
 
                     lg-plugin =
@@ -135,7 +135,7 @@
                             output = "lg/build/distributions/lg-${version}.zip";
                             name = "lg-plugin-${version}";
                             extension = "zip";
-                            outputHash = "sha256-jNN0FRM/VhRz2gCDzAf1NZNb44KcUrTUWxdyz2hv72I=";
+                            outputHash = "sha256-B6ZvbomjuZD736YkZetWpWBBoA/L5DZYsX9NHwMvOOc=";
                         };
 
                     sta-plugin =
@@ -300,14 +300,14 @@
                                 echo ""
                                 echo "Options:"
                                 echo "  --all         Update all build artifact hashes (jar, plugins)"
-                                echo "  --deps        Update the Gradle dependency cache hash"
+                                echo "  --common        Update the common artifact cache"
                                 echo "  --everything  Update deps first, then all build artifacts"
                                 echo "  --help, -h    Show this help message"
                                 echo ""
                                 echo "Without arguments, defaults to updating paralyabot-jar"
                                 ;;
                             --everything)
-                                for pkg in gradle-deps paralyabot-jar lg-plugin sta-plugin; do
+                                for pkg in common-deps paralyabot-jar lg-plugin sta-plugin; do
                                     ${lib.getExe pkgs.nix-update} --flake --version=skip "$pkg"
                                 done
                                 ;;
@@ -316,8 +316,8 @@
                                     ${lib.getExe pkgs.nix-update} --flake --version=skip "$pkg"
                                 done
                                 ;;
-                            --deps)
-                                ${lib.getExe pkgs.nix-update} --flake --version=skip gradle-deps
+                            --common)
+                                ${lib.getExe pkgs.nix-update} --flake --version=skip common-deps
                                 ;;
                             *)
                                 ${lib.getExe pkgs.nix-update} --flake --version=skip "''${1:-paralyabot-jar}"
