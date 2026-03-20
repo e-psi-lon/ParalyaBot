@@ -1,7 +1,5 @@
 package fr.paralya.bot.extensions.base
 
-import dev.kord.common.annotation.KordExperimental
-import dev.kord.common.annotation.KordUnsafe
 import dev.kord.common.entity.MessageType
 import dev.kord.common.entity.Snowflake
 import dev.kord.core.entity.Attachment
@@ -24,7 +22,6 @@ import kotlinx.html.style
 import kotlinx.html.svg
 import kotlinx.html.title
 import kotlinx.html.unsafe
-import kotlin.time.ExperimentalTime
 import kotlin.time.Instant
 
 @HtmlTagMarker
@@ -97,7 +94,6 @@ fun FlowContent.span(text: String) = span { +text }
 
 
 
-@OptIn(ExperimentalTime::class)
 @HtmlTagMarker
 fun FlowContent.discordMessageContainer(message: Message, index: Int, mentionedUsers: List<User>) {
     val author = message.author
@@ -213,7 +209,7 @@ fun DIV.reactionsBlock(reactions: List<Reaction>) {}
 fun DIV.stickersBlock(stickers: List<Sticker>) {}
 @HtmlTagMarker
 fun DIV.invitesBlock(invites: List<Invite>) {}
-@OptIn(ExperimentalTime::class)
+
 @HtmlTagMarker
 fun DIV.timestamp(timestamp: Instant, messageId: Snowflake, isSystem: Boolean = false) {
     span("chatlog__${if (isSystem) "system-notification-" else ""}timestamp") {
@@ -222,7 +218,6 @@ fun DIV.timestamp(timestamp: Instant, messageId: Snowflake, isSystem: Boolean = 
     }
 }
 
-@OptIn(ExperimentalTime::class)
 fun formatDiscordTimestamp(timestamp: Instant): String {
     return ""
 }

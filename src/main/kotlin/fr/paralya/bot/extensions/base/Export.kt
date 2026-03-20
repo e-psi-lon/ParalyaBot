@@ -30,10 +30,8 @@ import kotlinx.html.stream.createHTML
 import kotlinx.html.style
 import kotlinx.html.title
 import kotlinx.html.unsafe
-import kotlin.time.ExperimentalTime
 import kotlin.time.Clock
 
-@OptIn(ExperimentalTime::class)
 suspend fun FollowupMessageCreateBuilder.addStringExport(channel: MessageChannelBehavior, guild: GuildBehavior?, messages: Flow<Message>, anonymous: Boolean) {
     val export = buildString {
         append("==============================================================\n")
@@ -116,7 +114,6 @@ private fun formatEmbed(embed: Embed): String {
     }
 }
 
-@OptIn(ExperimentalTime::class)
 suspend fun FollowupMessageCreateBuilder.addHtmlExport(
     channel: MessageChannelBehavior,
     guild: GuildBehavior?,
@@ -265,7 +262,6 @@ suspend fun FollowupMessageCreateBuilder.addHtmlExport(
     addFile("export.html", ChannelProvider { ByteReadChannel(html) })
 }
 
-@OptIn(ExperimentalTime::class)
 private fun formatDate(snowflake: Snowflake): String {
     val dateTime = snowflake.timestamp.toLocalDateTime(TimeZone.currentSystemDefault())
     return "%02d/%02d/%04d %02d:%02d".format(

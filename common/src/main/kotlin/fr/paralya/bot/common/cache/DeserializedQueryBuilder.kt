@@ -28,7 +28,6 @@ internal class DeserializedQueryBuilder<T : Any>(
         predicates.add { predicate(this.get(it)) }
     }
 
-    @OptIn(ExperimentalSerializationApi::class)
     override fun build(): Query<T> {
         val namespace = typeName.substringBefore(":")
         val key = typeName.substringAfter(":")

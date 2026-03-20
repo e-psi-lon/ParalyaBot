@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.ExperimentalTime
 
 
 private val logger = KotlinLogging.logger("MessageUtils")
@@ -91,7 +90,6 @@ const val MESSAGE_SEARCH_RANGE = 20
  * @param message The message to find the corresponding message for.
  * @return The corresponding message if found, or null if not found.
  */
-@OptIn(ExperimentalTime::class)
 suspend fun MessageChannelBehavior.getCorrespondingMessage(message: Message): Message? {
 	val date = message.timestamp
 
