@@ -5,8 +5,10 @@ import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.utils.loadModule
+import fr.paralya.bot.common.ParalyaBotException
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.konform.validation.Validation
+import io.konform.validation.ValidationError
 import io.konform.validation.ValidationResult
 import io.konform.validation.onEach
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -24,6 +26,13 @@ import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.io.path.writeText
+
+
+open class BotConfigException(message: String) : ParalyaBotException(message)
+class InvalidConfigException(className: String?, val errors: List<ValidationError>) : BotConfigException(
+	"Configuration for $className is invalid due to the following errors: "
+)
+class MissingConfigException(path: String) : BotConfigException("No configuration found for path: $path")
 
 /**
  * Configuration manager for the bot.
@@ -162,17 +171,14 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 
 	private fun getSubConfig(path: String, config: Config = state.raw): Config {
 		if (!config.hasPath(path))
-			throw IllegalArgumentException("No configuration found for path: $path")
+			throw MissingConfigException(path)
 		return config.getConfig(path)
 	}
 
 	private fun validateConfig(config: ValidatedConfig) {
 		val result = config.validate()
 		if (result.isValid) logger.info { "Configuration for ${config::class.simpleName} is valid." }
-		else throw IllegalStateException(
-			"Configuration for ${config::class.simpleName} is invalid due to the following errors: " +
-					result.errors.joinToString("\n")
-		)
+		else throw InvalidConfigException(config::class.simpleName, result.errors)
 	}
 }
 

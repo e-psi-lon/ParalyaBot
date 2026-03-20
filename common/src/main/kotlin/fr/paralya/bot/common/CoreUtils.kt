@@ -59,3 +59,6 @@ suspend fun Flow<Member>.filterByRole(roleId: Snowflake): Flow<Member> =
     filter { member -> member.roles.any { it.id == roleId } }
 
 fun Flow<Member>.filterByRole(role: RoleBehavior): Flow<Member> = filter { it.hasRole(role) }
+
+
+class ParalyaNotFoundException : ParalyaBotException("Paralya guild not found")

@@ -15,6 +15,7 @@ import dev.kordex.core.checks.inChannel
 import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
 import dev.kordex.core.utils.toReaction
+import fr.paralya.bot.common.ParalyaNotFoundException
 import fr.paralya.bot.common.addReactions
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.config.BotConfig
@@ -173,7 +174,7 @@ suspend fun LG.registerListeners() {
 private suspend fun LG.handleReadyEvent(guilds: Set<GuildBehavior>, botConfig: BotConfig, lgConfig: LgConfig) {
 	logger.debug { "Fetching channels from werewolf related categories" }
 	val paralya = guilds.firstOrNull { it.id.value == botConfig.paralyaId }
-		?: throw IllegalStateException("Paralya guild not found")
+		?: throw ParalyaNotFoundException()
 
 	val rolesChannels = collectChannelsFromCategory(lgConfig.rolesCategory.snowflake, paralya)
 	val mainChannels = collectChannelsFromCategory(lgConfig.mainCategory.snowflake, paralya)
@@ -184,12 +185,12 @@ private suspend fun LG.handleReadyEvent(guilds: Set<GuildBehavior>, botConfig: B
 	// If the required channels are not found, throw an exception
 	requiredRoleChannels.forEach { channelName ->
 		if (rolesChannels[channelName.name] == null) {
-			throw IllegalStateException("Channel $channelName not found in the roles category")
+			throw LgChannelNotFoundException("Channel $channelName not found in the roles category")
 		}
 	}
 	requiredMainChannels.forEach { channelName ->
 		if (mainChannels[channelName.name] == null) {
-			throw IllegalStateException("Channel $channelName not found in the main category")
+			throw LgChannelNotFoundException("Channel $channelName not found in the main category")
 		}
 	}
 
