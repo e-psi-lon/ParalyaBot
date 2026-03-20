@@ -198,11 +198,11 @@ class Base : Extension() {
 			name = I18n.StartGame.Argument.Game.name
 			description = I18n.StartGame.Argument.Game.description
 			validate {
-				if (!gameRegistry.hasGameMode(value)) fail()
+				failIf(I18n.StartGame.Argument.Game.Error.notFound) { !gameRegistry.hasGameMode(value) }
 			}
 			autoComplete {
 				val effectiveLocale = (locale ?: guildLocale)?.asJavaLocale() ?: KI18n.defaultLocale
-				suggestStringMap(gameRegistry.toChoices().mapKeys { it.key.translateLocale(effectiveLocale) })
+				suggestStringMap(gameRegistry.toChoices().mapKeys { it.key.	translateLocale(effectiveLocale) })
 			}
 		}
 	}
@@ -214,8 +214,7 @@ class Base : Extension() {
             minValue = 1
             maxValue = 1000
             validate {
-                if (value != null && end != null)
-                    return@validate fail(I18n.ChatExport.Argument.Count.Error.mutuallyExclusive)
+                if (value != null && end != null) fail(I18n.ChatExport.Argument.Count.Error.mutuallyExclusive)
             }
         }
 
@@ -228,11 +227,10 @@ class Base : Extension() {
             name = I18n.ChatExport.Argument.End.name
             description = I18n.ChatExport.Argument.End.description
             validate {
-				return@validate if (start == null && value != null)
+				if (start == null && value != null)
                      fail(I18n.ChatExport.Argument.End.Error.startRequired)
                 else if (value != null && value!! < start!!)
                     fail(I18n.ChatExport.Argument.End.Error.invalidRange)
-				else Unit
             }
         }
 

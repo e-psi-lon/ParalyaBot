@@ -101,21 +101,33 @@ class PluginExtension : Extension() {
                                     title = I18n.Plugins.Reload.Response.Error.Embed.title.contextTranslate()
                                     color = DISCORD_RED
                                     description = when (reloadResult) {
-                                        is OldPluginNotFound -> I18n.Plugins.Reload.Response.Error.OldPlugin.notFound.contextTranslate(arguments.oldPluginId)
-                                        is OldPluginFailedToDelete -> I18n.Plugins.Reload.Response.Error.OldPlugin.failedToDelete.contextTranslate(arguments.oldPluginId)
-                                        is OldPluginFallbackFailedToLoad -> I18n.Plugins.Reload.Response.Error.OldPlugin.fallbackFailed.contextTranslate(arguments.newPluginPath, arguments.oldPluginId)
-                                        is OldPluginReusedAsFallback -> I18n.Plugins.Reload.Response.Error.OldPlugin.asFallback.contextTranslate(arguments.newPluginPath, arguments.oldPluginId)
+                                        is OldPluginNotFound -> I18n.Plugins.Reload.Response.Error
+                                            .OldPlugin.notFound.contextTranslate(arguments.oldPluginId)
+                                        is OldPluginFailedToDelete -> I18n.Plugins.Reload.Response.Error.OldPlugin
+                                            .failedToDelete.contextTranslate(arguments.oldPluginId)
+                                        is OldPluginFallbackFailedToLoad -> I18n.Plugins.Reload.Response.Error.OldPlugin
+                                            .fallbackFailed.contextTranslate(
+                                                arguments.newPluginPath,
+                                                arguments.oldPluginId
+                                            )
+                                        is OldPluginReusedAsFallback -> I18n.Plugins.Reload.Response.Error.OldPlugin
+                                            .asFallback.contextTranslate(
+                                                arguments.newPluginPath,
+                                                arguments.oldPluginId
+                                            )
                                     }
                                 }
                                 components {
                                     if (exception != null) exceptionButton(
                                         I18n.Plugins.Reload.Response.Error.Button.viewError,
-                                        I18n.Plugins.Reload.Response.Error.Button.viewError.contextTranslate(arguments.oldPluginId),
+                                        I18n.Plugins.Reload.Response.Error.Button.viewError
+                                            .contextTranslate(arguments.oldPluginId),
                                         exception
                                     )
                                     if (reloadResult is OldPluginFallbackFailedToLoad) exceptionButton(
                                         I18n.Plugins.Reload.Response.Error.Button.secondError,
-                                        I18n.Plugins.Reload.Response.Error.Button.secondError.contextTranslate(arguments.newPluginPath),
+                                        I18n.Plugins.Reload.Response.Error.Button.secondError
+                                            .contextTranslate(arguments.newPluginPath),
                                         reloadResult.fallbackException
                                     )
                                 }
@@ -165,7 +177,7 @@ class PluginExtension : Extension() {
         this.name = name
         this.description = description
         validate {
-            if (pluginManager.plugins.none { it.pluginId == value }) fail()
+            failIf(I18n.Plugins.Arguments.Error.noPlugin) { pluginManager.plugins.none { it.pluginId == value } }
         }
         autoComplete {
             val effectiveLocale = (locale ?: guildLocale)?.asJavaLocale() ?: KI18n.defaultLocale
@@ -189,7 +201,9 @@ class PluginExtension : Extension() {
             name = I18n.Plugins.Reload.Argument.NewPluginPath.name
             description = I18n.Plugins.Reload.Argument.NewPluginPath.description
             validate {
-                if (value !in getAvailableZipFiles().map { it.nameWithoutExtension }) fail()
+                failIf(I18n.Plugins.Reload.Argument.NewPluginPath.Error.notFound) {
+                    value !in getAvailableZipFiles().map { it.nameWithoutExtension }
+                }
             }
             autoComplete {
                 suggestStringMap(getAvailableZipFiles().associate { it.nameWithoutExtension to it.fileName.name })
