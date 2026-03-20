@@ -8,15 +8,12 @@ import dev.kord.core.cache.data.UserData
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.User
 import dev.kord.rest.Image
-import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.utils.any
 import dev.kordex.core.utils.hasRole
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.withContext
-import org.koin.core.parameter.ParametersHolder
-import org.koin.core.qualifier.Qualifier
 
 /**
  * Retrieves an image asset from the specified path.
@@ -29,8 +26,9 @@ import org.koin.core.qualifier.Qualifier
 suspend fun getAsset(path: String, game: String? = null) =
     Image.raw(getResource("assets/${if (game != null) "$game/" else ""}$path.webp"), Image.Format.WEBP)
 
+private object Resource
 suspend fun getResource(path: String): ByteArray {
-    val resource = object {}.javaClass.getResourceAsStream("/$path")
+    val resource = Resource.javaClass.getResourceAsStream("/$path")
         ?: throw IllegalArgumentException("Resource at path /$path not found")
     return withContext(Dispatchers.IO) {
         resource.readAllBytes().also {

@@ -5,6 +5,7 @@ import dev.kord.core.Kord
 import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.channel.createMessage
 import dev.kord.core.behavior.execute
+import dev.kord.core.cache.data.WebhookData
 import dev.kord.core.entity.Message
 import dev.kord.core.entity.ReactionEmoji
 import dev.kord.core.entity.Webhook
@@ -149,7 +150,7 @@ fun ReactionEmoji.format(): String {
 /**
  * Extension function to easily add an emoji to message content in builders.
  *
- * @param emoji The emoji to add (unicode or custom emoji format)
+ * @param emoji The emoji to add (Unicode or custom emoji format)
  */
 fun MessageCreateBuilder.appendEmoji(emoji: String) {
 	content = (content ?: "") + emoji
@@ -166,15 +167,12 @@ fun MessageCreateBuilder.appendEmoji(emoji: String) {
  * @return The retrieved or newly created webhook.
  */
 suspend fun Kord.getWebhook(channel: Snowflake, name: String, avatar: Image? = null): Webhook {
-	val webhooks = rest.webhook.getChannelWebhooks(channel)
-	return (webhooks.firstOrNull { it.name == name } ?: rest.webhook.createWebhook(
-		channel,
-		name
-	) {
+	val existing = rest.webhook.getChannelWebhooks(channel)
+		.firstOrNull { it.name == name }
+	val data = existing ?: rest.webhook.createWebhook(channel, name) {
 		this.avatar = avatar ?: getAsset("bot")
-	}).let {
-		getWebhook(it.id)
 	}
+	return Webhook(WebhookData.from(data), this)
 }
 
 suspend inline fun ExtensibleBot.getWebhook(channel: Snowflake, name: String, avatar: Image? = null) =
