@@ -44,7 +44,7 @@ class ConfigManagerTest : KoinTest {
 		// Act
 		try {
 			ConfigManager(nonExistentPath)
-		} catch (e: IllegalStateException) {
+		} catch (_: IllegalStateException) {
 			// Expected to fail due to missing required fields, but the file should still be created
 		}
 

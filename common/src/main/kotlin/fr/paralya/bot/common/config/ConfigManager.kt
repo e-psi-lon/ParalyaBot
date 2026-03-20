@@ -79,7 +79,7 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 			unregisterConfig(name)
 			configEntry.configRegister(configEntry)
 			logger.debug { "Config for $name reloaded successfully" }
-		} catch (e: Exception) {
+		} catch (e: Exception) { // Many failure point with the same result handling
 			logger.error(e) { "Failed to reload config for $name, config may be unavailable" }
 		}
 	}
@@ -103,7 +103,7 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
             |}
         """.trimMargin()
 		)
-		logger.warn { "Default config created at ${configFile.absolutePathString()}. Please fill in required values." }
+		logger.error { "Default config created at ${configFile.absolutePathString()}. Please fill in required values." }
 	}
 
 	/**

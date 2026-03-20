@@ -59,13 +59,18 @@ internal class PluginReloadStrategy(
     private fun loadNewPlugin(): Result<String> = try {
         val loadedPluginId = pluginManager.loadPlugin(newPluginZipPath)
         if (pluginId != loadedPluginId) {
-            logger.warn { "Plugin $loadedPluginId was successfully loaded, but its ID doesn't match the old $pluginId." }
+            logger.warn {
+                "Plugin $loadedPluginId was successfully loaded, but its ID doesn't match the old $pluginId."
+            }
         }
         if (loadedPluginId != null) {
             logger.info { "Plugin $loadedPluginId successfully loaded from path $newPluginZipPath." }
             Result.success(loadedPluginId)
         } else {
-            logAndFail(Exception("Unknown error during plugin loading, no exception was thrown but the result is null"), "Failed to load the new plugin from path $newPluginZipPath for an unknown reason.")
+            logAndFail(
+                Exception("Unknown error during plugin loading, no exception was thrown but the result is null"),
+                "Failed to load the new plugin from path $newPluginZipPath for an unknown reason."
+            )
         }
     } catch (e: PluginRuntimeException) {
         logAndFail(e, "An error happened when loading: from path $newPluginZipPath: ${e.message}")
@@ -143,5 +148,9 @@ internal class PluginReloadStrategy(
  * Internal helper factory to create a [PluginReloadStrategy] instance based on the current [PluginManager] instance.
  * Avoids explicit `this` at call site.
  */
-internal fun PluginManager.createReloadStrategy(pluginId: String, oldPluginPath: Path, newPluginZipPath: Path, logger: KLogger) =
-    PluginReloadStrategy(this, pluginId, oldPluginPath, newPluginZipPath, logger)
+internal fun PluginManager.createReloadStrategy(
+    pluginId: String,
+    oldPluginPath: Path,
+    newPluginZipPath: Path,
+    logger: KLogger
+) = PluginReloadStrategy(this, pluginId, oldPluginPath, newPluginZipPath, logger)

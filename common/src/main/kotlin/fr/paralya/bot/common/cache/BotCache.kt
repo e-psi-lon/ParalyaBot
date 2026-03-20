@@ -31,10 +31,13 @@ private val cbor = Cbor {
 /**
  * Queries items of type [T] from the cache within [namespace].
  *
- * @param namespace The cache partition, typically the plugin ID, used to scope entries and avoid collisions between modules.
+ * @param namespace The cache partition, typically the plugin ID,
+ * used to scope entries and avoid collisions between modules.
  * @param itemIdProperty The property used as the item's unique identifier within the namespace.
- *   Required when multiple instances of [T] coexist under the same namespace, so that updates and removes target the right entry.
- * @param typeKey Differentiates between multiple types stored under the same namespace. Defaults to the simple class name of [T].
+ *   Required when multiple instances of [T] coexist under the same namespace, so that updates and
+ *   removes target the right entry.
+ * @param typeKey Differentiates between multiple types stored under the same namespace.
+ * Defaults to the simple class name of [T].
  * @param block Optional predicate block to filter results.
  * @return A [Query] of deserialized [T] instances matching the given criteria.
  */
@@ -52,10 +55,12 @@ inline fun <reified T : Any> DataCache.querySerialized(
  * Prefer the reified overload unless [clazz] or [serializer] must be provided explicitly.
  *
  * @param clazz The class of the type to query.
- * @param namespace The cache partition, typically the plugin ID, used to scope entries and avoid collisions between modules.
+ * @param namespace The cache partition, typically the plugin ID,
+ * used to scope entries and avoid collisions between modules.
  * @param serializer The serializer for [T].
  * @param itemIdProperty The property used as the item's unique identifier within the namespace.
- * @param typeKey Differentiates between multiple types stored under the same namespace. Defaults to the simple class name of [clazz].
+ * @param typeKey Differentiates between multiple types stored under the same namespace.
+ * Defaults to the simple class name of [clazz].
  * @param block Optional predicate block to filter results.
  * @return A [Query] of deserialized [T] instances matching the given criteria.
  */
@@ -68,7 +73,14 @@ fun <T : Any> DataCache.querySerialized(
     typeKey: String = clazz.simpleName ?: "unknown",
     block: QueryBuilder<T>.() -> Unit = {}
 ): Query<T> {
-    val builder = DeserializedQueryBuilder("$namespace:$typeKey", clazz, this, itemIdProperty, serializer, cbor)
+    val builder = DeserializedQueryBuilder(
+        "$namespace:$typeKey",
+        clazz,
+        this,
+        itemIdProperty,
+        serializer,
+        cbor
+    )
     builder.block()
     return builder.build()
 }
@@ -155,7 +167,8 @@ suspend fun <T : Any>DataCache.putSerializedAll(
  *
  * @param namespace The cache partition to remove items from, typically the plugin ID.
  * @param itemIdProperty The property used as the item's unique identifier within the namespace.
- * @param typeKey Differentiates between multiple types stored under the same namespace. Defaults to the simple class name of [T].
+ * @param typeKey Differentiates between multiple types stored under the same namespace.
+ * Defaults to the simple class name of [T].
  * @param block Optional predicate block to narrow which items are removed.
  */
 suspend inline fun <reified T : Any> DataCache.removeSerialized(
@@ -173,7 +186,8 @@ suspend inline fun <reified T : Any> DataCache.removeSerialized(
  * @param namespace The cache partition to remove items from, typically the plugin ID.
  * @param serializer The serializer for [T], required to deserialize entries before predicates can be applied.
  * @param itemIdProperty The property used as the item's unique identifier within the namespace.
- * @param typeKey Differentiates between multiple types stored under the same namespace. Defaults to the simple class name of [clazz].
+ * @param typeKey Differentiates between multiple types stored under the same namespace.
+ * Defaults to the simple class name of [clazz].
  * @param block Optional predicate block to narrow which items are removed.
  */
 suspend fun <T : Any>DataCache.removeSerialized(
@@ -191,7 +205,8 @@ suspend fun <T : Any>DataCache.removeSerialized(
  * @param namespace The cache partition containing the items to update, typically the plugin ID.
  * @param itemIdProperty The property used as the item's unique identifier within the namespace.
  *   Required so that each updated item is re-stored under the same key.
- * @param typeKey Differentiates between multiple types stored under the same namespace. Defaults to the simple class name of [T].
+ * @param typeKey Differentiates between multiple types stored under the same namespace.
+ * Defaults to the simple class name of [T].
  * @param block Optional predicate block to narrow which items are updated.
  * @param transform Transformation applied to each matching item to produce its replacement.
  */
@@ -212,7 +227,8 @@ suspend inline fun <reified T : Any> DataCache.updateSerialized(
  * @param serializer The serializer for [T].
  * @param itemIdProperty The property used as the item's unique identifier within the namespace.
  *   Required so that each updated item is re-stored under the same key.
- * @param typeKey Differentiates between multiple types stored under the same namespace. Defaults to the simple class name of [clazz].
+ * @param typeKey Differentiates between multiple types stored under the same namespace.
+ * Defaults to the simple class name of [clazz].
  * @param block Optional predicate block to narrow which items are updated.
  * @param transform Transformation applied to each matching item to produce its replacement.
  */
