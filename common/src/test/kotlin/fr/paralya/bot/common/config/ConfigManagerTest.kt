@@ -10,7 +10,7 @@ import org.koin.test.KoinTest
 import java.nio.file.Path
 import kotlin.io.path.writeText
 import kotlin.test.assertEquals
-import kotlin.test.assertFails
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 class ConfigManagerTest : KoinTest {
@@ -44,8 +44,11 @@ class ConfigManagerTest : KoinTest {
 		// Act
 		try {
 			ConfigManager(nonExistentPath)
-		} catch (_: IllegalStateException) {
-			// Expected to fail due to missing required fields, but the file should still be created
+		} catch (_: InvalidConfigException) {
+			// We don't want to assert because if validation pass, we don't want the test to fail,
+			// But we also don't want to swallow truly unpredictable errors, hence why no runCatching.
+			// Here, the default config won't (unless changes in validation or default logic) pass validation
+			// Not passing validation is NOT what's being tested here
 		}
 
 		// Assert
@@ -97,7 +100,7 @@ class ConfigManagerTest : KoinTest {
 		)
 
 		// Act & Assert
-		assertFails { ConfigManager(configFile) }
+		assertFailsWith<InvalidConfigException> { ConfigManager(configFile) }
 	}
 
 	@Test
@@ -117,7 +120,7 @@ class ConfigManagerTest : KoinTest {
 		)
 
 		// Act & Assert
-		assertFails { ConfigManager(configFile) }
+		assertFailsWith<InvalidConfigException> { ConfigManager(configFile) }
 	}
 
 	@Test
@@ -127,7 +130,7 @@ class ConfigManagerTest : KoinTest {
 		configFile.writeText("games {}")
 
 		// Act & Assert
-		assertFails { ConfigManager(configFile) }
+		assertFailsWith<InvalidConfigException> { ConfigManager(configFile) }
 	}
 
 	@Test
@@ -147,7 +150,7 @@ class ConfigManagerTest : KoinTest {
 		)
 
 		// Act & Assert
-		assertFails { ConfigManager(configFile) }
+		assertFailsWith<InvalidConfigException> { ConfigManager(configFile) }
 	}
 
 	@Test
