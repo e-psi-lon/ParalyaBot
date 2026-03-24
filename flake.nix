@@ -96,7 +96,7 @@
                         dontConfigure = true;
                         outputHashMode = "recursive";
                         outputHashAlgo = "sha256";
-                        outputHash = "sha256-SMkw1QS0gBEwzY63dkbyrhdIKXImcwp07Pmfv9DHCb4=";
+                        outputHash = "sha256-BEDoGwe0eakYP6CBQWb/E3rAPfx71K2kh2KDpdEoZmQ=";
 
                         buildPhase = ''
                             export GRADLE_USER_HOME=$(mktemp -d)
@@ -122,7 +122,7 @@
                             task = "shadowJar";
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-f64bBaCNMk8Xmn9ndCtANA1fKt8CBEQ4oUq4Zg/PgXc=";
+                            outputHash = "sha256-DjdOQuwQARtVqp8jO3yt3+Dn0b2HvZ5c60pqv7CCEzQ=";
                         };
 
                     lg-plugin =
@@ -135,7 +135,7 @@
                             output = "lg/build/distributions/lg-${version}.zip";
                             name = "lg-plugin-${version}";
                             extension = "zip";
-                            outputHash = "sha256-B6ZvbomjuZD736YkZetWpWBBoA/L5DZYsX9NHwMvOOc=";
+                            outputHash = "sha256-dWqpQs9NiGu5WCvkpxXnkGl2CKfMZ+LaaXRV5y4bY14=";
                         };
 
                     sta-plugin =
@@ -170,14 +170,12 @@
                             created = lastCommitAsTimestamp;
 
                             contents = [
-                                project-jre
                                 pkgs.cacert
                             ];
 
                             extraCommands = ''
-                                mkdir -p app/config app/plugins tmp
+                                mkdir -p app tmp
                                 chmod 1777 tmp
-                                cp ${self.packages.${system}.paralyabot-jar}/paralyabot.jar app/paralyabot.jar
                             '';
 
                             config = {
@@ -195,10 +193,10 @@
                                     "-XX:G1HeapRegionSize=1m"
                                     "-XX:ReservedCodeCacheSize=64m"
                                     "-Xms12m"
-                                    "-Xmx128m"
+                                    "-Xmx256m"
                                     "--enable-native-access=ALL-UNNAMED"
                                     "-jar"
-                                    "/app/paralyabot.jar"
+                                    "${self.packages.${system}.paralyabot-jar}/paralyabot.jar"
                                 ];
                                 WorkingDir = "/app";
                                 Env = [
