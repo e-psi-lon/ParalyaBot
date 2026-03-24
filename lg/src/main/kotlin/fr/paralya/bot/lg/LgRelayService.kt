@@ -130,6 +130,7 @@ class LgRelayService : KordExKoinComponent {
         val webhook = bot.getWebhook(outChannel, webhookName)
         val newMessage = event.message.asMessage()
         if (oldMessage != null) {
+            @Suppress("TooGenericExceptionCaught")
             try {
                 // Keep the NPE here, we want a loud error if it's null
                 webhook.getMessage(webhook.token!!, oldMessage.id).edit {

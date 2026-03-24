@@ -247,7 +247,7 @@ private val defaultCacheMutex = Mutex()
 /**
  * Executes [operation] atomically under [mutex], preventing concurrent cache modifications.
  *
- * @param mutex The mutex to lock. Defaults to a shared module-level mutex.
+ * @param mutex The mutex to lock. Defaults to a shared bot-level mutex.
  * @param operation The cache operation to execute.
  */
 suspend fun <T> DataCache.atomic(

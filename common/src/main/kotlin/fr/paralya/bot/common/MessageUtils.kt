@@ -35,9 +35,9 @@ private val logger = KotlinLogging.logger("MessageUtils")
  * @param messageBuilder A lambda to build the message content.
  * @return The sent message.
  */
-suspend fun MessageChannelBehavior.sendTemporaryMessage
-			(delay: Duration = 10.seconds,
-			 messageBuilder: UserMessageCreateBuilder.() -> Unit
+suspend fun MessageChannelBehavior.sendTemporaryMessage(
+	delay: Duration = 10.seconds,
+	messageBuilder: UserMessageCreateBuilder.() -> Unit
 ): Message {
 	return createMessage(messageBuilder).also {
 		it.kord.launch(
@@ -173,7 +173,7 @@ suspend fun Kord.getWebhook(channel: Snowflake, name: String, avatar: Image? = n
 	return Webhook(WebhookData.from(data), this)
 }
 
-suspend inline fun ExtensibleBot.getWebhook(channel: Snowflake, name: String, avatar: Image? = null) =
+suspend fun ExtensibleBot.getWebhook(channel: Snowflake, name: String, avatar: Image? = null) =
 	kordRef.getWebhook(channel, name, avatar)
 
 /**
