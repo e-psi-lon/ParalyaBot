@@ -1,0 +1,6 @@
+services:
+  paralyabot:
+    image: ghcr.io/e-psi-lon/paralyabot:latest
+    volumes:
+      - ./container:/app/external
+    restart: unless-stopped
