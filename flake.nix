@@ -96,7 +96,7 @@
                         dontConfigure = true;
                         outputHashMode = "recursive";
                         outputHashAlgo = "sha256";
-                        outputHash = "sha256-BEDoGwe0eakYP6CBQWb/E3rAPfx71K2kh2KDpdEoZmQ=";
+                        outputHash = "sha256-xwaN3HRM1NzIxCtejX+Q6M/pBUNeleNnJw7E0L1WYIU=";
 
                         buildPhase = ''
                             export GRADLE_USER_HOME=$(mktemp -d)
@@ -122,7 +122,7 @@
                             task = "shadowJar";
                             output = "build/libs/paralya-bot-${version}.jar";
                             name = "paralyabot";
-                            outputHash = "sha256-DjdOQuwQARtVqp8jO3yt3+Dn0b2HvZ5c60pqv7CCEzQ=";
+                            outputHash = "sha256-BeKCtnje1NxKI169BKJhWej0shojVG/UrSG0Q3iGNaM=";
                         };
 
                     lg-plugin =

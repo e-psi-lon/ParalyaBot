@@ -22,7 +22,7 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
     @Suppress("ThrowsCount")
     override fun loadPluginFromPath(pluginPath: Path): PluginWrapper {
         val wrapper = super.loadPluginFromPath(pluginPath)
-        val classLoader = getPluginClassLoader(wrapper.pluginId)
+        val classLoader = wrapper.pluginClassLoader
         val pluginClass = classLoader.loadClass(wrapper.descriptor.pluginClass)
         val pluginId = wrapper.pluginId
         logger.debug { "Verifying validity of the plugin at path $pluginPath with main class ${wrapper.descriptor.pluginClass}" }
