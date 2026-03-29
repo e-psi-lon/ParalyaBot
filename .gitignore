@@ -1,2 +1,3 @@
-container/*
-!container/.gitkeep
+container/**
+!container/**/
+!**/.gitkeep
