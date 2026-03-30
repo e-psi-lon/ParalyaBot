@@ -46,7 +46,7 @@ class LgRelayService : KordExKoinComponent {
     private val botCache by lazy { bot.kordRef.cache }
 
     private fun User?.shouldIgnore(botConfig: BotConfig) =
-        this.isAdmin(botConfig) || this?.isBot == true || this?.isSelf == true
+        isAdmin(botConfig) || this?.isBot == true || this?.isSelf == true
 
     context(context: EventContext<MessageCreateEvent>)
     suspend fun onMessageSent(

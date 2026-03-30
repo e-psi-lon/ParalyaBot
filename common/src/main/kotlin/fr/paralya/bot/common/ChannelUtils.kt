@@ -171,6 +171,6 @@ suspend fun TopGuildChannelBehavior.removeMemberPermissions(
  */
 suspend fun TextChannel.getMembersWithAccess(): Flow<Member> {
     return guild.members.filter { member ->
-        this.permissionsForMember(member).contains(Permission.ViewChannel)
+        permissionsForMember(member).contains(Permission.ViewChannel)
     }
 }

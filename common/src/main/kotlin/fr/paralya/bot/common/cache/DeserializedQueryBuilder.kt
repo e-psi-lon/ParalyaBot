@@ -25,7 +25,7 @@ internal class DeserializedQueryBuilder<T : Any>(
     private val predicates = mutableListOf<(T) -> Boolean>()
 
     override fun <R> KProperty1<T, R>.predicate(predicate: (R) -> Boolean) {
-        predicates.add { predicate(this.get(it)) }
+        predicates.add { predicate(get(it)) }
     }
 
     override fun build(): Query<T> {

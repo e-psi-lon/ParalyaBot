@@ -43,7 +43,7 @@ suspend fun getResource(path: String): ByteArray {
 fun DiscordUser?.asUser(kord: Kord) = this?.let { User(UserData.from(it), kord) }
 
 /** Extension properties to convert various number types to a [Snowflake] */
-val Number.snowflake get() = Snowflake(this.toLong())
+val Number.snowflake get() = Snowflake(toLong())
 
 /** @see [Number.snowflake] */
 val ULong.snowflake get() = Snowflake(this)
