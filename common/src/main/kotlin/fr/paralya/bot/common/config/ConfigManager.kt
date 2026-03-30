@@ -5,16 +5,9 @@ import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
 import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.utils.loadModule
-import fr.paralya.bot.common.ParalyaBotException
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.konform.validation.Validation
-import io.konform.validation.ValidationError
-import io.konform.validation.ValidationResult
-import io.konform.validation.onEach
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.Transient
 import kotlinx.serialization.hocon.Hocon
 import kotlinx.serialization.hocon.decodeFromConfig
 import kotlinx.serialization.serializer
@@ -26,13 +19,6 @@ import kotlin.io.path.Path
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.exists
 import kotlin.io.path.writeText
-
-
-open class BotConfigException(message: String) : ParalyaBotException(message)
-class InvalidConfigException(className: String?, val errors: List<ValidationError>) : BotConfigException(
-	"Configuration for $className is invalid due to the following errors: "
-)
-class MissingConfigException(path: String) : BotConfigException("No configuration found for path: $path")
 
 /**
  * Configuration manager for the bot.
@@ -180,54 +166,15 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 		if (result.isValid) logger.info { "Configuration for ${config::class.simpleName} is valid." }
 		else throw InvalidConfigException(config::class.simpleName, result.errors)
 	}
-}
 
+	private data class ConfigState(
+		val raw: Config,
+		val botConfig: BotConfig
+	)
 
-private data class ConfigState(
-	val raw: Config,
-	val botConfig: BotConfig
-)
+	private data class ConfigEntry(
+		val module: Module,
+		val configRegister: (ConfigEntry) -> Unit
+	)
 
-private data class ConfigEntry(
-	val module: Module,
-	val configRegister: (ConfigEntry) -> Unit
-)
-
-/**
- * Data class representing the core bot configuration.
- *
- * @property token The bot token used for authentication.
- * @property admins A list of admin user IDs.
- * @property dmLogChannelId A channel ID to copy direct messages to.
- * @property paralyaId The ID of the Paralya guild. (can be changed for testing purposes)
- */
-@Serializable
-data class BotConfig(
-	val token: String = "",
-	val admins: List<ULong> = emptyList(),
-	val dmLogChannelId: ULong = ULong.MIN_VALUE,
-	val paralyaId: ULong = ULong.MIN_VALUE
-) : ValidatedConfig {
-	@Transient
-	private val validator = Validation {
-		BotConfig::token {
-			defined() hint "Token must NOT be empty. Please provide it, it is a base requirement for the bot to work."
-		}
-		BotConfig::admins {
-			defined() hint "Admins list must have at least one item"
-			onEach {
-				appearsToBeSnowflake("Admin ID") // Just to be sure that a real ID is provided
-			}
-		}
-		BotConfig::dmLogChannelId {
-			appearsToBeSnowflake("DM log channel ID")
-		}
-		BotConfig::paralyaId {
-			appearsToBeSnowflake("Paralya guild ID")
-		}
-	}
-
-	override fun validate(): ValidationResult<BotConfig> {
-		return validator(this)
-	}
 }
