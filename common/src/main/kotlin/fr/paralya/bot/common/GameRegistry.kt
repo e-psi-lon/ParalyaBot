@@ -63,9 +63,9 @@ class GameRegistry : KordExKoinComponent {
 fun PresenceBuilder.gameMode(gameMode: Pair<Key, String>?) {
 	if (gameMode == null) {
 		status = PresenceStatus.Idle
-		watching("Paralya sans animation en cours...")
+		watching(I18n.Presence.notPlaying.translateLocale(KI18n.defaultLocale))
 	} else {
 		status = PresenceStatus.Online
-		playing("une partie de ${gameMode.first.translateLocale(KI18n.defaultLocale)}")
+		playing(I18n.Presence.playing.translateLocale(KI18n.defaultLocale, gameMode.first))
 	}
 }
