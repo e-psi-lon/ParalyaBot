@@ -11,6 +11,11 @@ configurations.all {
 	excludedDependencies.forEach { (group, module) ->
 		exclude(group = group, module = module)
 	}
+
+	resolutionStrategy.dependencySubstitution {
+		substitute(module("dev.kordex.data:api"))
+			.using(module("dev.kordex.data:api:${libs.versions.kordex.data.api.get()}"))
+	}
 }
 
 plugins {

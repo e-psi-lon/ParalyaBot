@@ -9,6 +9,7 @@ pluginManagement {
 		maven("https://snapshots-repo.kordex.dev")
 		maven("https://releases-repo.kordex.dev")
 	}
+	includeBuild("build-logic")
 }
 
 // Enable type-safe project accessor

@@ -1,3 +1,7 @@
+import org.gradle.api.provider.Provider
+import org.gradle.kotlin.dsl.DependencyHandlerScope
+import org.gradle.kotlin.dsl.`kotlin-dsl`
+
 plugins {
 	`kotlin-dsl`
 }
