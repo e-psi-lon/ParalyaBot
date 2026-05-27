@@ -11,11 +11,6 @@ configurations.all {
 	excludedDependencies.forEach { (group, module) ->
 		exclude(group = group, module = module)
 	}
-
-	resolutionStrategy.dependencySubstitution {
-		substitute(module("dev.kordex.data:api"))
-			.using(module("dev.kordex.data:api:${libs.versions.kordex.data.api.get()}"))
-	}
 }
 
 plugins {
@@ -38,6 +33,7 @@ kordEx {
 		dataCollection(DataCollection.None)
 		mainClass = "fr.paralya.bot.ParalyaBotKt"
 	}
+	configurations = listOf("compileOnly", "shadow")
 }
 
 i18n {
@@ -47,17 +43,19 @@ i18n {
 	}
 }
 
-
+val excludedPlugins = listOf("sta")
 
 val libraries = libs
 val typesafeProjects = projects
 subprojects {
-	apply(plugin = "kotlinx-serialization")
-	apply(plugin = "kotlin")
-	apply(plugin = "dev.detekt")
+	pluginManager.apply {
+		apply("kotlinx-serialization")
+		apply("kotlin")
+		apply("dev.detekt")
+	}
 
 	dependencies {
-		if (name != "common") {
+		if (path != typesafeProjects.common.path) {
 			compileOnly(typesafeProjects.common) // The common subproject serves as a base for all other subprojects
 			testImplementation(testFixtures(typesafeProjects.common)) // The common subproject also includes test dependencies
 		}
@@ -81,61 +79,17 @@ dependencies {
 	testImplementation(kotlin("test"))
 	implementation(libs.logback)
     implementation(libs.kotlinx.html)
-	implementation(projects.common)
+	compileOnly(projects.common)
+	shadow(projects.common)
 }
 
 tasks {
 	shadowJar {
 		archiveBaseName.set("paralya-bot")
 		archiveClassifier.set("")
-		archiveVersion.set(version as String)
+		archiveVersion.set("")
 		isPreserveFileTimestamps = false
 		isReproducibleFileOrder = true
-
-		listOf("brkitr", "translit", "rbnf").forEach { category ->
-			exclude("com/ibm/icu/impl/data/icudata/$category/**")
-		}
-		listOf(
-			"aix-*", "sunos-*", "darwin-*", "freebsd-*", "openbsd-*", "dragonflybsd-*",
-			"linux-arm*", "linux-mips*", "linux-ppc*", "linux-s390x", "linux-loongarch*",
-			"linux-riscv*", "linux-aarch64", "linux-x86",
-			"win32-x86", "win32-aarch64"
-		).forEach { platform ->
-			exclude("com/sun/jna/$platform/**")
-		}
-
-		exclude { file ->
-			val path = file.relativePath.pathString
-			if (!path.startsWith("com/ibm/icu/impl/data/icudata/")) return@exclude false
-
-			val lastName = file.relativePath.lastName
-			// Keep all non-res/icu binary data files (.cfu, .nrm, .spp, .brk, .dict, etc.)
-			if (!lastName.endsWith(".res") && !lastName.endsWith(".icu")) return@exclude false
-
-			val name = lastName.removeSuffix(".res").removeSuffix(".icu")
-
-			val keepFiles = setOf(
-				"root", "pool", "res_index", "metadata", "supplementalData",
-				"langInfo", "zoneinfo64", "metaZones", "timezoneTypes",
-				"windowsZones", "tzdbNames", "numberingSystems", "plurals",
-				"pluralRanges", "currencyNumericCodes", "keyTypeData",
-				"grammaticalFeatures", "genderList", "dayPeriods",
-				"icustd", "icuver", "units", "unames", "uprops",
-				"confusables", "pnames", "ucase"
-			)
-			if (name in keepFiles) return@exclude false
-			if (name.startsWith("en") || name.startsWith("fr")) return@exclude false
-
-			name.first().isLetter()
-		}
-
-		listOf("osx", "linux_aarch_64").forEach { platform ->
-			exclude("META-INF/native/libnetty_*_${platform}*.*")
-		}
-		exclude("META-INF/native/netty_*_x86_32.dll")
-		listOf("x86", "arm64").forEach { arch ->
-			exclude("org/fusesource/jansi/internal/native/Windows/$arch/**")
-		}
 
 		listOf(
 			"META-INF/maven/**",
@@ -160,7 +114,8 @@ tasks {
 	}
 
 	register("cleanPlugins") {
-		doLast {
+		description = "Wipes the local plugins directory and recreates an empty one to ensure a fresh environment."
+        doLast {
 			val pluginsDir = file("./container/plugins")
 			if (pluginsDir.exists()) {
 				pluginsDir.deleteRecursively()
@@ -170,9 +125,10 @@ tasks {
 	}
 
 	register<JavaExec>("runFull") {
-		dependsOn("cleanPlugins")
+		description = "Full execution from scratch: Cleans, exports all subproject plugins (excluding a pre-defined list), and runs the application via ShadowJar configuration."
+        dependsOn("cleanPlugins")
 		dependsOn(subprojects
-			.filter { it.name !in listOf("sta") }
+			.filter { it.name !in excludedPlugins }
 			.mapNotNull { it.tasks.findByName("exportToPluginsDir") }
 		)
 		val runTask = getByName<JavaExec>("runShadow")
