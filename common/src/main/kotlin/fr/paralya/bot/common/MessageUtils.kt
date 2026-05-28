@@ -18,10 +18,12 @@ import dev.kordex.core.ExtensibleBot
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -45,7 +47,9 @@ suspend fun MessageChannelBehavior.sendTemporaryMessage(
 		) {
 			delay(delay)
 			try {
-				it.delete()
+				withContext(NonCancellable + Dispatchers.IO) {
+					it.delete()
+				}
 			} catch (e: RestRequestException) {
 				logger.error(e) { "Failed to delete temporary message" }
 			}
