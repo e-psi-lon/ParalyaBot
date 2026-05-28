@@ -61,7 +61,7 @@ tasks {
             
             object CommonModule {
                 const val API_VERSION = "${project.version}"
-                const val MIN_COMPATIBLE_VERSION = "0.0.1"
+                const val MIN_COMPATIBLE_VERSION = "1.0.0"
             }
         """.trimIndent())
 		}
