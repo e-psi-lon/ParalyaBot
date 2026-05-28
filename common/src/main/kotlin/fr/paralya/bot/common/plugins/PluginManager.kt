@@ -7,6 +7,7 @@ import fr.paralya.bot.common.CommonModule
 import dev.kordex.core.plugins.PluginManager as KordExPluginManager
 import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.launch
+import org.pf4j.PluginRuntimeException
 import org.pf4j.PluginState
 import org.pf4j.PluginStateEvent
 import org.pf4j.PluginStateListener
@@ -71,6 +72,24 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
         startPlugins()
     }
 
+        fun tryStopPlugin(pluginId: String) = try {
+            // Non-nullable enum
+            // And if PF4J changes, we want to get a failure not a success holding null
+            Result.success(stopPlugin(pluginId)!!)
+        } catch (e: PluginRuntimeException) {
+            Result.failure(e)
+        }
+
+        fun tryLoadAndStartPlugin(pluginPath: Path) = try {
+            val fullPath = if (pluginPath.isAbsolute) pluginPath else pluginsRoot.resolve(pluginPath)
+            val pluginEntry = plugins.entries.find { it.value.pluginPath == fullPath }
+            val pluginId = if (pluginEntry != null) pluginEntry.key else loadPlugin(fullPath)
+            // Non-nullable enum
+            // And if PF4J changes, we want to get a failure not a success holding null
+            Result.success(startPlugin(pluginId)!!)
+        } catch (e: Exception) { // Untrusted start method
+            Result.failure(e)
+        }
 
     private inner class PluginListener : PluginStateListener, KordExKoinComponent {
         override fun pluginStateChanged(event: PluginStateEvent?) {

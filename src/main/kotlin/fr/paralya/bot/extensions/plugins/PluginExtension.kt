@@ -1,6 +1,7 @@
 package fr.paralya.bot.extensions.plugins
 
 import dev.kord.common.asJavaLocale
+import dev.kord.common.entity.ButtonStyle
 import dev.kord.rest.builder.message.EmbedBuilder
 import dev.kord.rest.builder.message.embed
 import dev.kordex.core.DISCORD_GREEN
@@ -51,30 +52,52 @@ class PluginExtension : Extension() {
 
     private suspend fun ComponentContainer.exceptionButton(label: Key, title: String, exception: Exception) = ephemeralButton {
         this.label = label
-        initialResponse {
-            val stringException = exception.stackTraceToString()
-            if (stringException.length < EmbedBuilder.Limits.description - 8) embed { // Account for the code block
-                this.title = title
-                description = "```\n$stringException\n```"
-                color = DISCORD_RED
-            } else {
-                content = ""
-                addFile(
-                    "stacktrace.txt", ChannelProvider(stringException.length.toLong()) {
-                        ByteReadChannel(stringException)
-                    }
-                )
+        style = ButtonStyle.Danger
+        action {
+            respond {
+                val stringException = exception.stackTraceToString()
+                if (stringException.length < EmbedBuilder.Limits.description - 8) embed { // Account for the code block
+                    this.title = title
+                    description = "```\n$stringException\n```"
+                    color = DISCORD_RED
+                } else {
+                    content = ""
+                    addFile(
+                        "stacktrace.txt", ChannelProvider(stringException.length.toLong()) {
+                            ByteReadChannel(stringException)
+                        }
+                    )
+                }
             }
         }
-
 
     }
 
     override suspend fun setup() {
-
         ephemeralSlashCommand {
             name = I18n.Plugins.Command.name
             description = I18n.Plugins.Command.description
+
+
+            ephemeralSubCommand {
+                name = I18n.Plugins.List.Command.name
+                description = I18n.Plugins.List.Command.description
+
+                adminOnly(listOf(botDeveloper)) {
+                    respond {
+                        embed {
+                            title = I18n.Plugins.List.Response.Embed.title.contextTranslate()
+                            for (plugin in pluginManager.plugins) {
+                                val pluginInstance = plugin.plugin as Plugin
+                                field {
+                                    name = pluginInstance.key.contextTranslate()
+                                    value = "`${pluginInstance.version}`"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 
             ephemeralSubCommand(::ReloadArguments) {
                 name = I18n.Plugins.Reload.Command.name
@@ -95,7 +118,6 @@ class PluginExtension : Extension() {
                             }
                         }
                         is PluginReloadError -> {
-                            val exception = reloadResult.exception
                             respond {
                                 embed {
                                     title = I18n.Plugins.Reload.Response.Error.Embed.title.contextTranslate()
@@ -118,6 +140,7 @@ class PluginExtension : Extension() {
                                     }
                                 }
                                 components {
+                                    val exception = reloadResult.exception
                                     if (exception != null) exceptionButton(
                                         I18n.Plugins.Reload.Response.Error.Button.viewError,
                                         I18n.Plugins.Reload.Response.Error.Button.viewError
@@ -137,24 +160,26 @@ class PluginExtension : Extension() {
                 }
             }
 
-
-
-            ephemeralSubCommand {
-                name = I18n.Plugins.List.Command.name
-                description = I18n.Plugins.List.Command.description
+            ephemeralSubCommand(::StartArguments) {
+                name = I18n.Plugins.Start.Command.name
+                description = I18n.Plugins.Start.Command.description
 
                 adminOnly(listOf(botDeveloper)) {
+                    val result = pluginManager.tryLoadAndStartPlugin(Path(arguments.pluginPath))
                     respond {
-                        embed {
-                            title = I18n.Plugins.List.Response.Embed.title.contextTranslate()
-                            for (plugin in pluginManager.plugins) {
-                                val pluginInstance = plugin.plugin as Plugin
-                                field {
-                                    name = pluginInstance.key.contextTranslate()
-                                    value = "`${pluginInstance.version}`"
-                                }
-                            }
-                        }
+
+                    }
+
+                }
+            }
+
+            ephemeralSubCommand(::StopArguments) {
+                name = I18n.Plugins.Stop.Command.name
+                description = I18n.Plugins.Stop.Command.description
+                adminOnly(listOf(botDeveloper)) {
+                    val result = pluginManager.tryStopPlugin(arguments.pluginId)
+                    respond {
+
                     }
                 }
             }
@@ -190,6 +215,32 @@ class PluginExtension : Extension() {
         }
     }
 
+    fun Arguments.pluginPath(name: Key, description: Key) = string {
+        this.name = name
+        this.description = description
+        validate {
+            failIf(I18n.Plugins.Arguments.Error.zipNotFound) {
+                value !in getAvailableZipFiles().map { it.nameWithoutExtension }
+            }
+        }
+        autoComplete {
+            suggestStringMap(getAvailableZipFiles().associate { it.nameWithoutExtension to it.fileName.name })
+        }
+    }
+    inner class StartArguments : Arguments() {
+        val pluginPath: String by pluginPath(
+            I18n.Plugins.Start.Argument.Plugin.name,
+            I18n.Plugins.Start.Argument.Plugin.description
+        )
+    }
+
+    inner class StopArguments : Arguments() {
+        val pluginId by pluginId(
+            I18n.Plugins.Stop.Argument.Plugin.name,
+            I18n.Plugins.Stop.Argument.Plugin.description
+
+        )
+    }
 
     inner class ReloadArguments : Arguments() {
         val oldPluginId by pluginId(
@@ -197,17 +248,9 @@ class PluginExtension : Extension() {
             I18n.Plugins.Reload.Argument.Plugin.description
         )
 
-        val newPluginPath: String by string {
-            name = I18n.Plugins.Reload.Argument.NewPluginPath.name
-            description = I18n.Plugins.Reload.Argument.NewPluginPath.description
-            validate {
-                failIf(I18n.Plugins.Reload.Argument.NewPluginPath.Error.notFound) {
-                    value !in getAvailableZipFiles().map { it.nameWithoutExtension }
-                }
-            }
-            autoComplete {
-                suggestStringMap(getAvailableZipFiles().associate { it.nameWithoutExtension to it.fileName.name })
-            }
-        }
+        val newPluginPath: String by pluginPath(
+            I18n.Plugins.Reload.Argument.NewPluginPath.name,
+            I18n.Plugins.Reload.Argument.NewPluginPath.description
+        )
     }
 }
