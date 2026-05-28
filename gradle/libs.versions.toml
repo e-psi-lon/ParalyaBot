@@ -2,7 +2,7 @@
 kotlin = "2.3.10"
 jvm = "25"
 kordex-plugin = "1.9.2"
-kordex-library = "2.4.1-20260425.200616-3"
+kordex-library = "2.4.1-20260525.073836-4"
 kordex-data-api = "1.0.2-20260404.122759-5" # See build.gradle.kts for enforcement
 kord = "0.18.0"
 kordex-i18n = "1.1.1"

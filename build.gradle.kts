@@ -18,7 +18,6 @@ plugins {
 	alias(libs.plugins.kordex.gradle)
 	alias(libs.plugins.kordex.i18n)
 	alias(libs.plugins.kotlinx.serialization)
-	alias(libs.plugins.shadow)
 	alias(libs.plugins.detekt)
 }
 
@@ -33,7 +32,7 @@ kordEx {
 		dataCollection(DataCollection.None)
 		mainClass = "fr.paralya.bot.ParalyaBotKt"
 	}
-	configurations = listOf("compileOnly", "shadow")
+	configurations = listOf("compileOnly")
 }
 
 i18n {
@@ -55,16 +54,23 @@ subprojects {
 	}
 
 	dependencies {
-		if (path != typesafeProjects.common.path) {
-			compileOnly(typesafeProjects.common) // The common subproject serves as a base for all other subprojects
-			testImplementation(testFixtures(typesafeProjects.common)) // The common subproject also includes test dependencies
+		if (path != typesafeProjects.deps.path) {
+			compileOnly(typesafeProjects.deps)
+			testImplementation(testFixtures(typesafeProjects.deps))
+			if (path != typesafeProjects.common.path)
+				compileOnly(typesafeProjects.common) // The common subproject serves as a base for all other subprojects
+
 		}
 	}
 }
 
 allprojects {
-	dependencyLocking {
-		lockAllConfigurations()
+	if (path != typesafeProjects.deps.path) {
+		configurations.runtimeClasspath {
+			exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+			exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk7")
+			exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
+		}
 	}
 }
 
@@ -80,11 +86,18 @@ dependencies {
 	implementation(libs.logback)
     implementation(libs.kotlinx.html)
 	compileOnly(projects.common)
-	shadow(projects.common)
+	compileOnly(projects.deps)
 }
 
 tasks {
-	shadowJar {
+	register<Copy>("copyRuntimeClasspath") {
+		description = "Copies the runtime dependencies to the build directory"
+		val outputDir = layout.buildDirectory.dir("deps")
+		from(configurations.runtimeClasspath)
+		into(outputDir)
+
+	}
+	jar {
 		archiveBaseName.set("paralya-bot")
 		archiveClassifier.set("")
 		archiveVersion.set("")
@@ -109,8 +122,6 @@ tasks {
 			"**/LICENSE*",
 			"**/NOTICE*"
 		).forEach(::exclude)
-
-		mergeServiceFiles()
 	}
 
 	register("cleanPlugins") {
@@ -131,7 +142,7 @@ tasks {
 			.filter { it.name !in excludedPlugins }
 			.mapNotNull { it.tasks.findByName("exportToPluginsDir") }
 		)
-		val runTask = getByName<JavaExec>("runShadow")
+		val runTask = getByName<JavaExec>("run")
 		mainClass = runTask.mainClass
 		classpath = runTask.classpath
 		jvmArgs = runTask.jvmArgs + listOf("--enable-native-access=ALL-UNNAMED")

@@ -156,52 +156,126 @@
               cp -r $GRADLE_USER_HOME/caches $out/gradle-home/caches
             '';
           };
+          deps-compile = mkGradleBuild {
+            pname = "paralyabot-deps";
+            module = "deps";
+            srcRoots = [ ./deps ];
+            task = "deps:shadowJar";
+            buildDependencies = [ self.packages.${system}.build-logic ];
+            installPhase = ''
+                mkdir -p $out/deps/build $out/gradle-home
+                cp -r deps/build/. $out/deps/build/
+                cp -r $GRADLE_USER_HOME/caches $out/gradle-home/caches
+                cp deps/build/libs/paralya-bot-deps.jar $out/
+            '';
+          };
+          deps-runtime = pkgs.runCommand "paralyabot-deps-runtime" {} ''
+            mkdir -p $out
+            cp --no-preserve=mode ${self.packages.${system}.deps-compile}/paralya-bot-deps.jar $out/
+          '';
           common-compile = mkGradleBuild {
             pname = "paralyabot-common-compile";
             module = "common";
             srcRoots = [ ./common ];
             task = "common:jar";
             updateTask = "common:nixDownloadDeps";
-            buildDependencies = [ self.packages.${system}.build-logic ];
+            buildDependencies = [ self.packages.${system}.build-logic self.packages.${system}.deps-compile ];
             installPhase = ''
                 mkdir -p $out/common/build $out/gradle-home
                 cp -r common/build/. $out/common/build/
                 cp -r $GRADLE_USER_HOME/caches $out/gradle-home/caches
+                cp common/build/libs/paralya-bot-common.jar $out/
             '';
           };
-          
-          common-runtime = mkGradleBuild {
-            pname = "paralyabot-common";
+          common-runtime-deps = mkGradleBuild {
+            pname = "paralyabot-common-deps";
             module = "common";
-            srcRoots = [ ./common ];
-            task = "common:shadowJar";
-            buildDependencies = [ self.packages.${system}.build-logic self.packages.${system}.common-compile ];
+            srcRoots = [ ./common/build.gradle.kts ];
+            task = "common:copyRuntimeClasspath";
+            buildDependencies = [ self.packages.${system}.build-logic self.packages.${system}.deps-compile self.packages.${system}.common-compile ];
             installPhase = ''
               mkdir -p $out
-              cp common/build/libs/paralya-bot-common.jar $out/
+              cp common/build/deps/*.jar $out/
             '';
           };
+
+          common-runtime = pkgs.runCommand "paralyabot-common-runtime" {
+            nativeBuildInputs = with pkgs; [ zip unzip perl ];
+          } ''
+            mkdir -p $out META-INF
+            cp --no-preserve=mode ${self.packages.${system}.common-compile}/paralya-bot-common.jar $out/
+
+            unzip -p "$out/paralya-bot-common.jar" META-INF/MANIFEST.MF > META-INF/MANIFEST.MF
+
+            CLASS_PATH=${self.packages.${system}.deps-runtime}/paralya-bot-deps.jar
+            EXTRA_JARS=$(ls ${self.packages.${system}.common-runtime-deps}/*.jar | tr '\n' ' ')
+            export RAW_CLASSPATH="Class-Path: $CLASS_PATH $EXTRA_JARS"
+            perl -i -0777 -pe '
+              my $cp = $ENV{RAW_CLASSPATH};
+              my $formatted = "";
+              if ($cp =~ s/^(.{1,70})//) { $formatted .= $1 . "\r\n"; }
+              while ($cp =~ s/^(.{1,69})//) { $formatted .= " " . $1 . "\r\n"; }
+              
+              s/^Class-Path:.*(?:\r?\n .*)*\r?\n//gm;
+
+              s|(Manifest-Version:.*?\r?\n)|$1$formatted|g;
+            ' META-INF/MANIFEST.MF
+
+            zip "$out/paralya-bot-common.jar" META-INF/MANIFEST.MF
+
+            mkdir -p $out/nix-support
+            echo ${self.packages.${system}.deps-runtime} > $out/nix-support/runtime-depends
+            echo ${self.packages.${system}.common-runtime-deps} >> $out/nix-support/runtime-depends
+          '';
+
+          paralyabot-jar-deps = mkGradleBuild {
+            pname = "paralyabot-jar-deps";
+            module = ".";
+            depsData = ./deps.json;
+            srcRoots = [ ./common ];
+            task = ":copyRuntimeClasspath";
+            buildDependencies = [ self.packages.${system}.build-logic self.packages.${system}.deps-compile self.packages.${system}.common-compile ];
+            installPhase = ''
+              mkdir -p $out
+              cp build/deps/*.jar $out/
+            '';
+          };
+
           paralyabot-jar = mkGradleBuild {
             pname = "paralyabot-jar";
             module = ".";
             depsData = ./deps.json;
             srcRoots = [ ./common ./src ];
-            task = ":shadowJar";
+            task = ":jar";
             extraNativeInputs = with pkgs; [ zip unzip perl ];
-            buildDependencies = [ self.packages.${system}.build-logic self.packages.${system}.common-compile ];
+            buildDependencies = [ self.packages.${system}.build-logic self.packages.${system}.deps-compile self.packages.${system}.common-compile ];
             installPhase = ''
                 mkdir -p $out META-INF
                 cp build/libs/paralya-bot.jar $out/
                 
                 unzip -p "$out/paralya-bot.jar" META-INF/MANIFEST.MF > META-INF/MANIFEST.MF
-                
-                perl -i -0pe 's|^Class-Path:.*?(?=^\S)|Class-Path: ${self.packages.${system}.common-runtime}/paralya-bot-common.jar\n|ms' META-INF/MANIFEST.MF
-                
+
+                CLASS_PATH="${self.packages.${system}.common-runtime}/paralya-bot-common.jar"
+                EXTRA_JARS=$(ls ${self.packages.${system}.paralyabot-jar-deps}/*.jar | tr '\n' ' ')
+                export RAW_CLASSPATH="Class-Path: $CLASS_PATH $EXTRA_JARS"
+
+                perl -i -0777 -pe '
+                  my $cp = $ENV{RAW_CLASSPATH};
+                  my $formatted = "";
+                  if ($cp =~ s/^(.{1,70})//) { $formatted .= $1 . "\r\n"; }
+                  while ($cp =~ s/^(.{1,69})//) { $formatted .= " " . $1 . "\r\n"; }
+                  
+                  s/^Class-Path:.*(?:\r?\n .*)*\r?\n//gm;
+
+                  s|(Manifest-Version:.*?\r?\n)|$1$formatted|g;
+                ' META-INF/MANIFEST.MF
+
                 zip "$out/paralya-bot.jar" META-INF/MANIFEST.MF
 
                 mkdir -p $out/nix-support
-                echo "${self.packages.${system}.common-runtime}" > $out/nix-support/runtime-depends
-                '';
+                echo ${self.packages.${system}.common-runtime} > $out/nix-support/runtime-depends
+                echo ${self.packages.${system}.paralyabot-jar-deps} >> $out/nix-support/runtime-depends
+            '';
           };
           lg-plugin = mkGradleBuild {
             pname = "lg-plugin";
@@ -209,7 +283,7 @@
             version = extractPluginVersion "lg";
             srcRoots = [ ./common ./lg ];
             task = ":lg:distZip";
-            buildDependencies = [ self.packages.${system}.build-logic self.packages.${system}.common-compile ];
+            buildDependencies = [ self.packages.${system}.build-logic self.packages.${system}.deps-compile self.packages.${system}.common-compile ];
             installPhase = ''
               mkdir -p $out
               cp lg/build/distributions/lg-''${version}.zip $out/
@@ -222,7 +296,7 @@
             version = extractPluginVersion "sta";
             srcRoots = [ ./common ./sta ];
             task = ":sta:distZip";
-            buildDependencies = [ self.packages.${system}.build-logic self.packages.${system}.common-compile ];
+            buildDependencies = [ self.packages.${system}.build-logic self.packages.${system}.deps-compile self.packages.${system}.common-compile ];
             installPhase = ''
               mkdir -p $out
               cp sta/build/distributions/sta-''${version}.zip $out/
@@ -301,7 +375,7 @@
         let
           build-bot = pkgs.writeShellScriptBin "build-bot" ''
             set -e
-            IMAGE_PATH=$(nix build .#paralyabot-image --print-out-paths)
+            IMAGE_PATH=$(nix build .#paralyabot-image --print-out-paths --show-trace)
             
             RUNTIME=""
             if command -v docker &> /dev/null; then
@@ -385,7 +459,7 @@
                     echo "If no package is specified, updates all dependency lockfiles."
                     ;;
                 "")
-                    for pkg in build-logic common-compile paralyabot-jar lg-plugin sta-plugin; do
+                    for pkg in build-logic deps-compile common-compile paralyabot-jar lg-plugin sta-plugin; do
                         if ! $(nix build .#''${pkg}.mitmCache.updateScript --print-out-paths); then
                             echo "Error: Failed to update ''${pkg} dependencies. Check the output above for details." >&2
                         fi

@@ -946,13 +946,13 @@
   }
  },
  "https://snapshots-repo.kordex.dev/dev": {
-  "kordex#kord-extensions/2.4.1-20260425.200616-3/SNAPSHOT": {
-   "module": "sha256-nl+MFTx/diVkLBuOIPL/5ML0I4BmKtv4aSfq1IX4nXs="
+  "kordex#kord-extensions/2.4.1-20260525.073836-4/SNAPSHOT": {
+   "module": "sha256-Zk//zFIK7Qu6ugLK+a1pc1U4iZZxTu0uNS0qq7YyELE="
   },
   "kordex/kord-extensions/2.4.1-SNAPSHOT/maven-metadata": {
    "xml": {
     "groupId": "dev.kordex",
-    "lastUpdated": "20260425200616"
+    "lastUpdated": "20260525073836"
    }
   }
  }
