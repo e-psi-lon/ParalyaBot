@@ -18,7 +18,6 @@ import fr.paralya.bot.lg.data.Voter
 import fr.paralya.bot.lg.data.getGameData
 import kotlinx.coroutines.sync.Mutex
 import org.koin.core.component.inject
-import org.koin.java.KoinJavaComponent.inject
 
 /**
  * Manager class responsible for handling voting operations in the Werewolf game.

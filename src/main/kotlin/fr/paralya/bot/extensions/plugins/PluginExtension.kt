@@ -142,8 +142,8 @@ class PluginExtension : Extension() {
                                 components {
                                     val exception = reloadResult.exception
                                     if (exception != null) exceptionButton(
-                                        I18n.Plugins.Reload.Response.Error.Button.viewError,
-                                        I18n.Plugins.Reload.Response.Error.Button.viewError
+                                        I18n.Plugins.Lifecycle.Response.Error.Button.viewError,
+                                        I18n.Plugins.Lifecycle.Response.Error.Button.viewError
                                             .contextTranslate(arguments.oldPluginId),
                                         exception
                                     )
@@ -167,9 +167,30 @@ class PluginExtension : Extension() {
                 adminOnly(listOf(botDeveloper)) {
                     val result = pluginManager.tryLoadAndStartPlugin(Path(arguments.pluginPath))
                     respond {
+                        val state = result.getOrNull()
+                        embed {
+                            title = if (state != null) I18n.Plugins.Start.Response.Success.Embed.title.contextTranslate()
+                            else I18n.Plugins.Start.Response.Error.Embed.title.contextTranslate()
 
+                            description = if (state != null) {
+                                I18n.Plugins.Start.Response.Success.Embed.description.contextTranslate("`$state`")
+                            } else {
+                                if (result.exceptionOrNull() is IllegalArgumentException)
+                                    I18n.Plugins.Start.Response.Error.Plugin.notFound.contextTranslate(arguments.pluginPath)
+                                else I18n.Plugins.Start.Response.Error.Embed.Description.unknownError.contextTranslate()
+
+                            }
+                        }
+                        components {
+                            val exception = result.exceptionOrNull()
+                            if (exception != null) exceptionButton(
+                                I18n.Plugins.Lifecycle.Response.Error.Button.viewError,
+                                I18n.Plugins.Lifecycle.Response.Error.Button.viewError
+                                    .contextTranslate(arguments.pluginPath),
+                                exception as Exception // Safe by construction
+                            )
+                        }
                     }
-
                 }
             }
 
@@ -179,6 +200,29 @@ class PluginExtension : Extension() {
                 adminOnly(listOf(botDeveloper)) {
                     val result = pluginManager.tryStopPlugin(arguments.pluginId)
                     respond {
+                        val state = result.getOrNull()
+                        embed {
+                            title = if (state != null) I18n.Plugins.Stop.Response.Success.Embed.title.contextTranslate()
+                            else I18n.Plugins.Stop.Response.Error.Embed.title.contextTranslate()
+
+                            description = if (state != null) {
+                                I18n.Plugins.Stop.Response.Success.Embed.description.contextTranslate("`$state`")
+                            } else {
+                                if (result.exceptionOrNull() is IllegalArgumentException)
+                                    I18n.Plugins.Stop.Response.Error.Plugin.notLoaded.contextTranslate(arguments.pluginId)
+                                else I18n.Plugins.Stop.Response.Error.Embed.Description.unknownError.contextTranslate()
+
+                            }
+                        }
+                        components {
+                            val exception = result.exceptionOrNull()
+                            if (exception != null) exceptionButton(
+                                I18n.Plugins.Lifecycle.Response.Error.Button.viewError,
+                                I18n.Plugins.Lifecycle.Response.Error.Button.viewError
+                                    .contextTranslate(arguments.pluginId),
+                                exception as Exception // Safe by construction
+                            )
+                        }
 
                     }
                 }
