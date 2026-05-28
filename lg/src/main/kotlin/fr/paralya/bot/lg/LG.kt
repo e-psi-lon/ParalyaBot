@@ -33,6 +33,7 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withTimeout
 import org.koin.core.component.get
 import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * The main extension class for the Werewolf (Loup-Garou) game.
@@ -55,7 +56,7 @@ class LG : Extension() {
 	override suspend fun setState(state: ExtensionState) {
 		try {
 			@Suppress("MagicNumber")
-			withTimeout(1000) {
+			withTimeout(1000.milliseconds) {
 				super.setState(state)
 			}
 		} catch (timeout: TimeoutCancellationException) {
