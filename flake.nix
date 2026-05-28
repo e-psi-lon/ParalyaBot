@@ -398,6 +398,7 @@
                 --name "$CONTAINER_NAME" \
                 --replace \
                 --detach \
+                --userns=keep-id \
                 --volume "$PWD/container:/app/external:Z" \
                 localhost/paralyabot:latest
             echo "Container $CONTAINER_NAME started successfully."
