@@ -9,8 +9,7 @@ A Discord bot for the Paralya Discord server, built with Kotlin and KordEx.
 ## Overview
 
 ParalyaBot is a modular Discord bot designed to facilitate community management and games for the Paralya community.
-The current implementation includes a Werewolf (Loup-Garou) game module directly integrated in the core bot.
-Once the plugin system is totally implemented, this game module, along with any potential other, will be moved to a dedicated plugin.
+Currently, a single plugin is implemented, a Werewolf game.
 
 ## Support
 
@@ -22,35 +21,13 @@ To get support, you can:
 
 You are free to self-host under the terms of the AGPL-3.0 license, but functionality and support may not be guaranteed outside that context.
 
-## Project Structure
-
-```
-paralya-bot/
-├── build.gradle.kts          # Root build configuration
-├── settings.gradle.kts       # Project settings
-├── src/                      # Root module sources
-│   └── main/
-│       ├── kotlin/           # Main application code
-│       └── resources/        # Root resources
-├── common/                   # Common utilities module
-│   ├── src/
-│   │   ├── main/kotlin/      # Shared code
-│   │   └── resources/        # Common resources
-│   └── build.gradle.kts      # Common module build config
-├── lg/                       # Werewolf (Loup-Garou) game module
-│   ├── src/
-│   │   └── main/kotlin/      # Game implementation
-│   └── build.gradle.kts      # LG module build config
-└── games/                    # Folder for installed game plugins
-```
-
 ## Key Features
 
 - Modular architecture for easy extension
 - Werewolf game with full role support and game cycle management
 - Command-based interface for easy interaction
-- Internationalization support
-- Configuration through HOCON files
+- Internationalization support (built-in from KordEx)
+- Configuration through a HOCON file
 
 ## Requirements
 
@@ -59,45 +36,6 @@ paralya-bot/
 - Discord Bot Token
 - Discord server with appropriate permissions
 
-## Installation
-
-### For Users
-
-- If you are an admin of the Paralya Discord server, you can directly ask me on Discord to get a pre-built JAR file.
-- If you want to self-host for your own server, please follow the Developers instruction below to set up the bot. You'll need to edit some values and to have some basic knowledge of Kotlin and Gradle as well as a Discord bot 
-
-### For Developers
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/paralya/paralyabot.git
-   cd paralyabot
-   ```
-2. Create a `config.conf` file in the project root (see the Configuration section)
-3. Build and run as described in the Building section
-
-## Setup and Configuration
-
-Create a `config.conf` file with the following structure:
-
-```hocon
-bot {
-  token = "YOUR_DISCORD_BOT_TOKEN"
-  admins = [YOUR_DISCORD_USER_ID, ANOTHER_ADMIN_USER_ID]
-  dmLogChannelId = DM_LOG_CHANNEL_ID
-  paralyaId = PARALYA_SERVER_ID
-}
-
-games {
-  // LG is an example, other games can be added similarly
-  lg {
-    rolesCategory = ROLES_CATEGORY_ID
-    mainCategory = MAIN_CATEGORY_ID
-    aliveRole = ALIVE_ROLE_ID
-    deadRole = DEAD_ROLE_ID
-  }
-}
-```
 
 ### Discord Bot Setup
 
@@ -107,67 +45,6 @@ games {
 4. Enable the necessary "Privileged Gateway Intents" (Message Content, Server Members, Presence)
 5. Copy the bot token to your `config.conf` file
 6. Use the OAuth2 URL Generator to invite the bot to your server with appropriate permissions
-
-## Building
-
-Build the entire project using Gradle:
-
-```bash
-./gradlew build
-```
-
-Build the deployable JAR:
-
-```bash
-./gradlew shadowJar
-```
-
-Export a plugin as a ready-to-use ZIP file for your `games` directory:
-
-```bash
-./gradlew :plugin-name:distZip
-```
-
-## Running
-
-Run the bot using:
-
-```bash
-java -jar build/libs/paralya-bot-$version.jar
-```
-
-For development, you can also run directly from Gradle:
-
-```bash
-./gradlew run
-```
-
-## Game Modules
-
-### Werewolf (Loup-Garou)
-
-A complete implementation of the Werewolf game for Discord. Features include:
-
-- Day/night cycle management
-- Role-based gameplay
-- Voting system
-- Special abilities for different roles
-- Webhook-based anonymous messaging
-
-See the LG module [README](lg/README.md) for more details on the Werewolf game implementation.
-
-## Development
-
-### Adding New Games
-
-The complete instructions for adding a new game module is available in the [common module README](common/README.md).
-You'll find a step-by-step guide on how to create a new game configuration and implement the game logic.
-
-## Troubleshooting
-
-### Common Issues
-
-- **Configuration errors**: Verify your `config.conf` file has the correct format and valid IDs
 
 ## Contributing
 
