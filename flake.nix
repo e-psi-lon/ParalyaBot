@@ -42,7 +42,7 @@
         in
         builtins.listToAttrs (builtins.filter (x: x != null) (map toPair lines));
 
-      gradleProperties = parseProperties ./gradle.properties;
+      gradleProperties = parseProperties ./versions.properties;
       extractVersion =
         propertyName:
         if builtins.hasAttr propertyName gradleProperties then
@@ -53,9 +53,6 @@
     {
       packages.${system} =
         let
-
-          extractPluginVersion = pluginName: extractVersion "plugin.${pluginName}.version";
-
           baseGradleFileset = lib.fileset.unions [
             ./build-logic
             ./settings.gradle.kts
@@ -85,7 +82,7 @@
             {
               pname,
               module ? pname,
-              version ? extractVersion "paralyabot.version",
+              versionProperty ? "paralyabot.version",
               task,
               updateTask ? if module == "." then ":nixDownloadDeps" else ":${module}:nixDownloadDeps",
               srcRoots ? [ ],
@@ -95,6 +92,9 @@
               preBuild ? "",
               extraNativeInputs ? [ ],
             }:
+            let 
+              version = extractVersion versionProperty;
+            in
             pkgs.stdenv.mkDerivation (finalAttrs: {
               inherit pname version;
               src = lib.fileset.toSource {
@@ -110,6 +110,7 @@
                 data = depsData;
               };
 
+              gradleFlags = [ "-P${versionProperty}=${version}" ];
               gradleBuildTask = task;
               gradleUpdateTask = updateTask;
 
@@ -141,7 +142,10 @@
                 JAVA_TOOL_OPTIONS = "-Dfile.encoding=UTF8 -Djava.properties.date=2024-10-28T18:24:19Z";
               };
 
-              inherit installPhase;
+              installPhase = ''
+                export version=${version}
+                ${installPhase}
+              '';
             });
         in
         {
@@ -280,7 +284,7 @@
           lg-plugin = mkGradleBuild {
             pname = "lg-plugin";
             module = "lg";
-            version = extractPluginVersion "lg";
+            versionProperty = "plugin.lg.version";
             srcRoots = [ ./common ./lg ];
             task = ":lg:distZip";
             buildDependencies = [ self.packages.${system}.build-logic self.packages.${system}.deps-compile self.packages.${system}.common-compile ];
@@ -293,7 +297,7 @@
           sta-plugin = mkGradleBuild {
             pname = "sta-plugin";
             module = "sta";
-            version = extractPluginVersion "sta";
+            versionProperty = "plugin.sta.version";
             srcRoots = [ ./common ./sta ];
             task = ":sta:distZip";
             buildDependencies = [ self.packages.${system}.build-logic self.packages.${system}.deps-compile self.packages.${system}.common-compile ];
