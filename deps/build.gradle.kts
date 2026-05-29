@@ -19,18 +19,13 @@ repositories {
     mavenCentral()
 }
 
-fun DependencyHandlerScope.bothTestScopes(dependencyNotation: Any) {
-    testImplementation(dependencyNotation)
-    testFixturesImplementation(dependencyNotation)
-}
-
-
 dependencies {
     // Test dependencies (exposed to test fixtures)
-    bothTestScopes(kotlin("test"))
-    bothTestScopes(libs.koin.test) // For tests that involve Koin
-    bothTestScopes(libs.mockk) // Allow mocking in tests
-    bothTestScopes(libs.junit)
+    testFixturesApi(kotlin("test"))
+    testFixturesApi(libs.koin.test) // For tests that involve Koin
+    testFixturesApi(libs.mockk) // Allow mocking in tests
+    testFixturesApi(libs.junit)
+    testFixturesApi(libs.junit.launcher)
 
     // Exposed dependencies, for use in plugins
     api(libs.konform)
@@ -42,7 +37,6 @@ kotlin {
 }
 
 tasks {
-
     shadowJar {
         archiveBaseName.set("paralya-bot-deps")
         archiveClassifier.set("")

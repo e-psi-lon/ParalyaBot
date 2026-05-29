@@ -59,7 +59,6 @@ subprojects {
 			testImplementation(testFixtures(typesafeProjects.deps))
 			if (path != typesafeProjects.common.path)
 				compileOnly(typesafeProjects.common) // The common subproject serves as a base for all other subprojects
-
 		}
 	}
 }
@@ -72,14 +71,12 @@ allprojects {
 			exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib-jdk8")
 		}
 	}
-}
 
-
-buildscript {
-	configurations.classpath {
-		resolutionStrategy.activateDependencyLocking()
+	tasks.withType<Test> {
+		useJUnitPlatform()
 	}
 }
+
 
 dependencies {
 	testImplementation(kotlin("test"))

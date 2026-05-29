@@ -1,21 +1,21 @@
 [versions]
-kotlin = "2.3.10"
+kotlin = "2.3.21"
 jvm = "25"
 kordex-plugin = "1.9.2"
 kordex-library = "2.4.1-20260525.073836-4"
 kordex-data-api = "1.0.2-20260404.122759-5" # See build.gradle.kts for enforcement
 kord = "0.18.0"
 kordex-i18n = "1.1.1"
-logback = "1.5.32"
-shadow = "9.3.2"
+logback = "1.5.33"
+shadow = "9.4.2"
 koin-test = "4.0.4"
 mockk = "1.14.9"
 kotlinx-serialization-format = "1.10.0"
 konform = "0.11.1"
 kotlinx-html = "0.12.0"
-kover = "0.9.7"
-detekt = "2.0.0-alpha.2"
-junit = "6.0.1"
+kover = "0.9.8"
+detekt = "2.0.0-alpha.3"
+junit = "6.1.0"
 
 [libraries]
 logback = { group = "ch.qos.logback", name = "logback-classic", version.ref = "logback" }
@@ -27,6 +27,7 @@ konform = { group = "io.konform", name = "konform-jvm", version.ref = "konform" 
 kotlinx-html = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinx-html" }
 kordex-i18n-runtime = { group = "dev.kordex.i18n", name = "i18n", version.ref = "kordex-i18n" }
 junit = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junit" }
+junit-launcher = { "group" = "org.junit.platform", name= "junit-platform-launcher", version.ref = "junit" }
 
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }

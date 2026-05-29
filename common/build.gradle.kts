@@ -15,7 +15,7 @@ kotlin {
 kordEx {
 	kordExVersion.set(libs.versions.kordex.library)
 	kordVersion.set(libs.versions.kord)
-	configurations = listOf("compileOnly")
+	configurations = listOf("compileOnly", "testImplementation")
 
 }
 
