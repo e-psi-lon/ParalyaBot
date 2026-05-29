@@ -21,8 +21,7 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
     }
 
     @Suppress("ThrowsCount")
-    override fun loadPluginFromPath(pluginPath: Path): PluginWrapper {
-        val wrapper = super.loadPluginFromPath(pluginPath)
+    internal fun validatePlugin(wrapper: PluginWrapper, pluginPath: Path) {
         val classLoader = wrapper.pluginClassLoader
         val pluginClass = classLoader.loadClass(wrapper.descriptor.pluginClass)
         val pluginId = wrapper.pluginId
@@ -38,15 +37,21 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
         )
 
         if (!versionManager.checkVersionConstraint(
-            annotation.version, ">=${CommonModule.MIN_COMPATIBLE_VERSION}"
-        )) throw PluginInvalidVersionException("Plugin $pluginId is not compatible with the current API version. " +
-                    "Minimum compatible version: ${CommonModule.MIN_COMPATIBLE_VERSION}", pluginId, annotation.version)
+                annotation.version, ">=${CommonModule.MIN_COMPATIBLE_VERSION}"
+            )) throw PluginInvalidVersionException("Plugin $pluginId is not compatible with the current API version. " +
+                "Minimum compatible version: ${CommonModule.MIN_COMPATIBLE_VERSION}", pluginId, annotation.version)
 
         if (!versionManager.checkVersionConstraint(
-            annotation.version, "<=${CommonModule.API_VERSION}"
-        )) throw PluginInvalidVersionException("Plugin $pluginId requires API version ${annotation.version}, " +
-                    "but the current API version is ${CommonModule.API_VERSION}", pluginId, annotation.version)
+                annotation.version, "<=${CommonModule.API_VERSION}"
+            )) throw PluginInvalidVersionException("Plugin $pluginId requires API version ${annotation.version}, " +
+                "but the current API version is ${CommonModule.API_VERSION}", pluginId, annotation.version)
 
+    }
+
+
+    override fun loadPluginFromPath(pluginPath: Path): PluginWrapper {
+        val wrapper = super.loadPluginFromPath(pluginPath)
+        validatePlugin(wrapper, pluginPath)
         return wrapper
     }
 

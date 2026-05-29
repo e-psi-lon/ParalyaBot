@@ -28,11 +28,12 @@ internal class PluginReloadStrategy(
     private val pluginId: String,
     private val oldPluginPath: Path,
     val newPluginZipPath: Path,
-    private val logger: KLogger
+    private val logger: KLogger,
+    private val workDirectory: Path
 ) {
 
     private fun saveCopy(): Path {
-        val path = tempDirectory.resolve(oldPluginPath.fileName)
+        val path = workDirectory.resolve(oldPluginPath.fileName)
         logger.info { "Saving a copy of the old plugin at $path" }
         return oldPluginPath.copyTo(path, overwrite = true)
     }
@@ -153,4 +154,4 @@ internal fun PluginManager.createReloadStrategy(
     oldPluginPath: Path,
     newPluginZipPath: Path,
     logger: KLogger
-) = PluginReloadStrategy(this, pluginId, oldPluginPath, newPluginZipPath, logger)
+) = PluginReloadStrategy(this, pluginId, oldPluginPath, newPluginZipPath, logger, tempDirectory)
