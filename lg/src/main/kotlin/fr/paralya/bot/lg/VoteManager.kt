@@ -148,11 +148,12 @@ class VoteManager : KordExKoinComponent {
 		force: Boolean
 	): VoteResult {
 		val voteCount = getVoteCount(vote)
-		val maxVote = voteCount.maxByOrNull { it.value }?.key
-		val maxVotedPlayers = voteCount.filter { it.key == maxVote }.keys
+		if (voteCount.isEmpty()) return VoteResult.NoVotes
+		val maxVote = voteCount.maxOfOrNull { it.value } ?: 0
+		if (maxVote == 0) return VoteResult.NoVotes
+		val maxVotedPlayers = voteCount.filter { it.value == maxVote }.keys
 
 		return when {
-			voteCount.isEmpty() -> VoteResult.NoVotes
 			maxVotedPlayers.size > 1 && !force -> VoteResult.Tie(maxVotedPlayers.toList())
 			maxVotedPlayers.size == 1 && kill -> VoteResult.Killed(maxVotedPlayers.first())
 			else -> VoteResult.NoVotes
