@@ -99,6 +99,7 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
         """.trimMargin()
 		)
 		logger.error { "Default config created at ${configFile.absolutePathString()}. Please fill in required values." }
+		throw MissingConfigException()
 	}
 
 	/**
@@ -157,7 +158,7 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 
 	private fun getSubConfig(path: String, config: Config = state.raw): Config {
 		if (!config.hasPath(path))
-			throw MissingConfigException(path)
+			throw MissingConfigEntryException(path)
 		return config.getConfig(path)
 	}
 

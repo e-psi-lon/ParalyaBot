@@ -42,14 +42,7 @@ class ConfigManagerTest : KoinTest {
 		val nonExistentPath = tempDir.resolve("non-existent.conf")
 
 		// Act
-		try {
-			ConfigManager(nonExistentPath)
-		} catch (_: InvalidConfigException) {
-			// We don't want to assert because if validation pass, we don't want the test to fail,
-			// But we also don't want to swallow truly unpredictable errors, hence why no runCatching.
-			// Here, the default config won't (unless changes in validation or default logic) pass validation
-			// Not passing validation is NOT what's being tested here
-		}
+		assertFailsWith<MissingConfigException> { ConfigManager(nonExistentPath) }
 
 		// Assert
 		assertTrue(nonExistentPath.toFile().exists())
@@ -130,7 +123,7 @@ class ConfigManagerTest : KoinTest {
 		configFile.writeText("games {}")
 
 		// Act & Assert
-		assertFailsWith<InvalidConfigException> { ConfigManager(configFile) }
+		assertFailsWith<MissingConfigEntryException> { ConfigManager(configFile) }
 	}
 
 	@Test

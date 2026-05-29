@@ -24,6 +24,7 @@ class GameRegistry : KordExKoinComponent {
 	 */
 	@PublishedApi
 	internal fun registerGameMode(key: Key, gameMode: String) {
+		gameModes.entries.removeIf { it.value == key }
 		gameModes[gameMode] = key
 	}
 

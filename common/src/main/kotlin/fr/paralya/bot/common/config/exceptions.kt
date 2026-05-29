@@ -8,4 +8,6 @@ open class BotConfigException(message: String) : ParalyaBotException(message)
 class InvalidConfigException(className: String?, val errors: List<ValidationError>) : BotConfigException(
     "Configuration for $className is invalid due to the following errors: "
 )
-class MissingConfigException(path: String) : BotConfigException("No configuration found for path: $path")
+class MissingConfigEntryException(path: String) : BotConfigException("No configuration found for path: $path")
+
+class MissingConfigException : BotConfigException("The configuration file is missing.")

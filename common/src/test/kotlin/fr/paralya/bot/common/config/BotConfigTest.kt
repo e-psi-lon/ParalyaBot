@@ -1,6 +1,6 @@
 package fr.paralya.bot.common.config
 
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 

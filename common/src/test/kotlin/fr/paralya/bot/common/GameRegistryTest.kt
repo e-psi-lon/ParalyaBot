@@ -5,8 +5,8 @@ import dev.kordex.i18n.Key
 import io.mockk.unmockkAll
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import java.util.Locale
-import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class GameRegistryTest {
@@ -38,7 +38,7 @@ class GameRegistryTest {
 	}
 
 	@Test
-	fun `getGameModes returns all registered modes`() {
+	fun `toChoices returns all registered modes`() {
 		// Arrange
 		val registry = GameRegistry()
 		val key1 = Key("game-mode.test1")
@@ -49,7 +49,7 @@ class GameRegistryTest {
 		// Act
 		registry.registerGameMode(key1, gameMode1)
 		registry.registerGameMode(key2, gameMode2)
-		val modes = registry.getGameModes()
+		val modes = registry.toChoices()
 
 		// Assert
 		assertEquals(2, modes.size)
@@ -70,7 +70,7 @@ class GameRegistryTest {
 
 		// Assert
 		assertEquals(null, registry.getGameMode(gameMode))
-		assertEquals(0, registry.getGameModes().size)
+		assertEquals(0, registry.toChoices().size)
 	}
 
 	@Test
@@ -94,6 +94,7 @@ class GameRegistryTest {
 
 		// Act
 		registry.registerGameMode(key, "New Game")
+		println(registry.toChoices())
 
 		// Assert
 		assertEquals(null, registry.getGameMode("Old Game"))
@@ -110,12 +111,12 @@ class GameRegistryTest {
 	}
 
 	@Test
-	fun `getGameModes returns empty map for empty registry`() {
+	fun `toChoices returns empty map for empty registry`() {
 		// Arrange
 		val registry = GameRegistry()
 
 		// Act
-		val modes = registry.getGameModes()
+		val modes = registry.toChoices()
 
 		// Assert
 		assertEquals(0, modes.size)
@@ -137,7 +138,7 @@ class GameRegistryTest {
 		// Assert
 		assertEquals(testKey to testGame, registry.getGameMode(testGame))
 		assertEquals(werewolfKey to werewolfGame, registry.getGameMode(werewolfGame))
-		assertEquals(2, registry.getGameModes().size)
+		assertEquals(2, registry.toChoices().size)
 	}
 
 	@Test

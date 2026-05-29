@@ -2,7 +2,7 @@ package fr.paralya.bot.common.config
 
 import io.konform.validation.Validation
 import io.konform.validation.ValidationResult
-import kotlin.test.Test
+import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
