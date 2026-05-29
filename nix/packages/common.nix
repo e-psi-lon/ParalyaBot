@@ -4,6 +4,7 @@
   unzip,
   perl,
   mkGradleBuild,
+  extractVersion,
   build-logic,
   deps-compile,
   deps-runtime,
@@ -12,6 +13,8 @@ rec {
   common-compile = mkGradleBuild {
     pname = "paralyabot-common-compile";
     module = "common";
+    versionProperty = "module.common.version";
+    extraGradleFlags = [ "-Pmodule.common.min-compatible-version=${extractVersion "module.common.min-compatible-version"}" ];
     srcRoots = [
       ../../common
       ./common.nix
@@ -36,6 +39,7 @@ rec {
       ../../common/build.gradle.kts
       ./common.nix
     ];
+    extraGradleFlags = [ "-Pmodule.common.min-compatible-version=${extractVersion "module.common.min-compatible-version"}" ];
     task = "common:copyRuntimeClasspath";
     buildDependencies = [
       build-logic

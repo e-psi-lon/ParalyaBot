@@ -7,6 +7,7 @@ rec {
   deps-compile = mkGradleBuild {
     pname = "paralyabot-deps";
     module = "deps";
+    versionProperty = "module.deps.version";
     srcRoots = [
       ../../deps
       ./deps.nix

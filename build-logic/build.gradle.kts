@@ -6,6 +6,8 @@ plugins {
 	`kotlin-dsl`
 }
 
+version = property("module.build-logic.version") as String
+
 repositories {
 	gradlePluginPortal()
 	mavenCentral()

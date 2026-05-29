@@ -34,6 +34,7 @@ in
   installPhase,
   preBuild ? "",
   extraNativeInputs ? [ ],
+  extraGradleFlags ? [ ],
 }:
 let
   version = extractVersion versionProperty;
@@ -55,7 +56,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   gradleBuildTask = task;
   gradleUpdateTask = updateTask;
-  gradleFlags = [ "-P${versionProperty}=${version}" ];
+  gradleFlags = [ "-P${versionProperty}=${version}" ] ++ extraGradleFlags;
 
   preBuild = ''
     mkdir -p $GRADLE_USER_HOME

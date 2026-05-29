@@ -5,6 +5,7 @@ mkGradleBuild {
     ../../build-logic
     ./build-logic.nix
   ];
+  versionProperty = "module.build-logic.version";
   module = "build-logic";
   task = "build-logic:build";
   updateTask = "build-logic:build";
