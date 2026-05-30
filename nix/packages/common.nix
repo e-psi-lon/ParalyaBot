@@ -27,6 +27,11 @@ rec {
       build-logic
       deps-compile
     ];
+    preBuild = ''
+        CLASS_PATH=${deps-runtime}/paralya-bot-deps.jar
+        EXTRA_JARS=$(ls ${common-runtime-deps}/*.jar | tr '\n' ' ')
+        export RAW_CLASSPATH="$CLASS_PATH $EXTRA_JARS"
+    '';
     installPhase = ''
       mkdir -p $out/common/build $out/gradle-home
       cp -r common/build/. $out/common/build/
@@ -65,25 +70,6 @@ rec {
       ''
         mkdir -p $out META-INF
         cp --no-preserve=mode ${common-compile}/paralya-bot-common.jar $out/
-
-        unzip -p "$out/paralya-bot-common.jar" META-INF/MANIFEST.MF > META-INF/MANIFEST.MF
-
-        CLASS_PATH=${deps-runtime}/paralya-bot-deps.jar
-        EXTRA_JARS=$(ls ${common-runtime-deps}/*.jar | tr '\n' ' ')
-        export RAW_CLASSPATH="Class-Path: $CLASS_PATH $EXTRA_JARS"
-        perl -i -0777 -pe '
-          my $cp = $ENV{RAW_CLASSPATH};
-          my $formatted = "";
-          if ($cp =~ s/^(.{1,70})//) { $formatted .= $1 . "\r\n"; }
-          while ($cp =~ s/^(.{1,69})//) { $formatted .= " " . $1 . "\r\n"; }
-          
-          s/^Class-Path:.*(?:\r?\n .*)*\r?\n//gm;
-
-          s|(Manifest-Version:.*?\r?\n)|$1$formatted|g;
-        ' META-INF/MANIFEST.MF
-
-        zip "$out/paralya-bot-common.jar" META-INF/MANIFEST.MF
-
         mkdir -p $out/nix-support
         echo ${deps-runtime} > $out/nix-support/runtime-depends
         echo ${common-runtime-deps} >> $out/nix-support/runtime-depends

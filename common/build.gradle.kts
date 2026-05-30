@@ -50,7 +50,7 @@ tasks {
 		manifest {
 			val rawClassPath = System.getenv("RAW_CLASSPATH")
 			if (!rawClassPath.isNullOrEmpty()) {
-				attributes("Class-Path" to rawClassPath)
+				attributes["Class-Path"] = rawClassPath.split(" ").joinToString(" ") { "file://$it" }
 			}
 		}
 	}
