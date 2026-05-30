@@ -16,6 +16,8 @@ rec {
     versionProperty = "module.common.version";
     extraGradleFlags = [ "-Pmodule.common.min-compatible-version=${extractVersion "module.common.min-compatible-version"}" ];
     srcRoots = [
+      ../../build-logic
+      ../../deps
       ../../common
       ./common.nix
     ];
@@ -44,7 +46,6 @@ rec {
     buildDependencies = [
       build-logic
       deps-compile
-      common-compile
     ];
     installPhase = ''
       mkdir -p $out

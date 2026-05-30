@@ -9,6 +9,7 @@ rec {
     module = "deps";
     versionProperty = "module.deps.version";
     srcRoots = [
+      ../../build-logic
       ../../deps
       ./deps.nix
     ];

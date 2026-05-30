@@ -9,6 +9,8 @@ mkGradleBuild {
   module = "lg";
   versionProperty = "plugin.lg.version";
   srcRoots = [
+    ../../../build-logic
+    ../../../deps
     ../../../common
     ../../../lg
     ./lg.nix

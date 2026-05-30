@@ -18,5 +18,6 @@ enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 include("deps")
 include("common")
+include("bot")
 include("lg")
 include("sta")

@@ -46,6 +46,13 @@ tasks {
 		archiveVersion.set("")
 		isPreserveFileTimestamps = false
 		isReproducibleFileOrder = true
+
+		manifest {
+			val rawClassPath = System.getenv("RAW_CLASSPATH")
+			if (!rawClassPath.isNullOrEmpty()) {
+				attributes("Class-Path" to rawClassPath)
+			}
+		}
 	}
 
 	register("generateVersion") {

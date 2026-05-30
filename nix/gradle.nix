@@ -4,6 +4,7 @@
   lib,
   project-jdk,
   baseGradleFileset,
+  modules,
   parseProperties,
   extractVersion,
 }:
@@ -60,6 +61,12 @@ stdenv.mkDerivation (finalAttrs: {
 
   preBuild = ''
     mkdir -p $GRADLE_USER_HOME
+    ${lib.concatMapStrings (module: ''
+        if [ ! -f "${module}/build.gradle.kts" ]; then
+          mkdir -p "${module}"
+          touch "${module}/build.gradle.kts"
+        fi
+    '') modules}
 
     ${lib.concatMapStrings (dep: ''
       mkdir -p ${dep.passthru.buildDir}/build/

@@ -9,6 +9,8 @@ mkGradleBuild {
   module = "sta";
   versionProperty = "plugin.sta.version";
   srcRoots = [
+    ../../../build-logic
+    ../../../deps
     ../../../common
     ../../../sta
     ./sta.nix

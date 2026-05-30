@@ -21,7 +21,16 @@
         ./flake.lock
         ./config
         ./nix/parse-properties.nix
-        (lib.fileset.fileFilter (file: file.name == "build.gradle.kts") ./.)
+        ./build.gradle.kts
+      ];
+
+      modules = [
+        "build-logic"
+        "deps"
+        "common"
+        "bot"
+        "lg"
+        "sta"
       ];
 
       utils = import ./nix/parse-properties.nix {
@@ -29,7 +38,7 @@
         inherit (self) lastModifiedDate;
       };
       mkGradleBuild = import ./nix/gradle.nix {
-        inherit lib baseGradleFileset project-jdk;
+        inherit lib baseGradleFileset modules project-jdk;
         inherit (pkgs) stdenv gradle-packages;
         inherit (utils) parseProperties extractVersion;
       };

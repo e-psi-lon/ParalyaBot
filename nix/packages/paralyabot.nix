@@ -11,13 +11,15 @@
 rec {
   paralyabot-jar-deps = mkGradleBuild {
     pname = "paralyabot-jar-deps";
-    module = ".";
-    depsData = ../../deps.json;
+    module = "bot";
     srcRoots = [
+      ../../build-logic
+      ../../deps
       ../../common
+      ../../bot/build.gradle.kts
       ./paralyabot.nix
     ];
-    task = ":copyRuntimeClasspath";
+    task = "bot:copyRuntimeClasspath";
     buildDependencies = [
       build-logic
       deps-compile
@@ -25,20 +27,21 @@ rec {
     ];
     installPhase = ''
       mkdir -p $out
-      cp build/deps/*.jar $out/
+      cp bot/build/deps/*.jar $out/
     '';
   };
 
   paralyabot-jar = mkGradleBuild {
     pname = "paralyabot-jar";
-    module = ".";
-    depsData = ../../deps.json;
+    module = "bot";
     srcRoots = [
+      ../../build-logic
+      ../../deps
       ../../common
-      ../../src
+      ../../bot
       ./paralyabot.nix
     ];
-    task = ":jar";
+    task = "bot:jar";
     extraNativeInputs = [
       zip
       unzip
