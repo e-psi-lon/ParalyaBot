@@ -38,7 +38,12 @@
         inherit (self) lastModifiedDate;
       };
       mkGradleBuild = import ./nix/gradle.nix {
-        inherit lib baseGradleFileset modules project-jdk;
+        inherit
+          lib
+          baseGradleFileset
+          modules
+          project-jdk
+          ;
         inherit (pkgs) stdenv gradle-packages;
         inherit (utils) parseProperties extractVersion;
       };
@@ -53,7 +58,12 @@
             inherit mkGradleBuild build-logic;
           };
           common = import ./nix/packages/common.nix {
-            inherit (pkgs) runCommand zip unzip perl;
+            inherit (pkgs)
+              runCommand
+              zip
+              unzip
+              perl
+              ;
             inherit mkGradleBuild build-logic;
             inherit (utils) extractVersion;
             inherit (deps) deps-compile deps-runtime;
@@ -66,7 +76,7 @@
           };
           paralyabot-image = import ./nix/packages/image.nix {
             inherit lib project-jdk project-jre-base;
-            inherit (pkgs) dockerTools cacert;
+            inherit (pkgs) dockerTools cacert writeTextDir;
             inherit (paralyabot) paralyabot-jar;
             inherit (utils) lastCommitAsTimestamp;
           };

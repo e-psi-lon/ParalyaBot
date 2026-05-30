@@ -1,7 +1,8 @@
 {
   lib,
-  cacert,
   dockerTools,
+  cacert,
+  writeTextDir,
   project-jdk,
   project-jre-base,
   lastCommitAsTimestamp,
@@ -30,7 +31,58 @@ dockerTools.streamLayeredImage {
   tag = "latest";
   created = lastCommitAsTimestamp;
 
-  contents = [ cacert ];
+  contents =
+    let
+      nixosVersion = lib.trivial.release;
+      nixosCodeName = lib.trivial.codeName;
+
+      nixosCodeNamePretty =
+        let
+          firstChar = lib.toUpper (builtins.substring 0 1 nixosCodeName);
+          restChars = builtins.substring 1 (builtins.stringLength nixosCodeName) nixosCodeName;
+        in
+        "${firstChar}${restChars}";
+
+      prettyName = "${nixosVersion} (${nixosCodeNamePretty})";
+      versionSuffix = lib.trivial.versionSuffix;
+    in
+    [
+      cacert
+      (writeTextDir "etc/os-release" ''
+      ANSI_COLOR="0;38;2;126;186;228"
+      BUG_REPORT_URL="https://github.com/NixOS/nixpkgs/issues"
+      BUILD_ID="${nixosVersion}.${versionSuffix}"
+      CPE_NAME="cpe:/o:nixos:nixos:${nixosVersion}"
+      DEFAULT_HOSTNAME=nixos
+      DOCUMENTATION_URL="https://nixos.org/learn.html"
+      HOME_URL="https://nixos.org/"
+      ID=nixos
+      ID_LIKE=""
+      IMAGE_ID=""
+      IMAGE_VERSION=""
+      LOGO="nix-snowflake"
+      NAME=NixOS
+      PRETTY_NAME="NixOS ${prettyName}"
+      SUPPORT_URL="https://nixos.org/community.html"
+      VARIANT=""
+      VARIANT_ID=""
+      VENDOR_NAME=NixOS
+      VENDOR_URL="https://nixos.org/"
+      VERSION="${prettyName}"
+      VERSION_CODENAME="${nixosCodeName}"
+      VERSION_ID="${nixosVersion}"
+
+    '')
+
+    # Complete /etc/lsb-release Stub
+    (writeTextDir "etc/lsb-release" ''
+      DISTRIB_CODENAME="${nixosCodeName}"
+      DISTRIB_DESCRIPTION="NixOS ${prettyName}"
+      DISTRIB_ID=nixos
+      DISTRIB_RELEASE="${nixosVersion}"
+      LSB_VERSION="${prettyName}"
+    '')
+    ];
 
   extraCommands = ''
     mkdir -p app tmp
