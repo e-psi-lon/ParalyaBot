@@ -33,6 +33,7 @@ import fr.paralya.bot.common.contextTranslate
 import fr.paralya.bot.common.gameMode
 import fr.paralya.bot.common.getCorrespondingMessage
 import fr.paralya.bot.common.getWebhook
+import fr.paralya.bot.common.isNotEphemeral
 import fr.paralya.bot.common.isUser
 import fr.paralya.bot.common.sendAsWebhook
 import fr.paralya.bot.common.snowflake
@@ -66,6 +67,7 @@ class Base : Extension() {
 
 		event<MessageCreateEvent> {
 			check {
+				isNotEphemeral()
 				noGuild()
 				isNotBot()
 				failIf { message?.isNotEmpty() == false }

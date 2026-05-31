@@ -1,6 +1,8 @@
 package fr.paralya.bot.common
 
+import dev.kord.common.entity.MessageFlag
 import dev.kordex.core.checks.failed
+import dev.kordex.core.checks.messageFor
 import dev.kordex.core.checks.passed
 import dev.kordex.core.checks.types.CheckContext
 import dev.kordex.core.checks.userFor
@@ -23,4 +25,12 @@ suspend fun CheckContext<*>.isUser() {
 
         pass()
     }
+}
+
+
+suspend fun CheckContext<*>.isNotEphemeral() {
+    if (!passed) return
+
+    val message = messageFor(event)?.asMessageOrNull() ?: return
+    failIf(message.flags?.contains(MessageFlag.Ephemeral) == true)
 }
