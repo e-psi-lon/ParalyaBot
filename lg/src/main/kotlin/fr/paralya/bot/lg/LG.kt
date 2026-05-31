@@ -135,7 +135,7 @@ class LG : Extension() {
 					LgChannelType.ANNONCES_VILLAGE.toId().sendAsWebhook(
 						bot,
 						"ParalyaLG",
-						getAsset("paralya_lg", pluginRef.pluginId)
+						pluginRef.getAsset("paralya_lg")
 					) {
 						content = Lg.EndDay.Response.infoMessage.contextTranslate(day, hour, config.aliveRole)
 					}

@@ -45,8 +45,8 @@ class LgRelayService : KordExKoinComponent {
     private val plugin by inject<LgPlugin>()
     private val botCache by lazy { bot.kordRef.cache }
 
-    private fun User?.shouldIgnore(botConfig: BotConfig) =
-        isAdmin(botConfig) || this?.isBot == true || this?.isSelf == true
+    private fun User?.shouldIgnore(botConfig: BotConfig) = this == null ||
+            isAdmin(botConfig) || this.isBot || this.isSelf
 
     context(context: EventContext<MessageCreateEvent>)
     suspend fun onMessageSent(
@@ -82,7 +82,7 @@ class LgRelayService : KordExKoinComponent {
         if (isAnonymous) outChannel.sendAsWebhook(
             bot,
             userName,
-            getAsset(userAvatar, plugin.pluginId),
+            plugin.getAsset(userAvatar),
             webhookName,
             content
         ) else outChannel.sendAsWebhook(
@@ -214,7 +214,7 @@ class LgRelayService : KordExKoinComponent {
         if (isAnonymous) outChannel.sendAsWebhook(
             bot,
             userName,
-            getAsset(userAvatar, plugin.pluginId),
+            plugin.getAsset(userAvatar),
             webhookName,
             content
         ) else outChannel.sendAsWebhook(
