@@ -106,13 +106,13 @@ class PluginExtension : Extension() {
                 adminOnly(listOf(botDeveloper)) {
                     val reloadResult = pluginManager.reloadPlugin(
                         arguments.oldPluginId,
-                        pluginsPath.resolve("${arguments.newPluginPath}.zip")
+                        pluginsPath.resolve(arguments.newPluginPath)
                     )
 
                     when (reloadResult) {
                         is SuccessfulPluginReload -> respond {
                             embed {
-                                title = I18n.Plugins.Reload.Response.Success.Embed.title.contextTranslate()
+                                title = I18n.Plugins.Reload.Response.Success.Embed.title.contextTranslate(arguments.oldPluginId)
                                 description = I18n.Plugins.Reload.Response.Success.Embed.description.contextTranslate(arguments.oldPluginId, arguments.newPluginPath)
                                 color = DISCORD_GREEN
                             }
@@ -120,7 +120,7 @@ class PluginExtension : Extension() {
                         is PluginReloadError -> {
                             respond {
                                 embed {
-                                    title = I18n.Plugins.Reload.Response.Error.Embed.title.contextTranslate()
+                                    title = I18n.Plugins.Reload.Response.Error.Embed.title.contextTranslate(arguments.oldPluginId)
                                     color = DISCORD_RED
                                     description = when (reloadResult) {
                                         is OldPluginNotFound -> I18n.Plugins.Reload.Response.Error
@@ -246,7 +246,9 @@ class PluginExtension : Extension() {
         this.name = name
         this.description = description
         validate {
-            failIf(I18n.Plugins.Arguments.Error.noPlugin) { pluginManager.plugins.none { it.pluginId == value } }
+            failIf(I18n.Plugins.Arguments.Error.noPlugin.withOrdinalPlaceholders(value)) {
+                pluginManager.plugins.none { it.pluginId == value }
+            }
         }
         autoComplete {
             val effectiveLocale = (locale ?: guildLocale)?.asJavaLocale() ?: KI18n.defaultLocale
@@ -263,8 +265,8 @@ class PluginExtension : Extension() {
         this.name = name
         this.description = description
         validate {
-            failIf(I18n.Plugins.Arguments.Error.zipNotFound) {
-                value !in getAvailableZipFiles().map { it.nameWithoutExtension }
+            failIf(I18n.Plugins.Arguments.Error.zipNotFound.withOrdinalPlaceholders(value)) {
+                value !in getAvailableZipFiles().map { it.fileName.name }
             }
         }
         autoComplete {

@@ -4,9 +4,14 @@ import io.github.oshai.kotlinlogging.KLogger
 import org.pf4j.PluginRuntimeException
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.OnErrorResult
 import kotlin.io.path.copyTo
+import kotlin.io.path.copyToRecursively
 import kotlin.io.path.deleteIfExists
+import kotlin.io.path.deleteRecursively
 import kotlin.io.path.exists
+import kotlin.io.path.notExists
 
 private sealed interface TeardownResult {
     class OldPluginFailedToDelete(val exception: PluginRuntimeException? = null) : TeardownResult
@@ -23,6 +28,8 @@ private var tempDirectory: Path = Files.createTempDirectory("ParalyaBot-Reload")
         return field
     }
 
+
+@OptIn(ExperimentalPathApi::class)
 internal class PluginReloadStrategy(
     private val pluginManager: PluginManager,
     private val pluginId: String,
@@ -35,7 +42,15 @@ internal class PluginReloadStrategy(
     private fun saveCopy(): Path {
         val path = workDirectory.resolve(oldPluginPath.fileName)
         logger.info { "Saving a copy of the old plugin at $path" }
-        return oldPluginPath.copyTo(path, overwrite = true)
+        return oldPluginPath.copyToRecursively(
+            path,
+            overwrite = true,
+            onError = { source, target, exception ->
+                logger.error(exception) { "Failed to copy $source to $target" }
+                OnErrorResult.TERMINATE
+            },
+            followLinks = false
+        )
     }
 
 
@@ -92,7 +107,15 @@ internal class PluginReloadStrategy(
 
     @Suppress("ReturnCount")
     private fun fallback(safeCopy: Path, originalException: Exception) : PluginReloadResult {
-        safeCopy.copyTo(oldPluginPath, overwrite = true)
+        safeCopy.copyToRecursively(
+            oldPluginPath,
+            overwrite = true,
+            onError = { source, target, exception ->
+                logger.error(exception) { "Failed to copy $source to $target" }
+                OnErrorResult.TERMINATE
+            },
+            followLinks = false
+        )
         try {
             pluginManager.loadPlugin(oldPluginPath)
             val exception = tryStartPlugin(pluginId)
@@ -118,11 +141,14 @@ internal class PluginReloadStrategy(
     @Suppress("ReturnCount")
     fun reload(): PluginReloadResult {
         val safeCopy = saveCopy()
+        val safeNewPlugin = workDirectory.resolve(newPluginZipPath.fileName)
         try {
+            newPluginZipPath.copyTo(safeNewPlugin, overwrite = true)
             val teardownResult = teardown()
             if (teardownResult is TeardownResult.OldPluginFailedToDelete) {
                 return OldPluginFailedToDelete(teardownResult.exception)
             }
+            if (newPluginZipPath.notExists()) safeNewPlugin.copyTo(newPluginZipPath, overwrite = true)
             val result = loadNewPlugin()
             // This has to be safe
             // We only catch Exception, if the cast fails, what the hell is happening to the JVM????
@@ -134,7 +160,8 @@ internal class PluginReloadStrategy(
             successCleanup()
             return SuccessfulPluginReload
         } finally {
-            safeCopy.deleteIfExists()
+            safeCopy.deleteRecursively()
+            safeNewPlugin.deleteIfExists()
         }
     }
 
