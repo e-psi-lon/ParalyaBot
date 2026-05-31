@@ -20,6 +20,7 @@ import fr.paralya.bot.common.addReactions
 import fr.paralya.bot.common.config.ConfigManager
 import fr.paralya.bot.common.config.BotConfig
 import fr.paralya.bot.common.contextTranslate
+import fr.paralya.bot.common.isNotEphemeral
 import fr.paralya.bot.common.isUser
 import fr.paralya.bot.common.plugins.PluginReadyEvent
 import fr.paralya.bot.common.removeMemberPermission
@@ -68,17 +69,18 @@ suspend fun LG.registerListeners() {
 	val relayService by inject<LgRelayService>()
 
 	event<MessageCreateEvent> {
-		check { inChannel(LgChannelType.LOUPS_CHAT.toId()); isUser() }
+		check { isNotEphemeral(); inChannel(LgChannelType.LOUPS_CHAT.toId()); isUser() }
 		action { relayService.onMessageSent(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId(), true) }
 	}
 
 	event<MessageCreateEvent> {
-		check { inChannel(LgChannelType.DATE_MYSTERE.toId()); isUser() }
+		check { isNotEphemeral(); inChannel(LgChannelType.DATE_MYSTERE.toId()); isUser() }
 		action { relayService.onMessageSent(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId(), false) }
 	}
 
 	event<MessageCreateEvent> {
 		check {
+			isNotEphemeral()
 			inChannel(LgChannelType.INTERVIEW.toId())
 			failIf { event.message.author?.id !in botCache.getInterviews() }
 		}
@@ -91,7 +93,7 @@ suspend fun LG.registerListeners() {
 	}
 
 	event<MessageCreateEvent> {
-		check { inChannel(LgChannelType.SUJETS.toId()); isUser() }
+		check { isNotEphemeral(); inChannel(LgChannelType.SUJETS.toId()); isUser() }
 		action {
 			val reasonText = I18n.System.Topics.creation.contextTranslate()
 			val textChannel = event.message.channel as TextChannel
