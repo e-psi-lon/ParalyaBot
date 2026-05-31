@@ -39,6 +39,12 @@ in
 }:
 let
   version = extractVersion versionProperty;
+  dependencyFlags = 
+    let
+      validDeps = builtins.filter (dep: dep ? passthru && dep.passthru ? gradleProperties) buildDependencies;
+      extractFlags = dep: lib.mapAttrsToList (key: val: "-P${key}=${val}") dep.passthru.gradleProperties;
+    in
+    lib.flatten (map extractFlags validDeps);
 in
 stdenv.mkDerivation (finalAttrs: {
   inherit pname version;
@@ -57,7 +63,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   gradleBuildTask = task;
   gradleUpdateTask = updateTask;
-  gradleFlags = [ "-P${versionProperty}=${version}" ] ++ extraGradleFlags;
+  gradleFlags = [ "-P${versionProperty}=${version}" ] ++ dependencyFlags ++ extraGradleFlags;
 
   preBuild = ''
     mkdir -p $GRADLE_USER_HOME
@@ -83,6 +89,7 @@ stdenv.mkDerivation (finalAttrs: {
 
   passthru = {
     buildDir = module;
+    gradleProperties."${versionProperty}" = version;
   };
 
   env = {
