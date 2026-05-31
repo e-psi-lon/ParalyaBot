@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -126,7 +127,7 @@ private const val REACTION_DELAY = 250L
 suspend fun Message.addReactions(emojis: List<ReactionEmoji>) {
 	for (emoji in emojis) {
 		addReaction(emoji)
-		delay(REACTION_DELAY) // Add small delay to avoid rate limiting
+		delay(REACTION_DELAY.milliseconds) // Add small delay to avoid rate limiting
 	}
 }
 
