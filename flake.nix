@@ -80,9 +80,14 @@
             inherit (paralyabot) paralyabot-jar;
             inherit (utils) lastCommitAsTimestamp;
           };
+          lg-plugin = import ./nix/packages/plugins/lg.nix {
+            inherit mkGradleBuild build-logic;
+            inherit (deps) deps-compile;
+            inherit (common) common-compile;
+          };
         in
         {
-          inherit build-logic paralyabot-image;
+          inherit build-logic paralyabot-image lg-plugin;
           inherit (deps) deps-compile deps-runtime;
           inherit (common) common-compile common-runtime;
           inherit (paralyabot) paralyabot-jar paralyabot-jar-deps;
