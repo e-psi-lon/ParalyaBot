@@ -1,8 +1,5 @@
 {
   runCommand,
-  zip,
-  unzip,
-  perl,
   mkGradleBuild,
   extractVersion,
   build-logic,
@@ -53,6 +50,8 @@ rec {
   common-runtime-deps = mkGradleBuild {
     pname = "paralyabot-common-deps";
     module = "common";
+    artifactVersion = "static";
+    versionProperty = "module.common.deps.version";
     srcRoots = [
       ../../common/build.gradle.kts
       ./common.nix
@@ -72,14 +71,7 @@ rec {
   };
 
   common-runtime =
-    runCommand "paralyabot-common-runtime"
-      {
-        nativeBuildInputs = [
-          zip
-          unzip
-          perl
-        ];
-      }
+    runCommand "paralyabot-common-runtime" {}
       ''
         mkdir -p $out META-INF
         cp --no-preserve=mode ${common-compile}/paralya-bot-common.jar $out/

@@ -1,7 +1,4 @@
 {
-  zip,
-  unzip,
-  perl,
   mkGradleBuild,
   build-logic,
   deps-compile,
@@ -42,11 +39,6 @@ rec {
       ./paralyabot.nix
     ];
     task = "bot:jar";
-    extraNativeInputs = [
-      zip
-      unzip
-      perl
-    ];
 
     preBuild = ''
       CLASS_PATH="${common-runtime}/paralya-bot-common.jar"

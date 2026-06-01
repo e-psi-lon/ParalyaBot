@@ -58,18 +58,12 @@
             inherit mkGradleBuild build-logic;
           };
           common = import ./nix/packages/common.nix {
-            inherit (pkgs)
-              runCommand
-              zip
-              unzip
-              perl
-              ;
+            inherit (pkgs) runCommand;
             inherit mkGradleBuild build-logic;
             inherit (utils) extractVersion;
             inherit (deps) deps-compile deps-runtime;
           };
           paralyabot = import ./nix/packages/paralyabot.nix {
-            inherit (pkgs) zip unzip perl;
             inherit mkGradleBuild build-logic;
             inherit (deps) deps-compile;
             inherit (common) common-compile common-runtime;
