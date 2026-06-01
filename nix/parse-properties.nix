@@ -19,7 +19,7 @@ rec {
       toPair =
         line:
         let
-          match = builtins.match "([^=]+)=(.*)$" line;
+          match = builtins.match "([^#!=][^=]*)=(.*)$" line;
         in
         if match == null then
           null

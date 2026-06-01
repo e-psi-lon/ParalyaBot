@@ -27,6 +27,7 @@ in
   pname,
   module ? pname,
   versionProperty ? "paralyabot.version",
+  artifactVersion ? extractVersion versionProperty,
   task,
   updateTask ? if module == "." then ":nixDownloadDeps" else ":${module}:nixDownloadDeps",
   srcRoots ? [ ],
@@ -39,7 +40,7 @@ in
 }:
 let
   version = extractVersion versionProperty;
-  dependencyFlags = 
+  dependencyFlags =
     let
       validDeps = builtins.filter (dep: dep ? passthru && dep.passthru ? gradleProperties) buildDependencies;
       extractFlags = dep: lib.mapAttrsToList (key: val: "-P${key}=${val}") dep.passthru.gradleProperties;
@@ -47,7 +48,8 @@ let
     lib.flatten (map extractFlags validDeps);
 in
 stdenv.mkDerivation (finalAttrs: {
-  inherit pname version;
+  inherit pname;
+  version = artifactVersion;
   src = lib.fileset.toSource {
     root = ../.;
     fileset = lib.fileset.unions ([ baseGradleFileset ] ++ srcRoots ++ [ ./gradle.nix ]);

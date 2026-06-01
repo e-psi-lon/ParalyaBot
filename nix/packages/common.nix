@@ -7,8 +7,8 @@
   deps-runtime,
 }:
 rec {
-  common-compile = 
-    let 
+  common-compile =
+    let
       drv = mkGradleBuild {
         pname = "paralyabot-common-compile";
         module = "common";

@@ -9,6 +9,8 @@ rec {
   paralyabot-jar-deps = mkGradleBuild {
     pname = "paralyabot-jar-deps";
     module = "bot";
+    artifactVersion = "static";
+    versionProperty = "paralyabot.deps.version";
     srcRoots = [
       ../../build-logic
       ../../deps
