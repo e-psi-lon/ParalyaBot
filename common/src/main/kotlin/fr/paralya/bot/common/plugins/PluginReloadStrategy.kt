@@ -11,11 +11,11 @@ import kotlin.io.path.copyToRecursively
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.deleteRecursively
 import kotlin.io.path.exists
-import kotlin.io.path.notExists
 
 private sealed interface TeardownResult {
-    class OldPluginFailedToDelete(val exception: PluginRuntimeException? = null) : TeardownResult
-    object OldPluginSuccessfulTeardown : TeardownResult
+    @JvmInline
+    value class OldPluginFailedToDelete(val exception: PluginRuntimeException? = null) : TeardownResult
+    data object OldPluginSuccessfulTeardown : TeardownResult
 }
 
 
@@ -37,7 +37,34 @@ internal class PluginReloadStrategy(
     val newPluginZipPath: Path,
     private val logger: KLogger,
     private val workDirectory: Path
-) {
+) { 
+
+    @Suppress("ReturnCount")
+    fun reload(): PluginReloadResult {
+        val safeCopy = saveCopy()
+        val safeNewPlugin = workDirectory.resolve(newPluginZipPath.fileName)
+        try {
+            newPluginZipPath.copyTo(safeNewPlugin, overwrite = true)
+            val teardownResult = teardown()
+            if (teardownResult is TeardownResult.OldPluginFailedToDelete) {
+                return OldPluginFailedToDelete(teardownResult.exception)
+            }
+            if (!newPluginZipPath.exists()) safeNewPlugin.copyTo(newPluginZipPath, overwrite = true)
+            val result = loadNewPlugin()
+            // This has to be safe
+            // We only catch Exception, if the cast fails, what the hell is happening to the JVM????
+            val loadedPluginId = result.getOrElse { return fallback(safeCopy, it as Exception) }
+            val exception = tryStartPlugin(loadedPluginId)
+            if (exception != null) {
+                return fallback(safeCopy, exception)
+            }
+            successCleanup()
+            return SuccessfulPluginReload
+        } finally {
+            safeCopy.deleteRecursively()
+            safeNewPlugin.deleteIfExists()
+        }
+    }
 
     private fun saveCopy(): Path {
         val path = workDirectory.resolve(oldPluginPath.fileName)
@@ -135,33 +162,6 @@ internal class PluginReloadStrategy(
         } catch (e: IllegalArgumentException) {
             logger.error(e) { "Failed to load the old plugin $pluginId: invalid plugin path." }
             return OldPluginFallbackFailedToLoad(originalException, e)
-        }
-    }
-
-    @Suppress("ReturnCount")
-    fun reload(): PluginReloadResult {
-        val safeCopy = saveCopy()
-        val safeNewPlugin = workDirectory.resolve(newPluginZipPath.fileName)
-        try {
-            newPluginZipPath.copyTo(safeNewPlugin, overwrite = true)
-            val teardownResult = teardown()
-            if (teardownResult is TeardownResult.OldPluginFailedToDelete) {
-                return OldPluginFailedToDelete(teardownResult.exception)
-            }
-            if (newPluginZipPath.notExists()) safeNewPlugin.copyTo(newPluginZipPath, overwrite = true)
-            val result = loadNewPlugin()
-            // This has to be safe
-            // We only catch Exception, if the cast fails, what the hell is happening to the JVM????
-            val loadedPluginId = result.getOrElse { return fallback(safeCopy, it as Exception) }
-            val exception = tryStartPlugin(loadedPluginId)
-            if (exception != null) {
-                return fallback(safeCopy, exception)
-            }
-            successCleanup()
-            return SuccessfulPluginReload
-        } finally {
-            safeCopy.deleteRecursively()
-            safeNewPlugin.deleteIfExists()
         }
     }
 
