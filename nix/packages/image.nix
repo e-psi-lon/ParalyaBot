@@ -1,10 +1,10 @@
 {
   lib,
+  stdenv,
   dockerTools,
   cacert,
   writeTextDir,
   project-jdk,
-  project-jre-base,
   lastCommitAsTimestamp,
   paralyabot-jar,
 }:
@@ -14,16 +14,23 @@ let
     enableGtk = false;
     enableJavaFX = false;
   };
-  project-jre = project-jre-base.override {
-    jdk = headlessJdk;
-    jdkOnBuild = headlessJdk;
-    modules = [
-      "java.base"
-      "java.xml"
-      "java.naming"
-      "java.logging"
-      "jdk.crypto.ec"
-    ];
+  project-jre = stdenv.mkDerivation {
+    pname = "${headlessJdk.pname}-minimal-jre";
+    version = headlessJdk.version;
+
+    nativeBuildInputs = [ headlessJdk ];
+    strictDeps = true;
+    dontUnpack = true;
+    dontInstall = true;
+    stripDebugFlags = [ "--strip-unneeded" ];
+
+    buildPhase = ''
+      jlink --module-path ${headlessJdk}/lib/openjdk/jmods \
+        --add-modules java.base,java.xml,java.naming \
+        --no-header-files --no-man-pages --strip-debug \
+        --output $out
+    '';
+    inherit (headlessJdk) meta;
   };
 in
 dockerTools.streamLayeredImage {

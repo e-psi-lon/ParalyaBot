@@ -10,7 +10,6 @@
       pkgs = nixpkgs.legacyPackages.${system};
       lib = pkgs.lib;
       project-jdk = pkgs.jdk25;
-      project-jre-base = pkgs.jre25_minimal;
 
       baseGradleFileset = lib.fileset.unions [
         ./build-logic
@@ -69,8 +68,8 @@
             inherit (common) common-compile common-runtime;
           };
           paralyabot-image = import ./nix/packages/image.nix {
-            inherit lib project-jdk project-jre-base;
-            inherit (pkgs) dockerTools cacert writeTextDir;
+            inherit lib project-jdk;
+            inherit (pkgs) dockerTools cacert writeTextDir stdenv;
             inherit (paralyabot) paralyabot-jar;
             inherit (utils) lastCommitAsTimestamp;
           };
