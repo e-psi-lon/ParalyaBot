@@ -93,14 +93,16 @@ let
             echo "If no package is specified, updates all dependency lockfiles."
             ;;
         "")
-            for pkg in build-logic deps-compile common-compile paralyabot-jar lg-plugin sta-plugin; do
-                if ! $(nix build .#''${pkg}.mitmCache.updateScript --print-out-paths); then
-                    echo "Error: Failed to update ''${pkg} dependencies. Check the output above for details." >&2
+            for pkg-update in build-logic-update deps-compile-update common-update paralyabot-jar-update lg-plugin-update sta-plugin-update; do
+                if ! $(nix build .#''${pkg-update} --print-out-paths); then
+                    echo "Error: Failed to update ''${pkg-update} dependencies. Check the output above for details." >&2
                 fi
             done
             ;;
         *)
-            $(nix build .#"''${1}".mitmCache.updateScript --print-out-paths)
+            if ! $(nix build .#"''${1}-update" --print-out-paths); then
+                 echo "Error: Failed to update ''${1} dependencies. Check the output above for details." >&2
+            fi
             ;;
     esac
   '';

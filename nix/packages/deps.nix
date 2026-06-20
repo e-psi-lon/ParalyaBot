@@ -3,7 +3,7 @@
   mkGradleBuild,
   build-logic,
 }:
-rec {
+let
   deps-compile = mkGradleBuild {
     pname = "paralyabot-deps";
     module = "deps";
@@ -26,4 +26,6 @@ rec {
     mkdir -p $out
     cp --no-preserve=mode ${deps-compile}/paralya-bot-deps.jar $out/
   '';
+in {
+  inherit deps-compile deps-runtime;
 }

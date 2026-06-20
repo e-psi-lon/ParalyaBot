@@ -82,8 +82,12 @@
         {
           inherit build-logic paralyabot-image lg-plugin;
           inherit (deps) deps-compile deps-runtime;
-          inherit (common) common-compile common-runtime;
-          inherit (paralyabot) paralyabot-jar paralyabot-jar-deps;
+          inherit (common) common-compile common-runtime-deps common-runtime common-update;
+          inherit (paralyabot) paralyabot-jar paralyabot-jar-deps paralyabot-jar-update;
+
+          build-logic-update = build-logic.mitmCache.updateScript;
+          deps-compile-update = deps.deps-compile.mitmCache.updateScript;
+          lg-plugin-update = lg-plugin.mitmCache.updateScript;
         };
 
       devShells.${system}.default = import ./nix/shell.nix {

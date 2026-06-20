@@ -5,10 +5,29 @@
   common-compile,
   common-runtime,
 }:
-rec {
-  paralyabot-jar-deps = mkGradleBuild {
-    pname = "paralyabot-jar-deps";
+let
+  sharedArgs = {
     module = "bot";
+    buildDependencies = [
+      build-logic
+      deps-compile
+      common-compile
+    ];
+  };
+
+  jarArgs = sharedArgs // {
+    srcRoots = [
+      ../../build-logic
+      ../../deps
+      ../../common
+      ../../bot
+      ./paralyabot.nix
+    ];
+    task = "bot:jar";
+  };
+
+  paralyabot-jar-deps = mkGradleBuild (sharedArgs // {
+    pname = "paralyabot-jar-deps";
     artifactVersion = "static";
     versionProperty = "paralyabot.deps.version";
     srcRoots = [
@@ -19,39 +38,30 @@ rec {
       ./paralyabot.nix
     ];
     task = "bot:copyRuntimeClasspath";
-    buildDependencies = [
-      build-logic
-      deps-compile
-      common-compile
-    ];
     installPhase = ''
       mkdir -p $out
       cp bot/build/deps/*.jar $out/
     '';
-  };
+  });
+in {
+  inherit paralyabot-jar-deps;
 
-  paralyabot-jar = mkGradleBuild {
+  paralyabot-jar-update = (mkGradleBuild (jarArgs // {
+    pname = "paralyabot-jar-update";
+    preBuild = ''
+      CLASS_PATH="${common-runtime}/paralya-bot-common.jar"
+      export RAW_CLASSPATH="$CLASS_PATH $EXTRA_JARS"
+    '';
+    installPhase = "";
+  })).mitmCache.updateScript;
+
+  paralyabot-jar = mkGradleBuild (jarArgs // {
     pname = "paralyabot-jar";
-    module = "bot";
-    srcRoots = [
-      ../../build-logic
-      ../../deps
-      ../../common
-      ../../bot
-      ./paralyabot.nix
-    ];
-    task = "bot:jar";
-
     preBuild = ''
       CLASS_PATH="${common-runtime}/paralya-bot-common.jar"
       EXTRA_JARS=$(ls ${paralyabot-jar-deps}/*.jar | tr '\n' ' ')
       export RAW_CLASSPATH="$CLASS_PATH $EXTRA_JARS"
     '';
-    buildDependencies = [
-      build-logic
-      deps-compile
-      common-compile
-    ];
     installPhase = ''
       mkdir -p $out META-INF
       cp bot/build/libs/paralya-bot.jar $out/
@@ -59,5 +69,5 @@ rec {
       echo ${common-runtime} > $out/nix-support/runtime-depends
       echo ${paralyabot-jar-deps} >> $out/nix-support/runtime-depends
     '';
-  };
+  });
 }
