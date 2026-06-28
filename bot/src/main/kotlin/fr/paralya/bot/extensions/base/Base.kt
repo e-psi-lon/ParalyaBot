@@ -53,7 +53,7 @@ import org.koin.core.component.inject
  */
 class Base : Extension() {
 	override val name = "Base"
-	private val logger = KotlinLogging.logger(this::class.java.name)
+	private val logger = KotlinLogging.logger(this::class.java.simpleName)
 	private val configManager by inject<ConfigManager>()
 	private val gameRegistry by inject<GameRegistry>()
     override suspend fun setup() {
