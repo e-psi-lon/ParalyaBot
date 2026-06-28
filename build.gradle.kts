@@ -61,6 +61,7 @@ allprojects {
 tasks {
 	register("cleanPlugins") {
 		description = "Wipes the local plugins directory and recreates an empty one to ensure a fresh environment."
+		group = "debugging"
 		doLast {
 			val pluginsDir = file("./container/plugins")
 			if (pluginsDir.exists()) {
@@ -72,6 +73,7 @@ tasks {
 
 	register<JavaExec>("runFull") {
 		description = "Full execution from scratch: Cleans, exports all subproject plugins (excluding a pre-defined list), and runs the application via ShadowJar configuration."
+		group = "debugging"
         dependsOn("cleanPlugins")
 		dependsOn(subprojects
 			.filter { it.name !in excludedPlugins }

@@ -39,6 +39,7 @@ dependencies {
 tasks {
     register<Copy>("copyRuntimeClasspath") {
         description = "Copies the runtime dependencies to the build directory"
+        group = "distribution"
         val outputDir = layout.buildDirectory.dir("deps")
         from(configurations.runtimeClasspath)
         into(outputDir)

@@ -8,7 +8,9 @@ group = "fr.paralya.bot"
 version = providers.gradleProperty("plugin.${project.name}.version").get()
 
 tasks.register("exportToPluginsDir") {
-	dependsOn(":${project.name}:distZip")
+	description = "Exports the game module to the local debugging plugin directory"
+	group = "debugging"
+    dependsOn(":${project.name}:distZip")
 	doLast {
 		val distZipTask = tasks.getByName("distZip") as Zip
 		val zip = distZipTask.outputs.files.singleFile
