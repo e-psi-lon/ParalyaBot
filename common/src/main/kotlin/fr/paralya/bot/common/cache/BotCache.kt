@@ -74,7 +74,8 @@ fun <T : Any> DataCache.querySerialized(
     block: QueryBuilder<T>.() -> Unit = {}
 ): Query<T> {
     val builder = DeserializedQueryBuilder(
-        "$namespace:$typeKey",
+        namespace,
+        typeKey,
         clazz,
         this,
         itemIdProperty,
