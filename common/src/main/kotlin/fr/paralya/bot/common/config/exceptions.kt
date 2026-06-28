@@ -11,3 +11,5 @@ class InvalidConfigException(className: String?, val errors: List<ValidationErro
 class MissingConfigEntryException(path: String) : BotConfigException("No configuration found for path: $path")
 
 class MissingConfigException : BotConfigException("The configuration file is missing.")
+
+class BotAlreadyBootstrappedException : BotConfigException("The bot has already been bootstrapped.")

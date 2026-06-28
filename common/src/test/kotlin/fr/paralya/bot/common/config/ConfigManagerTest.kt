@@ -72,7 +72,7 @@ class ConfigManagerTest : KoinTest {
 		val configManager = ConfigManager(configFile)
 
 		// Assert
-		assertEquals("test-token-123", configManager.botConfig.token)
+		assertEquals(SNOWFLAKE3, configManager.botConfig.dmLogChannelId)
 		assertEquals(2, configManager.botConfig.admins.size)
 	}
 

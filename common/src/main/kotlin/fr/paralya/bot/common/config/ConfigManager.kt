@@ -3,8 +3,11 @@ package fr.paralya.bot.common.config
 import com.typesafe.config.Config
 import com.typesafe.config.ConfigException
 import com.typesafe.config.ConfigFactory
+import dev.kordex.core.ExtensibleBot
+import dev.kordex.core.builders.ExtensibleBotBuilder
 import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.utils.loadModule
+import fr.paralya.bot.common.InternalBotApi
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -22,7 +25,7 @@ import kotlin.io.path.writeText
 
 /**
  * Configuration manager for the bot.
- * Handles loading and managing the bot's configuration.
+ * Handles the lifecycle of the bot's configuration(s) including their respective access mediums.
  * Allows for dynamic registration of game-specific configurations.
  *
  * @property configFile The file where the configuration is stored.
@@ -43,11 +46,12 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 	}
 
 	private val configs = mutableMapOf<String, ConfigEntry>()
+	private var hasBootstrapped = false
 
 
 	// Core bot configuration, directly integrated into the ConfigManager
 	val botConfig: BotConfig
-		get() = state.botConfig
+		get() = state.botConfig.toPublic()
 
 	/**
 	 * Loads the configuration file into a [ConfigState] object
@@ -57,7 +61,7 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 	private fun loadState(): ConfigState {
 		if (!configFile.exists()) createDefaultConfig()
 		val raw = ConfigFactory.parseFile(configFile.toFile())
-		val botConfig = Hocon.decodeFromConfig<BotConfig>(getSubConfig("bot", raw))
+		val botConfig = Hocon.decodeFromConfig<PrivateBotConfig>(getSubConfig("bot", raw))
 		validateConfig(botConfig)
 		return ConfigState(raw, botConfig)
 	}
@@ -170,7 +174,7 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 
 	private data class ConfigState(
 		val raw: Config,
-		val botConfig: BotConfig
+		val botConfig: PrivateBotConfig
 	)
 
 	private data class ConfigEntry(
@@ -178,4 +182,27 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 		val configRegister: (ConfigEntry) -> Unit
 	)
 
+
+
+	/**
+	 * Bootstraps the bot with the provided configuration.
+	 *
+	 * This method is made public for cross-module boundary calls between the common module and the bot entrypoint as it
+	 * is the only legitimate way to use the token.
+	 * It should NOT be called directly by any plugin consumer.
+	 *
+	 * @param builder The configuration builder for the bot.
+	 * @return The initialized [ExtensibleBot] instance on first call.
+	 *
+	 * @throws BotAlreadyBootstrappedException if the bot has already been bootstrapped.
+	 */
+	@InternalBotApi
+	suspend fun bootstrapBot(builder: suspend ExtensibleBotBuilder.() -> Unit): ExtensibleBot {
+		if (hasBootstrapped) throw BotAlreadyBootstrappedException()
+		hasBootstrapped = true
+		// To avoid leaking the token in public API, uses the private state's token
+		return ExtensibleBot(state.botConfig.token) {
+			builder()
+		}
+	}
 }

@@ -22,6 +22,7 @@ import ch.qos.logback.classic.Logger
 import dev.kordex.core.DISCORD_RED
 import dev.kordex.core.annotations.warnings.ReplacingDefaultErrorResponseBuilder
 import dev.kordex.i18n.generated.CoreTranslations
+import fr.paralya.bot.common.InternalBotApi
 import fr.paralya.bot.extensions.Monitoring
 import fr.paralya.bot.extensions.plugins.PluginExtension
 import org.slf4j.LoggerFactory
@@ -53,12 +54,12 @@ private fun configureLogging(devMode: Boolean) {
  * @param args Command line arguments for the bot.
  * @return An instance of [ExtensibleBot], ready to be started.
  */
-@OptIn(ReplacingDefaultErrorResponseBuilder::class)
+@OptIn(ReplacingDefaultErrorResponseBuilder::class, InternalBotApi::class)
 suspend fun buildBot(args: Array<String>): ExtensibleBot {
 	val devModeArg = args.contains("--dev")
 	configureLogging(devModeArg) // Initial logger setup
 	val configManager = ConfigManager() // Bootstrap to get the token
-	return ExtensibleBot(configManager.botConfig.token) {
+	return configManager.bootstrapBot {
 		// Add another option to enable dev mode; the CLI flag
 		// KordEx also provides env vars to set it (see the doc)
 		devMode = devMode || devModeArg
@@ -116,7 +117,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 		hooks {
 			beforeKoinSetup {
 				loadModule {
-					single<ConfigManager> { configManager } withOptions {
+                    single<ConfigManager> { configManager } withOptions {
 						named("configManager")
 						createdAtStart()
 					}

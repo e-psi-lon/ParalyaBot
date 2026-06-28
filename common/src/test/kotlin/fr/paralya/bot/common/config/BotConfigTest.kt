@@ -16,7 +16,7 @@ class BotConfigTest {
 	@Test
 	fun `valid bot config with all required fields passes validation`() {
 		// Arrange
-		val config = BotConfig(
+		val config = PrivateBotConfig(
 			token = "valid-token",
 			admins = listOf(SNOWFLAKE1),
 			dmLogChannelId = SNOWFLAKE2,
@@ -33,7 +33,7 @@ class BotConfigTest {
 	@Test
 	fun `config fails validation when token is empty`() {
 		// Arrange
-		val config = BotConfig(
+		val config = PrivateBotConfig(
 			token = "",
 			admins = listOf(SNOWFLAKE1),
 			dmLogChannelId = SNOWFLAKE2,
@@ -50,7 +50,7 @@ class BotConfigTest {
 	@Test
 	fun `config fails validation when admins list is empty`() {
 		// Arrange
-		val config = BotConfig(
+		val config = PrivateBotConfig(
 			token = "valid-token",
 			admins = emptyList(),
 			dmLogChannelId = SNOWFLAKE2,
@@ -67,7 +67,7 @@ class BotConfigTest {
 	@Test
 	fun `config succeeds with multiple valid admin IDs`() {
 		// Arrange
-		val config = BotConfig(
+		val config = PrivateBotConfig(
 			token = "valid-token",
 			admins = listOf(SNOWFLAKE1, SNOWFLAKE2, SNOWFLAKE3),
 			dmLogChannelId = SNOWFLAKE4,
