@@ -69,7 +69,7 @@ private fun configureLogging(devMode: Boolean) {
 private var clientInitialized = false
 private val sharedClient: RedisClient by lazy {
 	clientInitialized = true
-	RedisClient.create(System.getenv(Defaults.KORD_REDIS_URL) ?: Defaults.DEFAULT_URL)
+	RedisClient.create(System.getenv("KORD_CACHE_URL") ?: Defaults.DEFAULT_URL)
 }
 
 @OptIn(InternalBotApi::class)

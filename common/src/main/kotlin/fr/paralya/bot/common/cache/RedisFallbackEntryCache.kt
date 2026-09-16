@@ -26,11 +26,11 @@ class RedisFallbackEntryCache<T : Any, I: Any>(
         try {
             redis.put(item)
         } catch (e: SerializationException) {
-            logger.warn { "Type ${klass.qualifiedName} is not Redis-compatible (${e::class.simpleName}: ${e.message}), falling back to in-memory cache" }
+            logger.warn { "Type ${klass.qualifiedName} is not Redis-compatible (${e::class.simpleName}: ${e.message}), falling back to generic cache" }
             incompatibleTypes += klass
             fallback.put(item)
         } catch (e: IllegalStateException) {
-            logger.warn { "Type ${klass.qualifiedName} is not Redis-compatible (${e::class.simpleName}: ${e.message}), falling back to in-memory cache" }
+            logger.warn { "Type ${klass.qualifiedName} is not Redis-compatible (${e::class.simpleName}: ${e.message}), falling back to generic cache" }
             incompatibleTypes += klass
             fallback.put(item)
         }
