@@ -24,10 +24,13 @@ import fr.paralya.bot.common.getAsset
 import fr.paralya.bot.common.sendAsWebhook
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.common.MessageForm
+import fr.paralya.bot.common.addMemberPermission
 import fr.paralya.bot.common.runCatchingException
 import fr.paralya.bot.lg.data.LgChannelType
 import fr.paralya.bot.lg.data.LgConfig
+import fr.paralya.bot.lg.data.addInterview
 import fr.paralya.bot.lg.data.getGameData
+import fr.paralya.bot.lg.data.getInterviews
 import fr.paralya.bot.lg.I18n as Lg
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.CancellationException
@@ -124,9 +127,15 @@ class LG : Extension() {
 					val interviewChannel =
 						guild.getChannel(LgChannelType.INTERVIEW.toId()) as TopGuildChannel
 					val user = arguments.user
-					interviewChannel.addOverwrite(
-						PermissionOverwrite.forMember(user.id, Permissions(Permission.SendMessages))
-					)
+					if (user.id in botCache.getInterviews()) respond {
+						content = Lg.Interview.Response.Failed.alreadyInterviewing
+							.contextTranslate(user.mention)
+					}
+					interviewChannel.addMemberPermission(user.id, Permission.ViewChannel)
+					botCache.addInterview(user.id)
+					respond {
+						content = Lg.Interview.Response.success.contextTranslate(user.mention)
+					}
 				}
 			}
 
