@@ -10,7 +10,6 @@ import fr.paralya.bot.common.runCatchingTypedException
 import dev.kordex.core.plugins.PluginManager as KordExPluginManager
 import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.launch
-import org.koin.core.context.unloadKoinModules
 import org.koin.core.module.Module
 import org.koin.dsl.bind
 import org.pf4j.PluginRuntimeException
@@ -120,7 +119,7 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
         if (plugins.containsKey(pluginId) && checkPluginState(pluginId, PluginState.STARTED)) {
             koinModules[pluginId]
                 ?.let { module ->
-                    unloadKoinModules(module)
+                    getKoin().unloadModules(listOf(module))
                     koinModules.remove(pluginId)
                 }
                 ?: logger.error {
