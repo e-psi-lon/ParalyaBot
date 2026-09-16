@@ -12,6 +12,8 @@ kordEx {
 		version = getVersion() as String
 		description = "ParalyaBot's AI-based help plugin"
 		pluginClass = "fr.paralya.bot.ai.AiPlugin"
+		author = "e_psi_lon"
+		license = "AGPL 3.0"
 	}
 }
 

@@ -12,6 +12,8 @@ kordEx {
 		version = getVersion() as String
 		description = "ParalyaBot's Stats Arena game plugin"
 		pluginClass = "fr.paralya.bot.sta.StaBotPlugin"
+		author = "e_psi_lon"
+		license = "AGPL 3.0"
 	}
 }
 

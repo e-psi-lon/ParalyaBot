@@ -12,6 +12,8 @@ kordEx {
 		version = getVersion() as String
 		description = "ParalyaBot's Werewolf game plugin"
 		pluginClass = "fr.paralya.bot.lg.LgPlugin"
+		author = "e_psi_lon"
+		license = "AGPL 3.0"
 	}
 }
 
