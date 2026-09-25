@@ -30,7 +30,6 @@ class AdminTest {
 	fun `user is admin when ID matches config admins list`() {
 		// Arrange
 		val config = BotConfig(
-			token = "token",
 			admins = listOf(SNOWFLAKE1, SNOWFLAKE2),
 			dmLogChannelId = SNOWFLAKE3,
 			paralyaId = SNOWFLAKE4
@@ -50,7 +49,6 @@ class AdminTest {
 	fun `user is not admin when ID does not match config admins list`() {
 		// Arrange
 		val config = BotConfig(
-			token = "token",
 			admins = listOf(SNOWFLAKE1),
 			dmLogChannelId = SNOWFLAKE2,
 			paralyaId = SNOWFLAKE3
@@ -70,7 +68,6 @@ class AdminTest {
 	fun `null user is not admin`() {
 		// Arrange
 		val config = BotConfig(
-			token = "token",
 			admins = listOf(SNOWFLAKE1),
 			dmLogChannelId = SNOWFLAKE2,
 			paralyaId = SNOWFLAKE3
@@ -88,7 +85,6 @@ class AdminTest {
 	fun `member is admin when ID matches config admins list`() {
 		// Arrange
 		val config = BotConfig(
-			token = "token",
 			admins = listOf(SNOWFLAKE1, SNOWFLAKE2),
 			dmLogChannelId = SNOWFLAKE3,
 			paralyaId = SNOWFLAKE4
@@ -108,7 +104,6 @@ class AdminTest {
 	fun `member is not admin when ID does not match config admins list`() {
 		// Arrange
 		val config = BotConfig(
-			token = "token",
 			admins = listOf(SNOWFLAKE1),
 			dmLogChannelId = SNOWFLAKE2,
 			paralyaId = SNOWFLAKE3
@@ -128,7 +123,6 @@ class AdminTest {
 	fun `null member is not admin`() {
 		// Arrange
 		val config = BotConfig(
-			token = "token",
 			admins = listOf(SNOWFLAKE1),
 			dmLogChannelId = SNOWFLAKE2,
 			paralyaId = SNOWFLAKE3
@@ -146,7 +140,6 @@ class AdminTest {
 	fun `admin check works with multiple admin IDs`() {
 		// Arrange
 		val config = BotConfig(
-			token = "token",
 			admins = listOf(SNOWFLAKE1, SNOWFLAKE2, SNOWFLAKE3, SNOWFLAKE4),
 			dmLogChannelId = SNOWFLAKE1,
 			paralyaId = SNOWFLAKE2
@@ -166,7 +159,6 @@ class AdminTest {
 	fun `admin check is case and value sensitive`() {
 		// Arrange
 		val config = BotConfig(
-			token = "token",
 			admins = listOf(SNOWFLAKE1),
 			dmLogChannelId = SNOWFLAKE2,
 			paralyaId = SNOWFLAKE3
