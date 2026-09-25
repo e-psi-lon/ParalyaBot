@@ -164,11 +164,13 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
         return configObject
     }
 
-	private fun getSubConfig(path: String, config: Config = state.raw): Config {
-		if (!config.hasPath(path))
+	private fun getSubConfig(path: String, config: Config): Config {
+        if (!config.hasPath(path))
 			throw MissingConfigEntryException(path)
 		return config.getConfig(path)
 	}
+
+	private fun getSubConfig(path: String): Config = getSubConfig(path, state.raw)
 
 	private fun validateConfig(config: ValidatedConfig) {
 		val result = config.validate()
