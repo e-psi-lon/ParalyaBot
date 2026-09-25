@@ -1,14 +1,13 @@
 package fr.paralya.bot.lg
 
 import dev.kord.common.entity.Permission
+import dev.kord.core.behavior.channel.editMemberPermission
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.PublicSlashCommand
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.converters.impl.defaultingBoolean
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.i18n.Key
-import dev.kordex.core.utils.getTopChannel
-import fr.paralya.bot.common.addMemberPermissions
 import fr.paralya.bot.common.addRolePermissions
 import fr.paralya.bot.common.adminOnly
 import fr.paralya.bot.common.contextTranslate
@@ -27,7 +26,6 @@ import fr.paralya.bot.lg.data.getChannel
 import fr.paralya.bot.lg.data.nextPhase
 import fr.paralya.bot.lg.data.setChoices
 import fr.paralya.bot.lg.I18n as Lg
-import kotlinx.coroutines.flow.toList
 import org.koin.core.component.get
 import org.koin.core.component.inject
 
@@ -35,11 +33,6 @@ private val DAY_CHANNELS = listOf(
 	LgChannelType.VILLAGE,
 	LgChannelType.VOTES,
 	LgChannelType.SUJETS
-)
-
-private val WOLF_CHANNELS = listOf(
-	LgChannelType.LOUPS_VOTE,
-	LgChannelType.LOUPS_CHAT
 )
 
 /**
@@ -111,20 +104,21 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			botCache.nextPhase()
 			DAY_CHANNELS.forEach { channelName ->
 				botCache.getChannel(channelName)
-					?.getTopChannel()
 					?.addRolePermissions(aliveRole, Permission.ViewChannel, Permission.SendMessages)
 			}
 			// For each thread in the SUJET channel, unlock it
+			val loupVote = botCache.getChannel(LgChannelType.LOUPS_VOTE)
+			val loupChat = botCache.getChannel(LgChannelType.LOUPS_CHAT)
 			botCache.getChannel(LgChannelType.SUJETS)?.activeThreads?.changeLockAll(false)
-			botCache.getChannel(LgChannelType.LOUPS_CHAT)?.getMembersWithAccess()
+			loupChat?.getMembersWithAccess()
 				?.filterByRole(aliveRole)
-				?.toList()
-				?.forEach { member ->
+				?.collect { member ->
 					val reason = Lg.System.Permissions.Day.reason.contextTranslate()
-					listOf(LgChannelType.LOUPS_VOTE, LgChannelType.LOUPS_CHAT).forEach { channelName ->
-						botCache.getChannel(channelName)?.getTopChannel()?.apply {
-							addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
-							removeRolePermissions(member.id, Permission.SendMessages, reason = reason)
+					listOf(loupVote, loupChat).forEach { actualChannel ->
+						actualChannel?.editMemberPermission(member.id) {
+							allowed += Permission.ViewChannel
+							denied += Permission.SendMessages
+							this.reason = reason
 						}
 					}
 				}
@@ -190,7 +184,6 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 			botCache.nextPhase()
 			DAY_CHANNELS.forEach { channelName ->
 				botCache.getChannel(channelName)
-					?.getTopChannel()
 					?.run {
 						removeRolePermissions(aliveRole, Permission.ViewChannel, Permission.SendMessages)
 						id.sendAsWebhook(lg.bot, BOT_NICKNAME, lg.pluginRef.getAsset(PROFILE_PICTURE)) {
@@ -200,17 +193,18 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 
 			}
 			// For each thread in the SUJET channel, lock it
+			val loupChat = botCache.getChannel(LgChannelType.LOUPS_CHAT)
+			val loupVote = botCache.getChannel(LgChannelType.LOUPS_VOTE)
 			botCache.getChannel(LgChannelType.SUJETS)?.activeThreads?.changeLockAll(true)
-			botCache.getChannel(LgChannelType.LOUPS_CHAT)?.getMembersWithAccess()
+			loupChat?.getMembersWithAccess()
 				?.filterByRole(aliveRole)
-				?.toList()
-				?.forEach { member ->
+				?.collect { member ->
 					val reason = Lg.System.Permissions.Night.reason.contextTranslate()
 
-					WOLF_CHANNELS.forEach { channelName ->
-						botCache.getChannel(channelName)?.getTopChannel()?.apply {
-							addMemberPermissions(member.id, Permission.ViewChannel, reason = reason)
-							addMemberPermissions(member.id, Permission.SendMessages, reason = reason)
+					listOf(loupChat, loupVote).forEach { actualChannel ->
+						actualChannel?.editMemberPermission(member.id) {
+							allowed += Permission.ViewChannel + Permission.SendMessages
+							this.reason = reason
 						}
 					}
 				}
