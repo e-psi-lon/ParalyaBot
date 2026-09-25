@@ -12,6 +12,9 @@ import dev.kord.core.event.message.MessageUpdateEvent
 import dev.kord.core.event.message.ReactionAddEvent
 import dev.kord.core.event.message.ReactionRemoveEvent
 import dev.kordex.core.checks.inChannel
+import dev.kord.core.event.Event
+import dev.kordex.core.checks.types.CheckContext
+import dev.kordex.core.extensions.Extension
 import dev.kordex.core.extensions.event
 import dev.kordex.core.utils.getCategory
 import dev.kordex.core.utils.toReaction
@@ -68,19 +71,19 @@ suspend fun LG.registerListeners() {
 	val relayService by inject<LgRelayService>()
 
 	event<MessageCreateEvent> {
-		check { isNotEphemeral(); inChannel(LgChannelType.LOUPS_CHAT.toId()); isUser() }
+		check { isNotEphemeral(); isUser(); inChannel(LgChannelType.LOUPS_CHAT); }
 		action { relayService.onMessageSent(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId(), true) }
 	}
 
 	event<MessageCreateEvent> {
-		check { isNotEphemeral(); inChannel(LgChannelType.DATE_MYSTERE.toId()); isUser() }
+		check { isNotEphemeral(); isUser(); inChannel(LgChannelType.DATE_MYSTERE) }
 		action { relayService.onMessageSent(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId(), false) }
 	}
 
 	event<MessageCreateEvent> {
 		check {
 			isNotEphemeral()
-			inChannel(LgChannelType.INTERVIEW.toId())
+			inChannel(LgChannelType.INTERVIEW)
 			failIf { event.message.author?.id !in botCache.getInterviews() }
 		}
 		action {
@@ -92,7 +95,7 @@ suspend fun LG.registerListeners() {
 	}
 
 	event<MessageCreateEvent> {
-		check { isNotEphemeral(); inChannel(LgChannelType.SUJETS.toId()); isUser() }
+		check { isNotEphemeral(); isUser(); inChannel(LgChannelType.SUJETS) }
 		action {
 			val reasonText = I18n.System.Topics.creation.contextTranslate()
 			val textChannel = event.message.channel as TextChannel
@@ -111,47 +114,47 @@ suspend fun LG.registerListeners() {
 	}
 
 	event<MessageUpdateEvent> {
-		check { inChannel(LgChannelType.LOUPS_CHAT.toId()); isUser() }
+		check {  isUser(); inChannel(LgChannelType.LOUPS_CHAT)}
 		action { relayService.onMessageUpdate(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId(), true) }
 	}
 
 	event<MessageUpdateEvent> {
-		check { inChannel(LgChannelType.DATE_MYSTERE.toId()); isUser() }
+		check {  isUser(); inChannel(LgChannelType.DATE_MYSTERE) }
 		action { relayService.onMessageUpdate(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId(), false) }
 	}
 
 	event<MessageDeleteEvent> {
-		check { inChannel(LgChannelType.LOUPS_CHAT.toId()); isUser() }
+		check { isUser(); inChannel(LgChannelType.LOUPS_CHAT) }
 		action { relayService.onMessageDelete(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId()) }
 	}
 
 	event<MessageDeleteEvent> {
-		check { inChannel(LgChannelType.DATE_MYSTERE.toId()); isUser() }
+		check { isUser(); inChannel(LgChannelType.DATE_MYSTERE) }
 		action { relayService.onMessageDelete(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId()) }
 	}
 
 	event<ReactionAddEvent> {
-		check { inChannel(LgChannelType.LOUPS_CHAT.toId()); isUser() }
+		check { isUser(); inChannel(LgChannelType.LOUPS_CHAT) }
 		action { relayService.onReactionAdd(WEBHOOK_PF_NAME,
 			LgChannelType.PETITE_FILLE.toId(), isAnonymous = true
 		) }
 	}
 
 	event<ReactionAddEvent> {
-		check { inChannel(LgChannelType.DATE_MYSTERE.toId()); isUser() }
+		check { isUser(); inChannel(LgChannelType.DATE_MYSTERE) }
 		action { relayService.onReactionAdd(WEBHOOK_CUPIDON_NAME,
 			LgChannelType.CUPIDON.toId(), isAnonymous = false
 		) }
 	}
 
 	event<ReactionRemoveEvent> {
-		check { inChannel(LgChannelType.LOUPS_CHAT.toId()); isUser() }
+		check { isUser(); inChannel(LgChannelType.LOUPS_CHAT) }
 		action { relayService.onReactionRemove(WEBHOOK_PF_NAME,
 			LgChannelType.PETITE_FILLE.toId(), isAnonymous = true
 		) }
 	}
 	event<ReactionRemoveEvent> {
-		check { inChannel(LgChannelType.DATE_MYSTERE.toId()); isUser() }
+		check { isUser(); inChannel(LgChannelType.DATE_MYSTERE) }
 		action { relayService.onReactionRemove(WEBHOOK_CUPIDON_NAME,
 			LgChannelType.CUPIDON.toId(), isAnonymous = false
 		) }
@@ -225,4 +228,12 @@ private suspend fun collectChannelsFromCategory(categoryId: Snowflake, guild: Gu
 		.toList()
 		.toMap()
 		.filterKeys { it.isNotBlank() && it != "_".repeat(it.length) }
+}
+
+context(_: Extension)
+private suspend fun <T : Event> CheckContext<T>.inChannel(
+	channel: LgChannelType
+) {
+	if (!passed) return
+	inChannel(channel.toId())
 }

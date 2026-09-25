@@ -253,7 +253,7 @@ class LgRelayService : KordExKoinComponent {
         message: Message,
         additionalElements: (suspend MessageBuilder.() -> Unit)? = null
     ): suspend MessageBuilder.() -> Unit = {
-        val botConfig = ctx.get<BotConfig>()
+        val botConfig = configManager.botConfig
         content = message.content
         val referencedMessage = message.referencedMessage
         if (referencedMessage != null && !referencedMessage.author.isAdmin(botConfig)) embed {
@@ -279,7 +279,7 @@ class LgRelayService : KordExKoinComponent {
             title = Lg.Transmission.Reaction.Content.title.contextTranslate()
             description = message.content
         }
-        val botConfig = ctx.get<BotConfig>()
+        val botConfig = configManager.botConfig
         val referencedMessage = message.referencedMessage
         if (referencedMessage != null && !referencedMessage.author.isAdmin(botConfig)) embed {
             title = Lg.Transmission.Reference.title.contextTranslate()
