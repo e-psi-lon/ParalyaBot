@@ -2,19 +2,20 @@
 package fr.paralya.bot.lg.data
 
 import dev.kord.cache.api.DataCache
-import dev.kord.cache.api.annotation.CacheExperimental
 import dev.kord.cache.api.data.description
 import dev.kord.cache.api.put
 import dev.kord.cache.api.query
 import dev.kord.cache.api.remove
 import dev.kord.common.entity.Snowflake
+import dev.kord.core.cache.idEq
 import dev.kord.core.entity.channel.TextChannel
 import dev.kordex.core.commands.application.ApplicationCommandContext
 import fr.paralya.bot.common.cache.atomic
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.Transient
 import kotlin.collections.plus
-import kotlin.time.Duration
 
+private const val GAME_DATA_ID = "LG_GAME_DATA"
 /**
  * Represents the game data for the Werewolf game.
  *
@@ -32,8 +33,10 @@ data class GameData(
 	val channels: Map<String, Snowflake> = mapOf(),
 	val interviews: List<Snowflake> = listOf()
 ) {
+	@Transient
+	internal val id = GAME_DATA_ID
 	companion object {
-		val description = description<GameData, GamePhase>(GameData::phase)
+		val description = description<GameData, String>(GameData::id)
 	}
 }
 /**
@@ -71,7 +74,9 @@ fun GameData.removeInterview(interviewId: Snowflake) = copy(interviews = intervi
  * @return The current [GameData] instance.
  */
 suspend fun DataCache.getGameData(): GameData = atomic {
-	query<GameData>().singleOrNull() ?: GameData().also {
+	query<GameData>{
+		idEq(GameData::id, GAME_DATA_ID)
+	}.singleOrNull() ?: GameData().also {
 		put(it)
 	}
 }
