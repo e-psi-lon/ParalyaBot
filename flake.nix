@@ -52,34 +52,31 @@
     {
       packages.${system} =
         let
-          build-logic = import ./nix/packages/build-logic.nix { inherit mkGradleBuild; };
-          deps = import ./nix/packages/deps.nix {
-            inherit (pkgs) runCommand;
+          build-logic = pkgs.callPackage ./nix/packages/build-logic.nix { inherit mkGradleBuild; };
+          deps = pkgs.callPackage ./nix/packages/deps.nix {
             inherit mkGradleBuild build-logic;
           };
-          common = import ./nix/packages/common.nix {
-            inherit (pkgs) runCommand;
+          common = pkgs.callPackage ./nix/packages/common.nix {
             inherit mkGradleBuild build-logic;
             inherit (utils) extractVersion;
             inherit (deps) deps-compile deps-runtime;
           };
-          paralyabot = import ./nix/packages/paralyabot.nix {
+          paralyabot = pkgs.callPackage ./nix/packages/paralyabot.nix {
             inherit mkGradleBuild build-logic;
             inherit (deps) deps-compile;
             inherit (common) common-compile common-runtime;
           };
-          paralyabot-image = import ./nix/packages/image.nix {
+          paralyabot-image = pkgs.callPackage ./nix/packages/image.nix {
             inherit lib project-jdk;
-            inherit (pkgs) dockerTools cacert writeTextDir stdenv;
             inherit (paralyabot) paralyabot-jar;
             inherit (utils) lastCommitAsTimestamp;
           };
-          lg-plugin = import ./nix/packages/plugins/lg.nix {
+          lg-plugin = pkgs.callPackage ./nix/packages/plugins/lg.nix {
             inherit mkGradleBuild build-logic;
             inherit (deps) deps-compile;
             inherit (common) common-compile;
           };
-          ai-plugin = import ./nix/packages/plugins/ai.nix {
+          ai-plugin = pkgs.callPackage ./nix/packages/plugins/ai.nix {
             inherit mkGradleBuild build-logic;
             inherit (deps) deps-compile;
             inherit (common) common-compile;
@@ -97,9 +94,8 @@
           ai-plugin-update = ai-plugin.mitmCache.updateScript;
         };
 
-      devShells.${system}.default = import ./nix/shell.nix {
+      devShells.${system}.default = pkgs.callPackage ./nix/shell.nix {
         inherit lib project-jdk;
-        inherit (pkgs) writeShellScriptBin mkShell;
         inherit (utils) extractVersion;
       };
     };
