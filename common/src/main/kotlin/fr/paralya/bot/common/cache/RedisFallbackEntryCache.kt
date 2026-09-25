@@ -4,8 +4,10 @@ import dev.kord.cache.api.DataEntryCache
 import dev.kord.cache.api.QueryBuilder
 import dev.kord.cache.api.data.DataDescription
 import dev.kord.cache.redis.RedisEntryCache
+import fr.paralya.bot.common.orNoMessage
+import fr.paralya.bot.common.orUnknownClass
+import fr.paralya.bot.common.runCatchingTypedException
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.serialization.SerializationException
 import kotlin.reflect.KClass
 
 private val logger = KotlinLogging.logger("RedisFallbackEntryCache")
@@ -23,14 +25,14 @@ class RedisFallbackEntryCache<T : Any, I: Any>(
             fallback.put(item)
             return
         }
-        try {
+
+        runCatchingTypedException<IllegalStateException, _> {
             redis.put(item)
-        } catch (e: SerializationException) {
-            logger.warn { "Type ${klass.qualifiedName} is not Redis-compatible (${e::class.simpleName}: ${e.message}), falling back to generic cache" }
-            incompatibleTypes += klass
-            fallback.put(item)
-        } catch (e: IllegalStateException) {
-            logger.warn { "Type ${klass.qualifiedName} is not Redis-compatible (${e::class.simpleName}: ${e.message}), falling back to generic cache" }
+        }.exceptionOrNull()?.let { e ->
+            logger.warn {
+                "Type ${klass.qualifiedName.orUnknownClass()} is not Redis-compatible " +
+                        "(${e::class.simpleName.orUnknownClass()}: ${e.message.orNoMessage()}), falling back to generic cache"
+            }
             incompatibleTypes += klass
             fallback.put(item)
         }
