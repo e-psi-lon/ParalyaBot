@@ -27,6 +27,8 @@ private object Resource
  */
 suspend inline fun <reified T : Plugin> T.getAsset(path: String) = getAsset(path, pluginId, T::class.java)
 
+
+internal fun assetPath(game: String? = null, path: String) = "assets/${if (game != null) "$game/" else ""}$path.webp"
 /**
  * Retrieves an image asset from the specified path.
  *
@@ -37,7 +39,7 @@ suspend inline fun <reified T : Plugin> T.getAsset(path: String) = getAsset(path
  * @throws IllegalArgumentException if the resource is not found at the specified path
  */
 suspend fun getAsset(path: String, game: String? = null, clazz: Class<*> = Resource.javaClass) =
-    Image.raw(getResource("assets/${if (game != null) "$game/" else ""}$path.webp", clazz), Image.Format.WEBP)
+    Image.raw(getResource(assetPath(game, path), clazz), Image.Format.WEBP)
 
 
 suspend inline fun <reified T>getResourceFrom(path: String) = getResource(path, T::class.java)
@@ -72,7 +74,7 @@ val ULong.snowflake get() = Snowflake(this)
  * @return A flow of [Member] objects who have the specified role.
  */
 fun Flow<Member>.filterByRole(roleId: Snowflake): Flow<Member> =
-    filter { member -> member.roles.any { it.id == roleId } }
+    filter { member -> member.roleIds.contains(roleId) }
 
 fun Flow<Member>.filterByRole(role: RoleBehavior): Flow<Member> = filter { it.hasRole(role) }
 

@@ -5,7 +5,7 @@ import dev.kord.cache.api.annotation.CacheExperimental
 import kotlinx.coroutines.flow.Flow
 import kotlin.time.Duration
 
-class DefaultTtlEntryCache<T : Any>(
+class DefaultTtlDataEntryCache<T : Any>(
     private val delegate: DataEntryCacheWithTTL<T>,
     private val defaultTtl: Duration,
 ) : DataEntryCacheWithTTL<T> by delegate {

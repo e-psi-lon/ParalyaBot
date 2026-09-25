@@ -5,6 +5,7 @@ import dev.kord.cache.api.DataEntryCache
 import dev.kord.cache.api.QueryBuilder
 import dev.kord.cache.api.data.DataDescription
 import dev.kord.cache.api.delegate.DelegatingDataCache
+import dev.kord.cache.api.ConcurrentHashMap
 import dev.kord.cache.api.query
 import dev.kord.cache.redis.RedisConfiguration
 import fr.paralya.bot.common.InternalBotApi
@@ -15,9 +16,7 @@ import kotlin.reflect.KProperty1
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.lang.reflect.Field
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.reflect.KType
-
 
 private val cachesField: Field by lazy {
     DelegatingDataCache::class.java.getDeclaredField("caches").apply { isAccessible = true }

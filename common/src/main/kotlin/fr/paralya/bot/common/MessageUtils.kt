@@ -88,7 +88,8 @@ fun areMessagesSimilar(msg1: Message, msg2: Message): Boolean {
 	return attachments1 == attachments2
 }
 
-const val MESSAGE_SEARCH_RANGE = 20
+const val MESSAGE_SEARCH_RANGE = 30
+
 /**
  * Retrieves the corresponding message in the channel based on the timestamp of the provided message.
  *
@@ -98,20 +99,20 @@ const val MESSAGE_SEARCH_RANGE = 20
 suspend fun MessageChannelBehavior.getCorrespondingMessage(message: Message): Message? {
 	val date = message.timestamp
 
-	val beforeMessage = getMessagesBefore(Snowflake.max, MESSAGE_SEARCH_RANGE)
+	val beforeMessage = getMessagesBefore(message.id, MESSAGE_SEARCH_RANGE)
 		.filter { it.timestamp >= date }
 		.toList()
 		.sortedBy { it.timestamp }
 		.firstOrNull { areMessagesSimilar(msg1 = message, msg2 = it) }
 
 	if (beforeMessage != null) return beforeMessage
-	return getMessagesAfter(Snowflake.min, MESSAGE_SEARCH_RANGE)
+	return getMessagesAfter(message.id, MESSAGE_SEARCH_RANGE)
 		.filter { it.timestamp <= date }
 		.toList()
 		.sortedByDescending { it.timestamp }
 		.firstOrNull { areMessagesSimilar(msg1 = message, msg2 = it) }
 		?: run {
-			logger.warn {
+			logger.debug {
 				"No corresponding similar message found for message ${message.id} when searching in channel $id"
 			}
 			null

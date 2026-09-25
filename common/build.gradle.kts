@@ -78,6 +78,7 @@ tasks {
                 const val API_VERSION = "$apiVersion"
                 const val MIN_COMPATIBLE_VERSION = "$minCompatibleVersion"
             }
+			
             """.trimIndent()
 			)
 		}
