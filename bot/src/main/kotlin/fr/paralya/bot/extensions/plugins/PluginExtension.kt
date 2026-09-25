@@ -201,7 +201,7 @@ class PluginExtension : Extension() {
                 name = I18n.Plugins.Stop.Command.name
                 description = I18n.Plugins.Stop.Command.description
                 adminOnly(listOf(botDeveloper)) {
-                    val result = pluginManager.tryStopPlugin(arguments.pluginId)
+                    val result = pluginManager.tryUnloadPlugin(arguments.pluginId)
                     respond {
                         val state = result.getOrNull()
                         embed {
@@ -218,12 +218,12 @@ class PluginExtension : Extension() {
                             }
                         }
                         components {
-                            val exception = result.exceptionOrNull()
+                            val exception = result.getExceptionOrNull()
                             if (exception != null) exceptionButton(
                                 I18n.Plugins.Lifecycle.Response.Error.Button.viewError,
                                 I18n.Plugins.Lifecycle.Response.Error.Button.viewError
                                     .contextTranslate(arguments.pluginId),
-                                exception as Exception // Safe by construction
+                                exception
                             )
                         }
 

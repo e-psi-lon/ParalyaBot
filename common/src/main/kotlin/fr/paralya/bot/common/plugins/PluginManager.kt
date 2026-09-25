@@ -100,10 +100,10 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
         startPlugins()
     }
 
-    fun tryStopPlugin(pluginId: String) = runCatchingTypedException<PluginRuntimeException, _> {
+    fun tryUnloadPlugin(pluginId: String) = runCatchingTypedException<PluginRuntimeException, _> {
         // Non-nullable enum
         // And if PF4J changes, we want to get a failure not a success holding null
-        stopPlugin(pluginId)!!
+        unloadPlugin(pluginId)
     }
 
     fun tryLoadAndStartPlugin(pluginPath: Path) = runCatchingException {
