@@ -129,7 +129,7 @@ class PluginManager(roots: List<Path>, enabled: Boolean) : KordExPluginManager(r
         return super.stopPlugin(pluginId, stopDependent)
     }
 
-    private inner class PluginListener : PluginStateListener, KordExKoinComponent {
+    private inner class PluginListener : PluginStateListener {
         override fun pluginStateChanged(event: PluginStateEvent?) {
             event ?: return
             val bot = getKoin().getOrNull<ExtensibleBot>()

@@ -21,6 +21,7 @@ import org.pf4j.PluginWrapper
 import kotlin.getValue
 import kotlin.lazy
 
+@Suppress("TooManyFunctions")
 abstract class Plugin: KordExPlugin() {
     abstract val name: String
     abstract val key: Key
@@ -47,7 +48,7 @@ abstract class Plugin: KordExPlugin() {
             error("Plugin ${this::class.simpleName.orUnknownClass()} version couldn't be found.")
     }
 
-    override suspend fun setup() {
+    final override suspend fun setup() {
         prepareRegistration()
         onSetup()
         try {
@@ -91,14 +92,14 @@ abstract class Plugin: KordExPlugin() {
     open suspend fun onDelete() {}
     open suspend fun onStop() {}
 
-    override fun delete() = runBlocking {
+    final override fun delete() = runBlocking {
         kord.launch {
             removeAllRegistration()
             onDelete()
         }.join()
     }.also { super.delete() }
 
-    override fun stop() = runBlocking {
+    final override fun stop() = runBlocking {
         kord.launch {
             removeAllRegistration()
             onStop()
@@ -132,7 +133,6 @@ abstract class Plugin: KordExPlugin() {
     @PublishedApi
     internal open fun extraInternalRegistration() {}
     internal open fun extraInternalUnregistration() {}
-
 
 
     private fun prepareRegistration() {
