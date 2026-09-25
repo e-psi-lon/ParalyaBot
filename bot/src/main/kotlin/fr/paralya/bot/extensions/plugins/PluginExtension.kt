@@ -90,6 +90,9 @@ class PluginExtension : Extension() {
                     respond {
                         embed {
                             title = I18n.Plugins.List.Response.Embed.title.contextTranslate()
+                            if (pluginManager.plugins.isEmpty()) {
+                                description = I18n.Plugins.List.Response.Embed.noPlugin.contextTranslate()
+                            }
                             for (plugin in pluginManager.plugins) {
                                 val pluginInstance = plugin.plugin as Plugin
                                 field {
@@ -153,7 +156,7 @@ class PluginExtension : Extension() {
                                     if (reloadResult is OldPluginFallbackFailedToLoad) exceptionButton(
                                         I18n.Plugins.Reload.Response.Error.Button.secondError,
                                         I18n.Plugins.Reload.Response.Error.Button.secondError
-                                            .contextTranslate(arguments.newPluginPath),
+                                            .contextTranslate(),
                                         reloadResult.fallbackException
                                     )
                                 }
@@ -173,10 +176,10 @@ class PluginExtension : Extension() {
                         val state = result.getOrNull()
                         embed {
                             title = if (state != null && state == PluginState.STARTED) I18n.Plugins.Start.Response.Success.Embed.title.contextTranslate()
-                            else I18n.Plugins.Start.Response.Error.Embed.title.contextTranslate()
+                            else I18n.Plugins.Start.Response.Error.Embed.title.contextTranslate(arguments.pluginPath)
 
                             description = if (state != null) {
-                                I18n.Plugins.Start.Response.Success.Embed.description.contextTranslate("`$state`")
+                                I18n.Plugins.Start.Response.Success.Embed.description.contextTranslate(arguments.pluginPath, "`$state`")
                             } else {
                                 if (result.exceptionOrNull() is IllegalArgumentException)
                                     I18n.Plugins.Start.Response.Error.Plugin.notFound.contextTranslate(arguments.pluginPath)
@@ -205,11 +208,11 @@ class PluginExtension : Extension() {
                     respond {
                         val state = result.getOrNull()
                         embed {
-                            title = if (state != null) I18n.Plugins.Stop.Response.Success.Embed.title.contextTranslate()
-                            else I18n.Plugins.Stop.Response.Error.Embed.title.contextTranslate()
+                            title = if (state != null) I18n.Plugins.Stop.Response.Success.Embed.title.contextTranslate(arguments.pluginId)
+                            else I18n.Plugins.Stop.Response.Error.Embed.title.contextTranslate(arguments.pluginId)
 
                             description = if (state != null) {
-                                I18n.Plugins.Stop.Response.Success.Embed.description.contextTranslate("`$state`")
+                                I18n.Plugins.Stop.Response.Success.Embed.description.contextTranslate("`${arguments.pluginId}`")
                             } else {
                                 if (result.exceptionOrNull() is IllegalArgumentException)
                                     I18n.Plugins.Stop.Response.Error.Plugin.notLoaded.contextTranslate(arguments.pluginId)
