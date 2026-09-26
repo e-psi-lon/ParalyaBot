@@ -1,6 +1,7 @@
 .gradle
 build/
 .jdk
+.goroot
 *.jar
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
@@ -52,12 +53,15 @@ bin/
 .venv
 data/**
 logs/**
-games/**
 .direnv
-config.conf
 todo.md
 result
 *.html
 *.cshtml
 *.py
 container/
+
+## GO ##
+coverage.out
+paralyabot-cache
+.idea/go.imports.xml

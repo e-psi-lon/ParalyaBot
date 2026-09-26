@@ -81,9 +81,16 @@
             inherit (deps) deps-compile;
             inherit (common) common-compile;
           };
+          cache = pkgs.callPackage ./nix/packages/cache.nix {
+            inherit (utils) extractVersion;
+          };
+          paralyabot-cache-image = pkgs.callPackage ./nix/packages/cache-image.nix {
+            paralyabot-cache = cache;
+            inherit (utils) lastCommitAsTimestamp;
+          };
         in
         {
-          inherit build-logic paralyabot-image lg-plugin ai-plugin;
+          inherit build-logic paralyabot-image lg-plugin ai-plugin cache paralyabot-cache-image;
           inherit (deps) deps-compile deps-runtime;
           inherit (common) common-compile common-runtime-deps common-runtime common-update;
           inherit (paralyabot) paralyabot-jar paralyabot-jar-deps paralyabot-jar-update;

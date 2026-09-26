@@ -1,5 +1,7 @@
 {
   lib,
+  go,
+  golangci-lint,
   writeShellScriptBin,
   mkShell,
   project-jdk,
@@ -24,21 +26,68 @@ let
     "$IMAGE_PATH" | "$RUNTIME" load
   '';
 
+  build-bot-cache = writeShellScriptBin "build-bot-cache" ''
+    set -e
+    IMAGE_PATH=$(nix build .#paralyabot-cache-image --print-out-paths --show-trace)
+
+    RUNTIME=""
+    if command -v docker &> /dev/null; then
+        RUNTIME="docker"
+    elif command -v podman &> /dev/null; then
+        RUNTIME="podman"
+    else
+        echo "Neither docker nor podman found"
+        exit 1
+    fi
+
+    echo "Loading cache image into $RUNTIME..."
+    "$IMAGE_PATH" | "$RUNTIME" load
+  '';
+
   run-bot = writeShellScriptBin "run-bot" ''
     CONTAINER_NAME="''${1:-ParalyaBot}"
     echo "Starting container: $CONTAINER_NAME..."
+    podman network exists paralya-bot-network || podman network create paralya-bot-network
     podman run \
         --name "$CONTAINER_NAME" \
         --replace \
         --detach \
+        --network paralya-bot-network \
+        --env KORD_CACHE_URL="redis://ParalyaBotCache:6379" \
         --userns=keep-id \
         --volume "$PWD/container:/app/external:Z" \
         localhost/paralyabot:latest
     echo "Container $CONTAINER_NAME started successfully."
   '';
 
+  run-bot-cache = writeShellScriptBin "run-bot-cache" ''
+    CONTAINER_NAME="''${1:-ParalyaBotCache}"
+    echo "Starting cache container: $CONTAINER_NAME..."
+    podman network exists paralya-bot-network || podman network create paralya-bot-network
+    podman run \
+        --name "$CONTAINER_NAME" \
+        --replace \
+        --detach \
+        --network paralya-bot-network \
+        --userns=keep-id \
+        localhost/paralyabot-cache:latest
+    echo "Cache container $CONTAINER_NAME started successfully."
+  '';
+
   build-and-run-bot = writeShellScriptBin "build-and-run-bot" ''
     ${lib.getExe build-bot} && ${lib.getExe run-bot} ''${1:-ParalyaBot}
+  '';
+
+  build-and-run-bot-cache = writeShellScriptBin "build-and-run-bot-cache" ''
+    ${lib.getExe build-bot-cache} && ${lib.getExe run-bot-cache} ''${1:-ParalyaBotCache}
+  '';
+
+  run-all = writeShellScriptBin "run-all" ''
+   ${lib.getExe run-bot-cache} && ${lib.getExe run-bot}
+  '';
+
+  build-and-run-all = writeShellScriptBin "build-and-run-all" ''
+   ${lib.getExe build-and-run-bot-cache} && ${lib.getExe build-and-run-bot}
   '';
 
   build-plugin = writeShellScriptBin "build-plugin" ''
@@ -115,14 +164,23 @@ in
 mkShell {
   shellHook = ''
     ln -sfn ${project-jdk}/lib/openjdk .jdk
+    ln -sfn ${go} .goroot
     export JAVA_HOME=$PWD/.jdk
     export PARALYABOT_VERSION=${extractVersion "paralyabot.version"}
+    export PARALYABOT_CACHE_VERSION=${extractVersion "paralyabot.cache.version"}
   '';
   packages = [
     project-jdk
+    go
+    golangci-lint
     build-bot
+    build-bot-cache
     run-bot
+    run-bot-cache
     build-and-run-bot
+    build-and-run-bot-cache
+    run-all
+    build-and-run-all
     build-plugin
     deploy-plugin
     update-deps
