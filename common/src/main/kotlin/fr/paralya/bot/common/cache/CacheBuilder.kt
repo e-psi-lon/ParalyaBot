@@ -9,7 +9,7 @@ import kotlin.time.Duration
 
 @Suppress("UnusedReceiverParameter") // used for scoping
 fun <T : Any, I : Any> KordCacheBuilder.redisCache(
-    config: RedisConfiguration = RedisConfiguration()
+    config: RedisConfiguration
 ): Generator<T, I> = { cache, description ->
     RedisEntryCache(
         cache,
@@ -22,7 +22,7 @@ fun <T : Any, I : Any> KordCacheBuilder.redisCache(
 
 @Suppress("UnusedReceiverParameter") // used for scoping
 fun <T : Any, I : Any> KordCacheBuilder.redisCacheWithTtl(
-    config: RedisConfiguration = RedisConfiguration(),
+    config: RedisConfiguration,
     ttl: Duration
 ): Generator<T, I> = { cache, description ->
     DefaultTtlDataEntryCache(
