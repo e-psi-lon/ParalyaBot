@@ -1,7 +1,15 @@
 services:
+  paralyabot-cache:
+    image: ghcr.io/e-psi-lon/paralyabot-cache:latest
+    container_name: paralyabot-cache
+    restart: unless-stopped
   paralyabot:
     image: ghcr.io/e-psi-lon/paralyabot:latest
     container_name: paralyabot
     volumes:
       - ./container:/app/external
+    environment:
+      - KORD_CACHE_URL=redis://paralyabot-cache:6379
     restart: unless-stopped
+    depends_on:
+      - paralyabot-cache
