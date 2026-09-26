@@ -188,40 +188,40 @@
   }
  },
  "https://repo.kordex.dev/mirror/dev": {
-  "kord#kord-common-jvm/0.19.0-20260811.145131-18/SNAPSHOT": {
-   "jar": "sha256-KeaKDzYFucqvp/UnqnfwgPr3GvrcV5Gas6+ljN2kuEM=",
-   "module": "sha256-/BcpfmvD558WaXvbwzVsjsM3ceGIj8ikxxINe/mmRko=",
+  "kord#kord-common-jvm/0.19.0-20260923.102211-19/SNAPSHOT": {
+   "jar": "sha256-CllAbMsv6gtx4MP8D7xh3QgtRSYH15owM5G2DYFnHaU=",
+   "module": "sha256-d87rBU0yPnknUuZPu2R8tMpzeklOATBdEcnPcAn6Vto=",
    "pom": "sha256-kX18G1DEFf6gtoBStDwNywhmLYM3n+X0DHmKZ2V/dP4="
   },
-  "kord#kord-common/0.19.0-20260811.145131-18/SNAPSHOT": {
-   "module": "sha256-SuW/VVJaBSx9d/pKXvsuYtKMbVCPqJ0FItnVkdYA9fU=",
+  "kord#kord-common/0.19.0-20260923.102211-19/SNAPSHOT": {
+   "module": "sha256-/Yi0gNncXqN5eP5kDUPqYl8tiGmjS9RQJcNCgHWkGXs=",
    "pom": "sha256-W/sgK84eg9t5CcSRY2Cz4G5a4udRsmkBpIbhHFTw33Q="
   },
-  "kord#kord-core-jvm/0.19.0-20260811.145131-17/SNAPSHOT": {
+  "kord#kord-core-jvm/0.19.0-20260923.102211-18/SNAPSHOT": {
    "jar": "sha256-dTVBpIygcE2UO3o/lMDI7hN8ZnYuWJdohyDQFtV1Dnc=",
    "module": "sha256-r2y0jZEU90VqYABWNPYp7MpO/WgF/a+VH0yKJaRcoU4=",
    "pom": "sha256-GvjnG8NVQ9/qB2W8H1zSXqCfU11A6XoyuD9SV4q7nDs="
   },
-  "kord#kord-core/0.19.0-20260811.145131-17/SNAPSHOT": {
+  "kord#kord-core/0.19.0-20260923.102211-18/SNAPSHOT": {
    "module": "sha256-ZgRFLxJp+mSY3aObHsGtnN3KM5wobvT6AIITGQlMuTw=",
    "pom": "sha256-lhXdmc6gb/f5vQ5HVEFsbSREYLJXSN2vAT0x0MoWpjc="
   },
-  "kord#kord-gateway-jvm/0.19.0-20260811.145131-17/SNAPSHOT": {
+  "kord#kord-gateway-jvm/0.19.0-20260923.102211-18/SNAPSHOT": {
    "jar": "sha256-nJT93rUgv0pvyJnno99z9gTAkBqgZ/ms87x7uNd6ls0=",
    "module": "sha256-TqqQt0tylycyzHpgnvpozhNa8iPe7tag5mCwfx+2Sh8=",
    "pom": "sha256-uI74xhaS6skZfc3NbKbiCD+Wk/xdWbrhwTh/UDr/Fiw="
   },
-  "kord#kord-gateway/0.19.0-20260811.145131-17/SNAPSHOT": {
+  "kord#kord-gateway/0.19.0-20260923.102211-18/SNAPSHOT": {
    "module": "sha256-zc0jEFGTVmDUw+ujqkHvfDNHjk1JCPd/ahuR+LhTL60=",
    "pom": "sha256-vMWp9AQ8XxA52jNy+JnxZJJOHCwva3o8mgL0zfi6tgA="
   },
-  "kord#kord-rest-jvm/0.19.0-20260811.145131-17/SNAPSHOT": {
-   "jar": "sha256-XObiPIS3Z6Hnqn2otejfa2JsCUwrXcOK4K6PiX4vmP4=",
-   "module": "sha256-U9J6ppqtGsPnjXM1bzI9nO7/eP+1AsqxPbkDluaVfDg=",
+  "kord#kord-rest-jvm/0.19.0-20260923.102211-18/SNAPSHOT": {
+   "jar": "sha256-OTaBAE/aHipEa4/ENVJfapfHJ2JTstIRJrvkben+Ryc=",
+   "module": "sha256-uHqmTvkff6mS3adLdM9A6C3kLfLhGhkZHmNG5laoUpY=",
    "pom": "sha256-2cSWNoaKm6D6bDXnkKX3cQfF5pxTrgpJ+VMHOu6oUo8="
   },
-  "kord#kord-rest/0.19.0-20260811.145131-17/SNAPSHOT": {
-   "module": "sha256-QK3s9PovTsmoCYfwSmu0iwiofj0e3YfdKpfHQaI+J8Y=",
+  "kord#kord-rest/0.19.0-20260923.102211-18/SNAPSHOT": {
+   "module": "sha256-ipK6iCV2/BCguBFkparftfSid2rXQSIefnEoGkLBh4w=",
    "pom": "sha256-GKNvL6eBqcmZWFM7TzEZddkyk2HfPzpElnVp6eV2k2c="
   }
  },

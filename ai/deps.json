@@ -2,12 +2,12 @@
  "!comment": "This is a nixpkgs Gradle dependency lockfile. For more details, refer to the Gradle section in the nixpkgs manual.",
  "!version": 1,
  "https://repo.kordex.dev/mirror/dev": {
-  "kord#kord-core-voice/0.19.0-20260811.145131-17/SNAPSHOT": {
+  "kord#kord-core-voice/0.19.0-20260923.102211-18/SNAPSHOT": {
    "jar": "sha256-6vEw3HMWCaEzK3WmM2UtyCniZFyoLcJ4exWc1dZKFtE=",
    "module": "sha256-foK9LUgJ/N/e5KVeU/h4HolUlGMXBrpugKJVD3TVX6c=",
    "pom": "sha256-uS0oKOTJnbsC8nr86FhZ40kBXdL3ZkEmJRVsR5bkzb4="
   },
-  "kord#kord-voice/0.19.0-20260811.145131-16/SNAPSHOT": {
+  "kord#kord-voice/0.19.0-20260923.102211-17/SNAPSHOT": {
    "jar": "sha256-SWAyk/XTc1j65EpRHT82dQSWW4L/7lP38DF4q31so74=",
    "module": "sha256-86cjKUCdVU/HCurBbZgCiMBkNWrZiZLlK7QwovZA0xQ=",
    "pom": "sha256-btDMXyOjfriqYORNrzjgCUl54xOWN9Jpk+IK3SAemF4="

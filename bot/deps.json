@@ -2,16 +2,16 @@
  "!comment": "This is a nixpkgs Gradle dependency lockfile. For more details, refer to the Gradle section in the nixpkgs manual.",
  "!version": 1,
  "https://repo.maven.apache.org/maven2": {
-  "ch/qos/logback#logback-classic/1.6.3": {
-   "jar": "sha256-vuvt6NsGX+G3KQnsxmu0ms2mGJAWNdhsJfzhSlkV434=",
-   "pom": "sha256-cDOrt4SsvFzBXo3X4vYAQbNYeHJFZkotLxiUgp0hCBs="
+  "ch/qos/logback#logback-classic/1.6.4": {
+   "jar": "sha256-Fszf0YR+yhadVlHF95nqmQRyNQ4MOPaP1rxH1wXvSgo=",
+   "pom": "sha256-6/bhgdiEVPavsXP8W263bfgXq2zq8ZRLn9EgVVD/Fz8="
   },
-  "ch/qos/logback#logback-core/1.6.3": {
-   "jar": "sha256-ppZ6KMiwht7nWmlNL2+4gwxxFTU5hm19ivBlybbfkeA=",
-   "pom": "sha256-728buuLq1LJVgwwIOi27MyJLCqtQ3BFIx+TnEInPhgs="
+  "ch/qos/logback#logback-core/1.6.4": {
+   "jar": "sha256-G2d3niJEVa5+AL1MytrwXDhTGSfqQ2P2ZBI1k3Py6dc=",
+   "pom": "sha256-R6vkpLl5ObLjnSvipM4q6atOQYxEx15Tk9rftsC+yJc="
   },
-  "ch/qos/logback#logback-parent/1.6.3": {
-   "pom": "sha256-3t3tUkV5VVL8LYEFM/M6+NAmK6/LCGV5esWLkdprVK0="
+  "ch/qos/logback#logback-parent/1.6.4": {
+   "pom": "sha256-JIUBU68BCZ0Gcqz29dgK0MXxRlvI4kYiP/DFOyy1M0w="
   },
   "com/github/ben-manes/caffeine#caffeine/2.9.3": {
    "jar": "sha256-Hgp7vvHdeRZTFD8/BdDkiZNL9UgeWKh8nmGc1Gtocps=",
@@ -417,15 +417,15 @@
    "module": "sha256-SL8dbItdyU90ZSvReQD2VN63FDUCSM9ej8onuQkMjg0=",
    "pom": "sha256-m/fP/EEPPoNywlIleN+cpW2dQ72TfjCUhwbCMqlDs1U="
   },
-  "org/slf4j#slf4j-api/2.0.18": {
-   "jar": "sha256-RFCP0VdlAGiMeQsZCs3Rb+xPjHmj4LkAr9cFA88FX1U=",
-   "pom": "sha256-bCx/LAJ3TMK3thn70t94c82tKXGJJuRHVLh/cNHrQ8s="
+  "org/slf4j#slf4j-api/2.0.19": {
+   "jar": "sha256-6R/21yBgnnoZT/51jD7VyE55hheuB7Cg9qT+IpdBtLs=",
+   "pom": "sha256-sEpIQ+qimWaAfMlQip8lE/pWPQ0HlMsO3WqNLI9GINA="
   },
-  "org/slf4j#slf4j-bom/2.0.18": {
-   "pom": "sha256-khmqtgFXUSbE5m4TMesrDGwXozCsTVoH480R1YCgwS0="
+  "org/slf4j#slf4j-bom/2.0.19": {
+   "pom": "sha256-4UqasYD2AkfzR942m3pEzNWR0MR/TZa8ZEBWxPg7UaA="
   },
-  "org/slf4j#slf4j-parent/2.0.18": {
-   "pom": "sha256-CziWvtrSye2Wl+3L6h2gxUzSOKcjWDqBNYqDv7eC6fo="
+  "org/slf4j#slf4j-parent/2.0.19": {
+   "pom": "sha256-RSgx75b76+ZNhV3VyY7GCG10eKnlaEIsg0PG2gCydQ0="
   },
   "org/snakeyaml#snakeyaml-engine/2.10": {
    "jar": "sha256-yZ2f1mx8JR2IGpzZUIm3yARMKaGwKYPXA2mBvUNU7Dc=",
