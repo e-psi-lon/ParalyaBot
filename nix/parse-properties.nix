@@ -19,13 +19,13 @@ rec {
       toPair =
         line:
         let
-          match = builtins.match "([^#!=][^=]*)=(.*)$" line;
+          match = builtins.match "[ \t]*([^ \t#!=][^=]*)=(.*)$" line;
         in
         if match == null then
           null
         else
           {
-            name = builtins.elemAt match 0;
+            name = lib.trim (builtins.elemAt match 0);
             value = builtins.elemAt match 1;
           };
     in

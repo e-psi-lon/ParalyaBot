@@ -17,6 +17,7 @@ val excludedPlugins = listOf("sta")
 
 val libraries = libs
 val typesafeProjects = projects
+
 subprojects {
 	pluginManager.apply {
 		apply("kotlinx-serialization")

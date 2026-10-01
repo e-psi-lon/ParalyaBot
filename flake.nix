@@ -16,10 +16,7 @@
         ./settings.gradle.kts
         ./gradle.properties
         ./gradle
-        ./flake.nix
-        ./flake.lock
         ./config
-        ./nix/parse-properties.nix
         ./build.gradle.kts
       ];
 
