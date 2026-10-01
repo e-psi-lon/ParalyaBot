@@ -8,7 +8,6 @@ import dev.kord.core.cache.data.UserData
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.User
 import dev.kord.rest.Image
-import dev.kordex.core.utils.any
 import dev.kordex.core.utils.hasRole
 import fr.paralya.bot.common.plugins.Plugin
 import kotlinx.coroutines.Dispatchers
@@ -49,9 +48,7 @@ suspend fun getResource(path: String, clazz: Class<*> = Resource.javaClass) : By
     val resource = clazz.getResourceAsStream("/$path")
         ?: throw IllegalArgumentException("Resource at path /$path not found")
     return withContext(Dispatchers.IO) {
-        resource.readAllBytes().also {
-            resource.close()
-        }
+        resource.use { it.readAllBytes() }
     }
 }
 

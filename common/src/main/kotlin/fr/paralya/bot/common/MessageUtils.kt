@@ -33,7 +33,7 @@ private val logger = KotlinLogging.logger("MessageUtils")
 /**
  * Sends a temporary message to a channel and deletes it after a specified delay.
  *
- * @param delay The delay in milliseconds before the message is deleted. Default is 10 milliseconds.
+ * @param delay The delay in milliseconds before the message is deleted. Default is 10 seconds.
  * @param messageBuilder A lambda to build the message content.
  * @return The sent message.
  */
@@ -63,7 +63,7 @@ suspend fun MessageChannelBehavior.sendTemporaryMessage(
  *
  * @param message The content of the message to send.
  * @param delay The delay in milliseconds before the message is deleted. Default is 10 milliseconds.
- * @return The sent message.
+ * @return The message that was sent.
  */
 suspend fun MessageChannelBehavior.sendTemporaryMessage(message: String, delay: Duration = 10.seconds): Message {
 	return sendTemporaryMessage(delay) {
@@ -168,21 +168,22 @@ fun MessageCreateBuilder.appendEmoji(emoji: String) {
  * @receiver The Kord instance used to interact with Discord.
  * @param channel The ID of the channel where the webhook will be retrieved or created.
  * @param name The name of the webhook to retrieve or create.
- * @param avatar An optional avatar image for the webhook. If not provided, Discord's default avatar will be used.
+ * @param defaultAvatar An optional avatar image for the webhook. If not provided,
+ * Discord's default avatar will be used. Only used for creation
  * @return The retrieved or newly created webhook.
  */
 @Suppress("SuspendFunWithCoroutineScopeReceiver")
-suspend fun Kord.getWebhook(channel: Snowflake, name: String, avatar: Image? = null): Webhook {
+suspend fun Kord.getWebhook(channel: Snowflake, name: String, defaultAvatar: Image? = null): Webhook {
 	val existing = rest.webhook.getChannelWebhooks(channel)
 		.firstOrNull { it.name == name }
 	val data = existing ?: rest.webhook.createWebhook(channel, name) {
-		this.avatar = avatar ?: getAsset("bot")
+		this.avatar = defaultAvatar ?: getAsset("bot")
 	}
 	return Webhook(WebhookData.from(data), this)
 }
 
-suspend fun ExtensibleBot.getWebhook(channel: Snowflake, name: String, avatar: Image? = null) =
-	kordRef.getWebhook(channel, name, avatar)
+suspend fun ExtensibleBot.getWebhook(channel: Snowflake, name: String, defaultAvatar: Image? = null) =
+	kordRef.getWebhook(channel, name, defaultAvatar)
 
 /**
  * Sends a message as a webhook in a specified channel.

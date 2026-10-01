@@ -8,7 +8,6 @@ import dev.kord.core.behavior.channel.editMemberPermission
 import dev.kord.core.behavior.channel.editRolePermission
 import dev.kord.core.entity.Member
 import dev.kord.core.entity.channel.TextChannel
-import dev.kordex.core.utils.permissionsForMember
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filter
 
