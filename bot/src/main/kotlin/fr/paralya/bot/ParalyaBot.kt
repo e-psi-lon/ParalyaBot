@@ -40,13 +40,14 @@ import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.serializerOrNull
 import org.slf4j.LoggerFactory
 import java.util.Locale
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.ConcurrentHashMap.newKeySet
 import kotlin.concurrent.thread
 import kotlin.reflect.KClass
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.toJavaDuration
 
 internal val botDeveloper = System.getenv("BOT_DEVELOPER_ID").toULong()
 
@@ -66,11 +67,11 @@ private fun configureLogging(devMode: Boolean) {
 	rootLogger.level = if (devMode) Level.DEBUG else Level.INFO
 }
 
+@Volatile
 private var clientInitialized = false
-private val sharedClient: RedisClient by lazy {
-	clientInitialized = true
-	RedisClient.create(System.getenv("KORD_CACHE_URL") ?: Defaults.DEFAULT_URL)
-}
+private val sharedClient: RedisClient = RedisClient.create(System.getenv("KORD_CACHE_URL") ?: run {
+	Defaults.DEFAULT_URL
+}).also { clientInitialized = true }
 
 @OptIn(InternalBotApi::class)
 private fun redisConfig(): RedisConfiguration = redisConfig(sharedClient)
@@ -130,7 +131,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 		members { all() }
 
 		kord {
-			val incompatibleTypes: MutableSet<KClass<*>> = ConcurrentHashMap.newKeySet()
+			val incompatibleTypes: MutableSet<KClass<*>> = newKeySet() // shared across every DataEntryCache
 			@OptIn(InternalSerializationApi::class)
 			cache {
 				defaultGenerator = { cache, description ->
@@ -179,7 +180,7 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 			embed {
 				title = I18n.Error.title.translateLocale(locale)
 				description = if (message.bundle != CoreTranslations.bundle) message.translateLocale(locale)
-				else I18n.Error.description.translateLocale(locale, message, type.error::class.simpleName)
+				else I18n.Error.description.translateLocale(locale, message, type.error::class.simpleName.orUnknownClass())
 				color = DISCORD_RED
 			}
 		}
@@ -209,7 +210,8 @@ suspend fun buildBot(args: Array<String>): ExtensibleBot {
 		}
 	}.also {
 		Runtime.getRuntime().addShutdownHook(thread(false) {
-			sharedClient.shutdown(100, 500, TimeUnit.MILLISECONDS)
+			if (!clientInitialized) return@thread
+			sharedClient.shutdown(100.milliseconds.toJavaDuration(), 500.milliseconds.toJavaDuration())
 		})
 	}
 }
