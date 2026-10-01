@@ -13,6 +13,7 @@ import kotlin.test.assertTrue
 
 class AdminTest {
 
+	@Suppress("ClassOrdering")
 	companion object {
 		// Fixed Discord snowflakes for testing
 		private const val SNOWFLAKE1 = 661720242585600000UL  // 01/01/2020

@@ -30,8 +30,10 @@ class ResultUtilsTest {
 
     @Test
     fun `runCatchingTypedException does not catch exceptions outside the typed bound`() {
-        assertFailsWith<RuntimeException> {
-            runCatchingTypedException<IllegalStateException, _> { throw RuntimeException("not the typed exception") }
+        assertFailsWith<IllegalArgumentException> {
+            runCatchingTypedException<IllegalStateException, _> {
+                throw IllegalArgumentException("not the typed exception")
+            }
         }
     }
 

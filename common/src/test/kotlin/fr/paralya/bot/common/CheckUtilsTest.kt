@@ -49,11 +49,11 @@ class CheckUtilsTest {
 
     @Test
     suspend fun `isNotEphemeral leaves check untouched when there is no associated message`() {
-        val event = mockk<Event>() // hits messageFor's `else -> null` branch
+        val event = mockk<Event>()
         val ctx = context(event)
 
         ctx.isNotEphemeral()
 
-        assertTrue(ctx.passed) // unchanged from CheckContext's default of true — only meaningful if that default is actually correct behavior here
+        assertTrue(ctx.passed)
     }
 }

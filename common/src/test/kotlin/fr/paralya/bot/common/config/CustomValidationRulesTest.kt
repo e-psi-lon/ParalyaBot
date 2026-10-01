@@ -8,6 +8,7 @@ import kotlin.test.assertTrue
 
 class CustomValidationRulesTest {
 
+	@Suppress("ClassOrdering")
 	companion object {
 		// Fixed Discord snowflakes for testing
 		private const val SNOWFLAKE = 661720242585600000UL  // 01/01/2020

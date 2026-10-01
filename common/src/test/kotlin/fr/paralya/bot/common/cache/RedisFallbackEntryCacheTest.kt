@@ -49,7 +49,8 @@ class RedisFallbackEntryCacheTest {
         val redis = mockk<RedisEntryCache<SomeType, String>>()
         val fallback = mockk<DataEntryCache<SomeType>>(relaxed = true)
         val description = description(SomeType::id)
-        val incompatible = mutableSetOf<KClass<*>>(description.klass) // pre-seeded, no need to trigger the exception path first
+        // pre-seeded, no need to trigger the exception path first
+        val incompatible = mutableSetOf<KClass<*>>(description.klass)
         val cache = RedisFallbackEntryCache(redis, fallback, description, incompatible)
 
         cache.put(SomeType())
