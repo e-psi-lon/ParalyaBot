@@ -2,6 +2,7 @@ package fr.paralya.bot.common.plugins
 
 import dev.kord.cache.api.data.DataDescription
 import dev.kord.cache.api.delegate.DelegatingDataCache
+import dev.kordex.core.koin.KordExContext
 import dev.kordex.core.koin.KordExKoinComponent
 import dev.kordex.core.plugins.KordExPlugin
 import dev.kordex.i18n.Key
@@ -12,6 +13,7 @@ import fr.paralya.bot.common.config.ValidatedConfig
 import fr.paralya.bot.common.orUnknownClass
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.core.Koin
 import org.koin.core.component.inject
 import org.koin.core.module.Module
 import org.koin.core.module.dsl.createdAtStart
@@ -49,11 +51,10 @@ abstract class Plugin: KordExPlugin() {
     }
 
     final override suspend fun setup() {
-        prepareRegistration()
+        val koin = KordExContext.getOrNull()
+        prepareRegistration(koin)
         onSetup()
-        try {
-            getKoin().loadModules(components)
-        } catch (_: IllegalStateException) {
+        koin?.loadModules(components) ?: run {
             bot.logger.info { "Koin not started, loading $name components after Koin setup" }
             settings {
                 hooks { afterKoinSetup { getKoin().loadModules(components) } }
@@ -135,10 +136,8 @@ abstract class Plugin: KordExPlugin() {
     internal open fun extraInternalUnregistration() {}
 
 
-    private fun prepareRegistration() {
-        try {
-            getKoin()
-        } catch (_: IllegalStateException) {
+    private fun prepareRegistration(koin: Koin?) {
+        if (koin == null) {
             bot.logger.info { "Koin not started, registering $name config and game hook after Koin setup" }
             settings {
                 hooks { afterKoinSetup { defineConfig() } }
