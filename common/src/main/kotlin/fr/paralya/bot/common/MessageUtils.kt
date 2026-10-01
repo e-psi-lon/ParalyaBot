@@ -20,8 +20,7 @@ import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.time.Duration
@@ -97,19 +96,11 @@ const val MESSAGE_SEARCH_RANGE = 30
  * @return The corresponding message if found, or null if not found.
  */
 suspend fun MessageChannelBehavior.getCorrespondingMessage(message: Message): Message? {
-	val date = message.timestamp
+	val afterMessage = getMessagesAfter(message.id, MESSAGE_SEARCH_RANGE)
+		.firstOrNull { areMessagesSimilar(msg1 = message, msg2 = it)}
 
-	val beforeMessage = getMessagesBefore(message.id, MESSAGE_SEARCH_RANGE)
-		.filter { it.timestamp >= date }
-		.toList()
-		.sortedBy { it.timestamp }
-		.firstOrNull { areMessagesSimilar(msg1 = message, msg2 = it) }
-
-	if (beforeMessage != null) return beforeMessage
-	return getMessagesAfter(message.id, MESSAGE_SEARCH_RANGE)
-		.filter { it.timestamp <= date }
-		.toList()
-		.sortedByDescending { it.timestamp }
+	if (afterMessage != null) return afterMessage
+	return getMessagesBefore(message.id, MESSAGE_SEARCH_RANGE)
 		.firstOrNull { areMessagesSimilar(msg1 = message, msg2 = it) }
 		?: run {
 			logger.debug {
