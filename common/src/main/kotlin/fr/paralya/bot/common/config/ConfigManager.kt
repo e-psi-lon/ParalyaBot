@@ -76,7 +76,7 @@ class ConfigManager internal constructor(private val configFile: Path) : KordExK
 			state
 		}
 		@Suppress("TooGenericExceptionCaught")
-		for ((name, configEntry) in configs) try {
+		for ((name, configEntry) in configs.toList()) try {
 			unregisterConfig(name)
 			configEntry.configRegister(configEntry)
 			logger.debug { "Config for $name reloaded successfully" }
