@@ -12,7 +12,6 @@ let
     srcRoots = [
       ../../build-logic
       ../../deps
-      ./deps.nix
     ];
     task = "deps:shadowJar";
     buildDependencies = [ build-logic ];
@@ -27,6 +26,7 @@ let
     mkdir -p $out
     cp --no-preserve=mode ${deps-compile}/paralya-bot-deps.jar $out/
   '';
-in {
+in
+{
   inherit deps-compile deps-runtime;
 }

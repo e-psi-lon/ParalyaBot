@@ -86,9 +86,8 @@ dockerTools.streamLayeredImage {
         DISTRIB_DESCRIPTION = "Nix Container ${prettyName}";
         LSB_VERSION = prettyName;
       };
-      toEnvFile = attrs: builtins.concatStringsSep "\n" (
-        lib.mapAttrsToList (k: v: "${k}=${toString v}") attrs
-      );
+      toEnvFile =
+        attrs: builtins.concatStringsSep "\n" (lib.mapAttrsToList (k: v: "${k}=${toString v}") attrs);
     in
     [
       cacert

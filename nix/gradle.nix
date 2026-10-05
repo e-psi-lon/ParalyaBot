@@ -42,7 +42,9 @@ let
   version = extractVersion versionProperty;
   dependencyFlags =
     let
-      validDeps = builtins.filter (dep: dep ? passthru && dep.passthru ? gradleProperties) buildDependencies;
+      validDeps = builtins.filter (
+        dep: dep ? passthru && dep.passthru ? gradleProperties
+      ) buildDependencies;
       extractFlags = dep: lib.mapAttrsToList (key: val: "-P${key}=${val}") dep.passthru.gradleProperties;
     in
     lib.flatten (map extractFlags validDeps);

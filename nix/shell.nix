@@ -83,11 +83,11 @@ let
   '';
 
   run-all = writeShellScriptBin "run-all" ''
-   ${lib.getExe run-bot-cache} && ${lib.getExe run-bot}
+    ${lib.getExe run-bot-cache} && ${lib.getExe run-bot}
   '';
 
   build-and-run-all = writeShellScriptBin "build-and-run-all" ''
-   ${lib.getExe build-and-run-bot-cache} && ${lib.getExe build-and-run-bot}
+    ${lib.getExe build-and-run-bot-cache} && ${lib.getExe build-and-run-bot}
   '';
 
   build-plugin = writeShellScriptBin "build-plugin" ''

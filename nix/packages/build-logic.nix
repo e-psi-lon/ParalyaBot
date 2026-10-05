@@ -3,7 +3,6 @@ mkGradleBuild {
   pname = "paralyabot-build-logic";
   srcRoots = [
     ../../build-logic
-    ./build-logic.nix
   ];
   versionProperty = "module.build-logic.version";
   module = "build-logic";
