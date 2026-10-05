@@ -28,7 +28,7 @@ let
       jlink --module-path ${headlessJdk}/lib/openjdk/jmods \
         --add-modules java.base,java.xml,java.naming \
         --no-header-files --no-man-pages --strip-debug \
-        --compress=2 \
+        --compress=zip-6 \
         --output $out
     '';
     inherit (headlessJdk) meta;
