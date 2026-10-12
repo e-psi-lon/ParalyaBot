@@ -49,39 +49,39 @@
     {
       packages.${system} =
         let
-          build-logic = pkgs.callPackage ./nix/packages/build-logic.nix { inherit mkGradleBuild; };
-          deps = pkgs.callPackage ./nix/packages/deps.nix {
+          build-logic = pkgs.callPackage ./nix/pkgs/build-logic.nix { inherit mkGradleBuild; };
+          deps = pkgs.callPackage ./nix/pkgs/deps.nix {
             inherit mkGradleBuild build-logic;
           };
-          common = pkgs.callPackage ./nix/packages/common.nix {
+          common = pkgs.callPackage ./nix/pkgs/common.nix {
             inherit mkGradleBuild build-logic;
             inherit (utils) extractVersion;
             inherit (deps) deps-compile deps-runtime;
           };
-          paralyabot = pkgs.callPackage ./nix/packages/paralyabot.nix {
+          paralyabot = pkgs.callPackage ./nix/pkgs/paralyabot.nix {
             inherit mkGradleBuild build-logic;
             inherit (deps) deps-compile;
             inherit (common) common-compile common-runtime;
           };
-          paralyabot-image = pkgs.callPackage ./nix/packages/image.nix {
+          paralyabot-image = pkgs.callPackage ./nix/pkgs/image.nix {
             inherit lib project-jdk;
             inherit (paralyabot) paralyabot-jar;
             inherit (utils) lastCommitAsTimestamp;
           };
-          lg-plugin = pkgs.callPackage ./nix/packages/plugins/lg.nix {
+          lg-plugin = pkgs.callPackage ./nix/pkgs/plugins/lg.nix {
             inherit mkGradleBuild build-logic;
             inherit (deps) deps-compile;
             inherit (common) common-compile;
           };
-          ai-plugin = pkgs.callPackage ./nix/packages/plugins/ai.nix {
+          ai-plugin = pkgs.callPackage ./nix/pkgs/plugins/ai.nix {
             inherit mkGradleBuild build-logic;
             inherit (deps) deps-compile;
             inherit (common) common-compile;
           };
-          cache = pkgs.callPackage ./nix/packages/cache.nix {
+          cache = pkgs.callPackage ./nix/pkgs/cache.nix {
             inherit (utils) extractVersion;
           };
-          paralyabot-cache-image = pkgs.callPackage ./nix/packages/cache-image.nix {
+          paralyabot-cache-image = pkgs.callPackage ./nix/pkgs/cache-image.nix {
             paralyabot-cache = cache;
             inherit (utils) lastCommitAsTimestamp;
           };
@@ -98,9 +98,15 @@
           ai-plugin-update = ai-plugin.mitmCache.updateScript;
         };
 
-      devShells.${system}.default = pkgs.callPackage ./nix/shell.nix {
-        inherit lib project-jdk;
-        inherit (utils) extractVersion;
-      };
+      devShells.${system} =
+        let
+          shells = pkgs.callPackage ./nix/shell {
+            inherit lib project-jdk;
+            inherit (utils) extractVersion;
+          };
+        in
+        {
+          inherit (shells) default ci-bot ci-bot-cache ci-plugin;
+        };
     };
 }

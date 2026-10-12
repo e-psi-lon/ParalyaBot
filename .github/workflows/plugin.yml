@@ -28,7 +28,9 @@ jobs:
       - name: Build plugin
         env:
           PLUGIN: ${{ inputs.plugin }}
-        run: nix develop --command bash -c 'echo "PLUGIN_PATH=$(build-plugin $PLUGIN)" >> $GITHUB_ENV'
+        run: |
+          PLUGIN_PATH=$(nix develop .#ci-plugin --command build-plugin "$PLUGIN")
+          echo "PLUGIN_PATH=$PLUGIN_PATH" >> "$GITHUB_ENV"
 
       - name: Upload plugin
         uses: actions/upload-artifact@v7

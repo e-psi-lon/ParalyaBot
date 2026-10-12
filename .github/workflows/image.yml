@@ -28,9 +28,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build image
-        run: |
-          nix develop --command bash -c 'echo "PARALYABOT_VERSION=$PARALYABOT_VERSION" >> $GITHUB_ENV'
-          nix develop --command build-bot
+        run: nix develop .#ci-bot --command build-bot
 
       - name: Tag and push image
         run: |
