@@ -203,6 +203,4 @@ fun DIV.timestamp(timestamp: Instant, messageId: Snowflake, isSystem: Boolean = 
     }
 }
 
-fun formatDiscordTimestamp(timestamp: Instant): String {
-    return ""
-}
+fun formatDiscordTimestamp(timestamp: Instant) = ""

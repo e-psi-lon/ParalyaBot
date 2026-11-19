@@ -130,7 +130,8 @@ class PluginExtension : Extension() {
                                     color = DISCORD_RED
                                     description = when (reloadResult) {
                                         is OldPluginNotFound -> I18n.Plugins.Reload.Response.Error
-                                            .OldPlugin.notFound.contextTranslate(arguments.oldPluginId)
+                                            .OldPlugin
+                                            .notFound.contextTranslate(arguments.oldPluginId)
                                         is OldPluginFailedToDelete -> I18n.Plugins.Reload.Response.Error.OldPlugin
                                             .failedToDelete.contextTranslate(arguments.oldPluginId)
                                         is OldPluginFallbackFailedToLoad -> I18n.Plugins.Reload.Response.Error.OldPlugin
