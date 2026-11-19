@@ -2,14 +2,17 @@ package fr.paralya.bot.lg
 
 import dev.kord.core.entity.User
 import dev.kord.rest.builder.message.embed
+import dev.kordex.core.checks.hasRole
+import dev.kordex.core.checks.isNotBot
+import dev.kordex.core.checks.notHasRole
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.EphemeralSlashCommandContext
 import dev.kordex.core.commands.application.slash.PublicSlashCommand
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
 import dev.kordex.core.commands.application.slash.group
-import dev.kordex.core.commands.converters.impl.optionalInt
+import dev.kordex.core.commands.converters.impl.member
+import dev.kordex.core.commands.converters.impl.optionalSnowflake
 import dev.kordex.core.commands.converters.impl.optionalString
-import dev.kordex.core.commands.converters.impl.user
 import dev.kordex.core.components.forms.ModalForm
 import dev.kordex.core.types.TranslatableContext
 import dev.kordex.core.utils.dm
@@ -20,6 +23,7 @@ import fr.paralya.bot.common.sendAsWebhook
 import fr.paralya.bot.common.snowflake
 import fr.paralya.bot.lg.data.GamePhase.PhaseType
 import fr.paralya.bot.lg.data.LgChannelType
+import fr.paralya.bot.lg.data.LgConfig
 import fr.paralya.bot.lg.I18n as Lg
 import fr.paralya.bot.lg.data.getGameData
 import org.koin.core.component.inject
@@ -127,7 +131,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 		description = Lg.Unvote.Command.description
 
 		action {
-			val previousId = arguments.previousId?.snowflake
+			val previousId = arguments.previousId
 			val channelId = channel.id
 			val votes = LgChannelType.VOTES.toId()
 			val voteLoups = LgChannelType.LOUPS_VOTE.toId()
@@ -153,7 +157,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 					voteCorbeau -> {
 						val currentVote = voteManager.getCurrentVote(PhaseType.DAY)
 						val isCorrectPhase = lg.botCache.getGameData().phase.type == PhaseType.NIGHT
-						if (currentVote == null || currentVote.corbeau == null || !isCorrectPhase) {
+						if (currentVote?.corbeau == null || !isCorrectPhase) {
 							respond { content = Lg.Unvote.Response.Error.noVote.contextTranslate() }
 							return@action
 						}
@@ -162,8 +166,11 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerVoti
 					}
 				}
 			}
-			if (previousId != null)
-				channel.getMessage(previousId).delete(Lg.System.MessageDelete.VoteMessage.reason.contextTranslate())
+			if (previousId != null) {
+				val message = channel.getMessage(previousId)
+				
+				message.delete(Lg.System.MessageDelete.VoteMessage.reason.contextTranslate())
+			}
 		}
 	}
 	ephemeralSubCommand {
@@ -282,7 +289,7 @@ private suspend fun <A : Arguments, M : ModalForm> EphemeralSlashCommandContext<
  *
  * @param target The user being voted for.
  * @param reason An optional reason for the vote.
- * @param alreadyVoted Indicates if the user has already voted.
+ * @param hasAlreadyVoted Indicates if the user has already voted.
  * @return The translated message for the vote response.
  */
 suspend fun TranslatableContext.getVotePublicResponse(
@@ -305,9 +312,17 @@ suspend fun TranslatableContext.getVotePublicResponse(
  * @property reason An optional reason for the vote.
  */
 private class VoteArguments : Arguments() {
-	val target by user {
+	val target by member {
 		name = Lg.Vote.Argument.Target.name
 		description = Lg.Vote.Argument.Target.description
+		validate {
+			isNotBot()
+			if (passed) {
+				val config = getKoin().get<LgConfig>()
+				hasRole(config.aliveRole.snowflake)
+				notHasRole(config.aliveRole.snowflake)
+			}
+		}
 	}
 	val reason by optionalString {
 		name = Lg.Vote.Argument.Reason.name
@@ -316,7 +331,7 @@ private class VoteArguments : Arguments() {
 }
 
 private class UnvoteArguments : Arguments() {
-	val previousId by optionalInt {
+	val previousId by optionalSnowflake {
 		name = Lg.Unvote.Argument.PreviousId.name
 		description = Lg.Unvote.Argument.PreviousId.description
 	}
