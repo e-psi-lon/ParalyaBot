@@ -88,7 +88,7 @@ suspend fun <A : Arguments, M : ModalForm> PublicSlashCommand<A, M>.registerDayC
 						guild.getMember(result.player).swapRoles(
 							addRoleId = config.deadRole.snowflake,
 							removeRoleId = aliveRole,
-							reason = Lg.System.Permissions.PlayerKilled.reason.contextTranslate()
+							reason = Lg.System.Permissions.PlayerKilled.reason.contextTranslate(guild.getMember(result.player).effectiveName)
 						)
 						respond {
 							content =
