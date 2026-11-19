@@ -1,12 +1,10 @@
 package fr.paralya.bot.lg
 
 import dev.kord.common.entity.Permission
-import dev.kord.common.entity.Permissions
-import dev.kord.core.entity.PermissionOverwrite
 import dev.kord.core.entity.channel.TopGuildChannel
-import dev.kord.core.entity.effectiveName
 import dev.kordex.core.commands.Arguments
 import dev.kordex.core.commands.application.slash.ephemeralSubCommand
+import dev.kordex.core.commands.converters.impl.member
 import dev.kordex.core.commands.converters.impl.optionalInt
 import dev.kordex.core.commands.converters.impl.optionalString
 import dev.kordex.core.commands.converters.impl.role
@@ -85,10 +83,10 @@ class LG : Extension() {
 			ephemeralSubCommand(::NotifArguments, ::MessageForm) {
 				name = Lg.Notif.Command.name
 				description = Lg.Notif.Command.description
-				action { modal ->
+				adminOnly { modal ->
 					if (guild == null) {
 						respond { content = Messages.Error.onlyInGuild.contextTranslate() }
-						return@action
+						return@adminOnly
 					}
 
 					val failed = mutableListOf<String>()
@@ -107,6 +105,7 @@ class LG : Extension() {
 						throw e
 					} catch (e: IllegalStateException) {
 						respond { content = Lg.Notif.Response.failed.contextTranslate(e.message) }
+						return@adminOnly
 					}
 
 					respond {
@@ -127,9 +126,12 @@ class LG : Extension() {
 					val interviewChannel =
 						guild.getChannel(LgChannelType.INTERVIEW.toId()) as TopGuildChannel
 					val user = arguments.user
-					if (user.id in botCache.getInterviews()) respond {
-						content = Lg.Interview.Response.Failed.alreadyInterviewing
-							.contextTranslate(user.mention)
+					if (user.id in botCache.getInterviews()) {
+						respond {
+							content = Lg.Interview.Response.Failed.alreadyInterviewing
+								.contextTranslate(user.mention)
+						}
+						return@adminOnly
 					}
 					interviewChannel.addMemberPermission(user.id, Permission.ViewChannel)
 					botCache.addInterview(user.id)
@@ -168,12 +170,18 @@ class LG : Extension() {
                 description = Lg.Kill.Command.description
 
                 adminOnly {
-					val guild = guild ?: return@adminOnly
                     val target = arguments.target
                     val reason = arguments.reason ?: Lg.Kill.Argument.Reason.default.contextTranslate()
                     val config = get<LgConfig>()
 
-                    guild.getMember(target.id).swapRoles(
+					if (target.roleIds.contains(config.deadRole.snowflake)) {
+						respond {
+							content = Lg.Kill.Response.Error.alreadyDead.contextTranslate()
+						}
+						return@adminOnly
+					}
+
+                    target.swapRoles(
                         addRoleId = config.deadRole.snowflake,
                         removeRoleId = config.aliveRole.snowflake,
                         reason = reason
@@ -226,7 +234,7 @@ class LG : Extension() {
 	}
 
     class KillArguments : Arguments() {
-        val target by user {
+        val target by member {
             name = Lg.Kill.Argument.Target.name
             description = Lg.Kill.Argument.Target.description
         }
