@@ -58,7 +58,6 @@ private val requiredMainChannels = listOf(
 
 private const val WEBHOOK_PF_NAME = "PF"
 private const val WEBHOOK_CUPIDON_NAME = "Cupidon"
-private const val DISCORD_THREAD_MAX_LENGTH = 100
 
 /**
  * Registers all event listeners for the Werewolf (Loup-Garou) game.
@@ -71,12 +70,12 @@ suspend fun LG.registerListeners() {
 	val relayService by inject<LgRelayService>()
 
 	event<MessageCreateEvent> {
-		check { isNotEphemeral(); isUser(); inChannel(LgChannelType.LOUPS_CHAT); }
+		check { isUser(); inChannel(LgChannelType.LOUPS_CHAT); }
 		action { relayService.onMessageSent(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId(), true) }
 	}
 
 	event<MessageCreateEvent> {
-		check { isNotEphemeral(); isUser(); inChannel(LgChannelType.DATE_MYSTERE) }
+		check { isUser(); inChannel(LgChannelType.DATE_MYSTERE) }
 		action { relayService.onMessageSent(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId(), false) }
 	}
 
@@ -114,12 +113,12 @@ suspend fun LG.registerListeners() {
 	}
 
 	event<MessageUpdateEvent> {
-		check {  isUser(); inChannel(LgChannelType.LOUPS_CHAT)}
+		check { isUser(); inChannel(LgChannelType.LOUPS_CHAT) }
 		action { relayService.onMessageUpdate(WEBHOOK_PF_NAME, LgChannelType.PETITE_FILLE.toId(), true) }
 	}
 
 	event<MessageUpdateEvent> {
-		check {  isUser(); inChannel(LgChannelType.DATE_MYSTERE) }
+		check { isUser(); inChannel(LgChannelType.DATE_MYSTERE) }
 		action { relayService.onMessageUpdate(WEBHOOK_CUPIDON_NAME, LgChannelType.CUPIDON.toId(), false) }
 	}
 
