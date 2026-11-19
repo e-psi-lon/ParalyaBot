@@ -4,7 +4,12 @@ import dev.kord.common.entity.Snowflake
 import dev.kord.core.behavior.channel.threads.ThreadChannelBehavior
 import dev.kord.core.behavior.channel.threads.edit
 import dev.kord.core.entity.Member
+import dev.kord.core.entity.Message
+import dev.kord.core.entity.effectiveName
 import kotlinx.coroutines.flow.Flow
+
+
+private const val DISCORD_THREAD_MAX_LENGTH = 100
 
 /**
  * Sets the lock status of all threads in the flow to [lock].
@@ -36,3 +41,26 @@ suspend fun Member.swapRoles(
 @Suppress("MagicNumber")
 fun String.truncate(maxLength: Int): String =
 	if (length <= maxLength) this else take(maxLength - 3) + "..."
+
+
+suspend fun formatThreadTitle(message: Message): String {
+	var title = message.content
+
+	message.mentionedUsers.collect { user ->
+		// Matches both <@id> and <@!id>
+		title = title.replace(Regex("<@!?${user.id}>"), "@${user.effectiveName}")
+	}
+
+	message.mentionedChannels.collect { channel ->
+		title = title.replace("<#${channel.id}>", "#${channel.data.name}")
+	}
+
+	message.mentionedRoles.collect { role ->
+		title = title.replace(oldValue = "<&${role.id}>", newValue = "@${role.name}")
+	}
+
+	title = title.replace(Regex("""\s+"""), " ").trim()
+	if (title.isEmpty()) title = "Thread"
+
+	return title.truncate(DISCORD_THREAD_MAX_LENGTH)
+}

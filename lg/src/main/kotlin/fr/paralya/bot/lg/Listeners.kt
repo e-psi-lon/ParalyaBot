@@ -100,8 +100,8 @@ suspend fun LG.registerListeners() {
 			val reasonText = I18n.System.Topics.creation.contextTranslate()
 			val textChannel = event.message.channel as TextChannel
 			textChannel.startPublicThreadWithMessage(
-					event.message.id,
-					event.message.content.truncate(DISCORD_THREAD_MAX_LENGTH)
+				event.message.id,
+				formatThreadTitle(event.message)
 			) {
 				reason = reasonText
 			}
