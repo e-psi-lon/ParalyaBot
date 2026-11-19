@@ -108,7 +108,8 @@ class VoteManager : KordExKoinComponent {
 	suspend fun resetVotes(phase: PhaseType) = botCache.atomic(voteMutex) {
         putVote(
             getCurrentVote(phase)?.copy(
-                votes = emptyMap()
+                votes = emptyMap(),
+                corbeau = null
             ) ?: return@atomic
         )
     }
