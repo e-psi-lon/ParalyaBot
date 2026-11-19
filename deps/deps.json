@@ -1269,19 +1269,19 @@
   }
  },
  "https://snapshots-repo.kordex.dev/dev": {
-  "kordex#annotations/2.7.0-20260907.114112-3/SNAPSHOT": {
-   "jar": "sha256-dm7q1GEqaJ3hHf0wTddHwA7U1hkx3s3dDP1z+aWMzSs=",
-   "module": "sha256-j9YNmLDRs8rfa/LLmQBvx9qHR0m/7HYU29SyEUml4EE=",
+  "kordex#annotations/2.7.0-20261110.170508-4/SNAPSHOT": {
+   "jar": "sha256-R4ztouG+GVsWfsAeRzHTUfvZbcRjiYcKxwVPqQLJISk=",
+   "module": "sha256-jjPNPujXEI4hPWmmsmNdcYH0oe30PbpWc6ETZItiWP0=",
    "pom": "sha256-FaD6j39BtJiPkz7FVkTWhZRcrq3We647eu1XD/3eZa0="
   },
-  "kordex#kord-extensions/2.7.0-20260907.114112-3/SNAPSHOT": {
-   "jar": "sha256-ILpmTd2YiRVDfosOrzwYvkUCt2M0JSrR0VtXMQK9DUo=",
-   "module": "sha256-DsMtBckDm+sY8IdqEahgBcIYFjl+64X4ItfMQ6Pn3mA=",
+  "kordex#kord-extensions/2.7.0-20261110.170508-4/SNAPSHOT": {
+   "jar": "sha256-c1l9edmw6ATaKt1mnN2NDifv1owBm/G1DhhmlxfOIDg=",
+   "module": "sha256-lP6ux/zXHZAG0FM72xGqekbf4P7xtziHQ54KKWNpQ6Q=",
    "pom": "sha256-gdzFcMXPN8D0tRHqXkqnfJpUnWndSgc2qHEhL5gVIek="
   },
-  "kordex#token-parser/2.7.0-20260907.114112-3/SNAPSHOT": {
-   "jar": "sha256-1MKkSJVURN3PomLGVwg/bWOY0/xt+akM1cTISvrGBlo=",
-   "module": "sha256-+OeZ5s2MSQY9f6Qz6Acp5SKv/mk1xobD0Di8x4qN2fc=",
+  "kordex#token-parser/2.7.0-20261110.170508-4/SNAPSHOT": {
+   "jar": "sha256-Lp4iEPUGqoHt2UFcaBmDHYTvp/MjtINs46mzfzV7j+M=",
+   "module": "sha256-A6+Bd4XSd3ExhtigBXsl24QB5MVhGokcXQqh3BOZglY=",
    "pom": "sha256-xzwaQY5k/88/KuVOpUzztDFWewpqcR9gYqEetb9tsj4="
   },
   "kordex/data#api/1.0.2-20260404.122759-5/SNAPSHOT": {
@@ -1292,7 +1292,7 @@
   "kordex/kord-extensions/2.7.0-SNAPSHOT/maven-metadata": {
    "xml": {
     "groupId": "dev.kordex",
-    "lastUpdated": "20260907114112"
+    "lastUpdated": "20261110170508"
    }
   }
  }
