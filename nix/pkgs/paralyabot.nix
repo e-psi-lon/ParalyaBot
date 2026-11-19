@@ -17,7 +17,6 @@ let
 
   jarArgs = sharedArgs // {
     srcRoots = [
-      ../../build-logic
       ../../deps
       ../../common
       ../../bot

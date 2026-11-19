@@ -10,7 +10,6 @@ let
     versionProperty = "module.deps.version";
     updateTask = "deps:dependencies --write-verification-metadata sha256";
     srcRoots = [
-      ../../build-logic
       ../../deps
     ];
     task = "deps:shadowJar";

@@ -20,7 +20,6 @@ let
 
   commonArgs = sharedArgs // {
     srcRoots = [
-      ../../build-logic
       ../../deps
       ../../common
     ];
